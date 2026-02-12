@@ -1,7 +1,8 @@
 import pandas as pd  
 import numpy as np  
 import re     
-
+import warnings
+warnings.filterwarnings("ignore")
 # Load the dataset
 
 file_path = "Healthcare.csv"   
@@ -17,14 +18,11 @@ if "Patient_ID" in df.columns:
     if df["Patient_ID"].str.fullmatch(r"\d+").all():
         df["Patient_ID"] = df["Patient_ID"].astype("Int64")
 
-
 if "Age" in df.columns:
     df["Age"] = pd.to_numeric(df["Age"], errors="coerce").round().astype("Int64")
 
-
 if "Symptoms" in df.columns:
     df["Symptoms"] = df["Symptoms"].astype(str).str.strip()
-
 
 if "Disease" in df.columns:
     df["Disease"] = df["Disease"].astype(str).str.strip()
@@ -33,10 +31,8 @@ if "Disease" in df.columns:
 if "Gender" in df.columns:
     df["Gender"] = df["Gender"].astype(str).str.strip()
 
-
 df = df.drop_duplicates()
 
-# Handle missing values (clean + safe)
 # Fill missing for TEXT columns
 for col in df.select_dtypes(include=["object"]).columns:
     if df[col].isna().any():
