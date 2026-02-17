@@ -110,6 +110,7 @@ class RiskPredictionResponse(BaseModel):
     risk_probability: float
     confidence_breakdown: Dict[str, float]
     risk_level: str
+    risk_score: int
 
 
 class AppointmentBookingResponse(BaseModel):
@@ -191,12 +192,18 @@ class RiskEngine:
 
         return pd.DataFrame([converted], columns=list(row.columns))
 
-    def _risk_level(self, probability: float) -> str:
+    def _risk_level(self, predicted_class: str, probability: float) -> str:
+        normalized = str(predicted_class).strip().lower()
+        if normalized in {"low", "medium", "high"}:
+            return normalized
         if probability >= 0.75:
             return "high"
         if probability >= 0.4:
             return "medium"
         return "low"
+
+    def _risk_score(self, risk_level: str) -> int:
+        return {"low": 1, "medium": 2, "high": 3}.get(risk_level, 1)
 
     def predict(self, features: Dict[str, Any]) -> RiskPredictionResponse:
         if not features:
@@ -235,17 +242,19 @@ class RiskEngine:
             confidence_breakdown = {
                 str(name): float(prob) for name, prob in zip(class_names, probabilities)
             }
-            risk_probability = float(np.max(probabilities))
+            risk_probability = float(confidence_breakdown.get(str(predicted_class), np.max(probabilities)))
         else:
             # Fallback if model has no probability API.
             confidence_breakdown = {predicted_class: 1.0}
             risk_probability = 1.0
 
+        risk_level = self._risk_level(str(predicted_class), risk_probability)
         return RiskPredictionResponse(
             predicted_class=str(predicted_class),
             risk_probability=risk_probability,
             confidence_breakdown=confidence_breakdown,
-            risk_level=self._risk_level(risk_probability),
+            risk_level=risk_level,
+            risk_score=self._risk_score(risk_level),
         )
 
 
@@ -522,11 +531,11 @@ def root() -> str:
         document.getElementById("riskFeatures").value = pretty;
         document.getElementById("bookFeatures").value = pretty;
 
-        const message = data.found
-          ? `Loaded dataset features for patient_id=${data.patient_id}`
-          : `No dataset row found for patient_id=${data.patient_id}. Loaded default template.`;
+        const message = `Loaded dataset features for patient_id=${data.patient_id}`;
         renderOutput("bookOutput", message, false);
       } catch (err) {
+        document.getElementById("riskFeatures").value = "{}";
+        document.getElementById("bookFeatures").value = "{}";
         renderOutput("bookOutput", err.message, true);
       }
     }
@@ -583,11 +592,7 @@ def get_patient_features(patient_id: str) -> Dict[str, Any]:
     if features is not None:
         return {"patient_id": normalized, "found": True, "patient_features": features}
 
-    return {
-        "patient_id": normalized,
-        "found": False,
-        "patient_features": DEFAULT_FEATURES_TEMPLATE,
-    }
+    raise HTTPException(status_code=404, detail=f"No dataset row found for patient_id={normalized}.")
 
 
 @app.get("/favicon.ico", include_in_schema=False)
