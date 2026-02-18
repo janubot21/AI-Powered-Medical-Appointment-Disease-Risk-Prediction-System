@@ -14,11 +14,7 @@ from pydantic import BaseModel, Field
 
 
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = (
-    BASE_DIR / "best_model.pkl"
-    if (BASE_DIR / "best_model.pkl").exists()
-    else BASE_DIR / "decision_tree_model.pkl"
-)
+MODEL_PATH = BASE_DIR / "decision_tree_model.pkl"
 LABEL_ENCODER_PATH = BASE_DIR / "label_encoder.pkl"
 FEATURE_DATA_PATH = BASE_DIR / "Healthcare_FeatureEngineered.csv"
 
