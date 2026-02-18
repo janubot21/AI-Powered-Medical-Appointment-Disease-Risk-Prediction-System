@@ -17,7 +17,7 @@ from predict import (
     RiskPredictionResponse,
     default_features_json,
     to_jsonable,
-)
+)    
 
 
 BASE_DIR = Path(__file__).resolve().parent
