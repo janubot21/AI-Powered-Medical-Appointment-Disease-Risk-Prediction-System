@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Portal</title>
+  <style>
+    :root {
+      --ink: #1b1f2a;
+      --cloud: #f6f7fb;
+      --teal: #0b7a75;
+      --sun: #ff9f1c;
+      --mint: #2ec4b6;
+      --paper: #ffffff;
+      --line: #d9dce7;
+      --danger: #9f1239;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Consolas", "Lucida Console", monospace;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 18%, rgba(46, 196, 182, 0.15), transparent 42%),
+        radial-gradient(circle at 88% 8%, rgba(255, 159, 28, 0.18), transparent 34%),
+        linear-gradient(150deg, #f1f5ff, #fcfcff 48%, #f8fbff);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 28px 18px 36px;
+      animation: rise 500ms ease-out;
+    }
+
+    h1, h2 {
+      font-family: "Palatino Linotype", "Book Antiqua", serif;
+      margin: 0;
+      letter-spacing: 0.02em;
+    }
+
+    h1 {
+      font-size: clamp(1.7rem, 3.5vw, 2.5rem);
+    }
+
+    .subhead {
+      margin: 10px 0 22px;
+      color: #394058;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 10px 24px rgba(29, 39, 71, 0.08);
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 6px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+
+    input, textarea {
+      padding: 10px 12px;
+      background: #fbfcff;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    button {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border: 0;
+      background: linear-gradient(120deg, var(--teal), #1164a3);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 160ms ease, filter 160ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    .output {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #f7f9ff;
+      border: 1px solid #d5dcf0;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      min-height: 58px;
+    }
+
+    .quicklinks {
+      margin-top: 14px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .quicklinks a {
+      color: var(--teal);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .error {
+      color: var(--danger);
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <h1>Patient Portal</h1>
+    <p class="subhead">Book appointments only.</p>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Book Appointment</h2>
+        <label for="patientId">Patient ID</label>
+        <input id="patientId" placeholder="e.g. 1520" />
+        <button id="loadPatientBtn" type="button">Load Features From Patient ID</button>
+        <label for="doctorId">Doctor ID</label>
+        <input id="doctorId" placeholder="D-209" />
+        <label for="appointmentTime">Appointment Time</label>
+        <input id="appointmentTime" type="datetime-local" />
+        <label for="bookFeatures">Patient Features (JSON)</label>
+        <textarea id="bookFeatures">__DEFAULT_FEATURES_JSON__</textarea>
+        <button id="bookBtn" type="button">Book Appointment</button>
+        <pre class="output" id="bookOutput">Waiting for input...</pre>
+      </article>
+    </section>
+
+    <div class="quicklinks">
+      <a href="/doctor">Open Doctor Page</a>
+      <a href="/docs" target="_blank" rel="noreferrer">Open Swagger Docs</a>
+      <a href="/health" target="_blank" rel="noreferrer">Check Health</a>
+    </div>
+  </main>
+
+  <script>
+    let hasLoadedPatientFeatures = false;
+
+    async function postJson(url, payload) {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const detail = data && data.detail ? data.detail : "Request failed";
+        throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+      }
+      return data;
+    }
+
+    function parseFeatures(textareaId) {
+      const raw = document.getElementById(textareaId).value;
+      try {
+        return JSON.parse(raw);
+      } catch (err) {
+        throw new Error("Invalid JSON in patient features.");
+      }
+    }
+
+    function renderOutput(targetId, value, isError) {
+      const el = document.getElementById(targetId);
+      el.textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+      el.className = isError ? "output error" : "output";
+    }
+
+    async function loadPatientFeatures() {
+      const patientId = document.getElementById("patientId").value.trim();
+      if (!patientId) {
+        hasLoadedPatientFeatures = false;
+        document.getElementById("bookFeatures").value = "Enter Patient ID first.";
+        throw new Error("Enter Patient ID first.");
+      }
+      renderOutput("bookOutput", "Loading patient features...", false);
+      const data = await fetch(`/patient-features/${encodeURIComponent(patientId)}`);
+      const payload = await data.json();
+      if (!data.ok) {
+        hasLoadedPatientFeatures = false;
+        const detail = payload && payload.detail ? payload.detail : "Patient lookup failed";
+        const msg = typeof detail === "string" ? detail : JSON.stringify(detail);
+        document.getElementById("bookFeatures").value = msg;
+        throw new Error(msg);
+      }
+      const featuresPretty = JSON.stringify(payload.patient_features, null, 2);
+      document.getElementById("bookFeatures").value = featuresPretty;
+      hasLoadedPatientFeatures = true;
+      renderOutput("bookOutput", payload, false);
+    }
+
+    document.getElementById("loadPatientBtn").addEventListener("click", async () => {
+      try {
+        await loadPatientFeatures();
+      } catch (err) {
+        hasLoadedPatientFeatures = false;
+        renderOutput("bookOutput", err.message, true);
+      }
+    });
+
+    document.getElementById("patientId").addEventListener("input", () => {
+      hasLoadedPatientFeatures = false;
+      document.getElementById("bookFeatures").value = "";
+    });
+
+    document.getElementById("bookBtn").addEventListener("click", async () => {
+      try {
+        let patient_features;
+        if (!hasLoadedPatientFeatures) {
+          patient_features = null;
+        } else {
+          try {
+            patient_features = parseFeatures("bookFeatures");
+          } catch (_) {
+            patient_features = null;
+          }
+        }
+        const payload = {
+          patient_id: document.getElementById("patientId").value.trim(),
+          doctor_id: document.getElementById("doctorId").value.trim(),
+          appointment_time: document.getElementById("appointmentTime").value,
+          patient_features
+        };
+        renderOutput("bookOutput", "Submitting...", false);
+        const data = await postJson("/book-appointment", payload);
+        const bookingSummary = {
+          booking_status: data.booking_status,
+          patient_id: data.patient_id,
+          doctor_id: data.doctor_id,
+          appointment_time: data.appointment_time
+        };
+        renderOutput("bookOutput", bookingSummary, false);
+      } catch (err) {
+        renderOutput("bookOutput", err.message, true);
+      }
+    });
+  </script>
+</body>
+</html>

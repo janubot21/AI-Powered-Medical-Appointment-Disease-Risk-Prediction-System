@@ -1,31 +1,40 @@
-import pandas as pd
-import numpy as np
+import warnings
+
 import joblib
+import numpy as np
+import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.metrics import (
+    accuracy_score,
+    auc,
+    classification_report,
+    confusion_matrix,
+    precision_recall_fscore_support,
+    roc_curve,
+)
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
+from sklearn.tree import DecisionTreeClassifier
+
+warnings.filterwarnings("ignore")
+
 try:
     import matplotlib.pyplot as plt
     import seaborn as sns
+
     HAS_PLOTTING = True
 except ModuleNotFoundError:
     HAS_PLOTTING = False
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_curve, auc
-from sklearn.metrics import precision_recall_fscore_support
-import warnings
-warnings.filterwarnings("ignore") 
 
-#  Load Dataset
+
+# Load dataset
 df = pd.read_csv("Healthcare_FeatureEngineered.csv")
 print("Dataset Loaded:", df.shape)
 
-#  Create Risk_Level if missing
-if "Risk_Level" not in df.columns:
 
+# Create Risk_Level if missing
+if "Risk_Level" not in df.columns:
     def risk_category(row):
         if pd.isna(row["Age"]) or pd.isna(row["Symptom_Count"]):
             return pd.NA
@@ -42,14 +51,14 @@ if "Risk_Level" not in df.columns:
 
         if score <= 2:
             return "Low"
-        elif score <= 4:
+        if score <= 4:
             return "Medium"
-        else:
-            return "High"
+        return "High"
 
     df["Risk_Level"] = df.apply(risk_category, axis=1)
 
-#  Features & Target
+
+# Features & target
 feature_cols_df = df.drop(columns=["Risk_Level", "Disease", "Patient_ID"], errors="ignore")
 required_cols = list(feature_cols_df.columns) + ["Risk_Level"]
 df_model = df.dropna(subset=required_cols).copy()
@@ -59,211 +68,148 @@ print(f"Rows dropped due to missing values (no imputation): {rows_dropped}")
 y = df_model["Risk_Level"]
 X = df_model.drop(columns=["Risk_Level", "Disease", "Patient_ID"], errors="ignore")
 
-#  Encode Target
 
+# Encode target
 label_encoder = LabelEncoder()
 y_encoded = label_encoder.fit_transform(y)
-joblib.dump(label_encoder, "label_encoder.pkl")
 
-#  Identify Column Types
+
+# Identify column types
 cat_cols = X.select_dtypes(include=["object", "category", "string"]).columns
 num_cols = X.select_dtypes(include=["number"]).columns
 
-#  Preprocessing Pipeline
 
-
-numeric_transformer = Pipeline(steps=[
-    ("scaler", StandardScaler())
-])
-
-categorical_transformer = Pipeline(steps=[
-    ("onehot", OneHotEncoder(handle_unknown="ignore"))
-])
-
+# Preprocessing pipeline
+numeric_transformer = Pipeline(steps=[("scaler", StandardScaler())])
+categorical_transformer = Pipeline(steps=[("onehot", OneHotEncoder(handle_unknown="ignore"))])
 preprocessor = ColumnTransformer(
     transformers=[
         ("num", numeric_transformer, num_cols),
-        ("cat", categorical_transformer, cat_cols)
+        ("cat", categorical_transformer, cat_cols),
     ]
 )
 
-# Train-Test Split
+
+# Train-test split
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y_encoded,
+    X,
+    y_encoded,
     test_size=0.2,
     random_state=42,
-    stratify=y_encoded
+    stratify=y_encoded,
 )
 
 print("\nTrain size:", X_train.shape[0])
 print("Test size:", X_test.shape[0])
 
-#  Define Models
 
-models = {
-    "Logistic Regression": LogisticRegression(max_iter=500),
-    "Decision Tree": DecisionTreeClassifier(random_state=42),
-    "Random Forest": RandomForestClassifier(random_state=42)
-}
-
-best_model = None
-best_accuracy = 0
-best_model_name = ""
-model_accuracies = {}
-conf_matrices = {}
-model_metrics = {}
-
-#  Train & Evaluate Models
-
-for name, model in models.items():
-
-    print(f"\n==============================")
-    print(f"Training {name}...")
-
-    pipeline = Pipeline(steps=[
-        ("preprocessor", preprocessor),
-        ("classifier", model)
-    ])
-
-    pipeline.fit(X_train, y_train)
-    y_pred = pipeline.predict(X_test)
-    y_prob = pipeline.predict_proba(X_test)[:, 1]
-
-    # Accuracy
-    acc = accuracy_score(y_test, y_pred)
-    acc_percent = acc * 100
-
-    # Manual Formula
-    correct = (y_test == y_pred).sum()
-    total = len(y_test)
-
-    print(f"{name} Accuracy Formula: {correct} / {total}")
-    print(f"{name} Accuracy: {acc_percent:.2f}%")
-
-    print("\nClassification Report:")
-    print(classification_report(y_test, y_pred, zero_division=0))
-
-    print("Confusion Matrix:")
-    cm = confusion_matrix(y_test, y_pred)
-    print(cm)
-    conf_matrices[name] = cm
-    model_accuracies[name] = acc_percent
-    fpr, tpr, _ = roc_curve(y_test, y_prob)
-    roc_auc = auc(fpr, tpr)
-    precision, recall, f1, _ = precision_recall_fscore_support(
-        y_test, y_pred, average="weighted", zero_division=0
-    )
-    model_metrics[name] = {
-        "Accuracy": acc_percent,
-        "Precision": precision * 100,
-        "Recall": recall * 100,
-        "F1": f1 * 100,
-        "AUC": roc_auc * 100,
-    }
-
-    # Save individual model
-    filename = name.lower().replace(" ", "_") + "_model.pkl"
-    joblib.dump(pipeline, filename)
-    print(f"Saved: {filename}")
-
-    # Track best model
-    if acc > best_accuracy:
-        best_accuracy = acc
-        best_model = pipeline
-        best_model_name = name
-
-#  Save Best Model
-
-joblib.dump(best_model, "best_model.pkl")
-
+# Decision Tree only
 print("\n==============================")
-print(f"Best Model: {best_model_name}")
-print(f"Best Accuracy: {best_accuracy * 100:.2f}%")
-print("Saved: best_model.pkl")
+print("Training Decision Tree...")
+
+decision_tree_pipeline = Pipeline(
+    steps=[
+        ("preprocessor", preprocessor),
+        ("classifier", DecisionTreeClassifier(random_state=42)),
+    ]
+)
+
+decision_tree_pipeline.fit(X_train, y_train)
+y_pred = decision_tree_pipeline.predict(X_test)
+y_prob = decision_tree_pipeline.predict_proba(X_test)[:, 1]
+
+
+# Metrics
+test_acc = accuracy_score(y_test, y_pred)
+train_acc = accuracy_score(y_train, decision_tree_pipeline.predict(X_train))
+test_acc_percent = test_acc * 100
+train_acc_percent = train_acc * 100
+train_loss_percent = (1 - train_acc) * 100
+test_loss_percent = (1 - test_acc) * 100
+
+precision, recall, f1, _ = precision_recall_fscore_support(
+    y_test, y_pred, average="weighted", zero_division=0
+)
+fpr, tpr, _ = roc_curve(y_test, y_prob)
+roc_auc = auc(fpr, tpr)
+
+print(f"Decision Tree Accuracy Formula: {(y_test == y_pred).sum()} / {len(y_test)}")
+print(f"Decision Tree Train Accuracy: {train_acc_percent:.2f}%")
+print(f"Decision Tree Test Accuracy: {test_acc_percent:.2f}%")
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred, zero_division=0))
+
+cm = confusion_matrix(y_test, y_pred)
+print("Confusion Matrix:")
+print(cm)
+
+
+joblib.dump(decision_tree_pipeline, "decision_tree_model.pkl")
+print("Saved: decision_tree_model.pkl")
 print("==============================")
 
-#  Graphical Representation
+
+# Graphical representation (Decision Tree only)
 if HAS_PLOTTING:
-    # Best-model highlight chart for project presentation
+    # Accuracy vs loss graph
     plt.figure(figsize=(8, 5))
-    model_names = list(model_accuracies.keys())
-    accuracy_values = list(model_accuracies.values())
-    colors = [
-        "#0b7a75" if name == best_model_name else "#b8c2d6"
-        for name in model_names
-    ]
-    bars = plt.bar(model_names, accuracy_values, color=colors, edgecolor="#26344f")
-    for bar, score in zip(bars, accuracy_values):
-        plt.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + 0.5,
-            f"{score:.2f}%",
-            ha="center",
-            va="bottom",
-            fontsize=9,
-        )
-    plt.title(f"Best Model Selection: {best_model_name}")
-    plt.xlabel("Models")
-    plt.ylabel("Accuracy (%)")
-    plt.ylim(0, 100)
-    plt.xticks(rotation=15)
+    phases = ["Train", "Test"]
+    accuracy_values = [train_acc_percent, test_acc_percent]
+    loss_values = [train_loss_percent, test_loss_percent]
+
+    plt.plot(phases, accuracy_values, marker="o", linewidth=2.4, label="Accuracy (%)")
+    plt.plot(phases, loss_values, marker="o", linewidth=2.4, label="Loss (%)")
+    for i, value in enumerate(accuracy_values):
+        plt.text(i, value + 0.4, f"{value:.2f}", ha="center", va="bottom", fontsize=9)
+    for i, value in enumerate(loss_values):
+        plt.text(i, value + 0.4, f"{value:.2f}", ha="center", va="bottom", fontsize=9)
+    plt.title("Decision Tree: Accuracy vs Loss")
+    plt.xlabel("Dataset Split")
+    plt.ylabel("Percentage")
+    plt.ylim(0, 105)
+    plt.grid(axis="y", linestyle="--", alpha=0.35)
+    plt.legend(loc="best")
     plt.tight_layout()
-    plt.savefig("best_model_selection.png", dpi=300)
     plt.show()
 
-    # Spaghetti-style comparison: one line per model across all metrics
-    metrics_order = ["Accuracy", "Precision", "Recall", "F1", "AUC"]
-    model_names = list(model_metrics.keys())
-    plt.figure(figsize=(11, 6))
-    x = np.arange(len(metrics_order))
-    for model_name in model_names:
-        values = [model_metrics[model_name][metric_name] for metric_name in metrics_order]
-        line_width = 2.8 if model_name == best_model_name else 2
-        plt.plot(
-            x,
-            values,
-            marker="o",
-            linewidth=line_width,
-            label=model_name,
-        )
-        for idx, val in enumerate(values):
-            plt.text(
-                idx,
-                val + 0.15,
-                f"{val:.1f}",
-                ha="center",
-                va="bottom",
-                fontsize=8,
-            )
-    plt.title("Spaghetti Plot: Model Performance Across Metrics")
+    # Decision tree metrics graph
+    plt.figure(figsize=(9, 5))
+    metric_names = ["Accuracy", "Precision", "Recall", "F1", "AUC"]
+    metric_values = [
+        test_acc_percent,
+        precision * 100,
+        recall * 100,
+        f1 * 100,
+        roc_auc * 100,
+    ]
+    plt.plot(metric_names, metric_values, marker="o", linewidth=2.6, color="#0b7a75")
+    for i, value in enumerate(metric_values):
+        plt.text(i, value + 0.35, f"{value:.2f}", ha="center", va="bottom", fontsize=9)
+    plt.title("Decision Tree Performance Metrics")
     plt.xlabel("Metrics")
     plt.ylabel("Score (%)")
     plt.ylim(0, 105)
-    plt.xticks(x, metrics_order, rotation=12)
     plt.grid(axis="y", linestyle="--", alpha=0.35)
-    plt.legend(loc="lower right")
     plt.tight_layout()
-    plt.savefig("all_models_metrics_comparison.png", dpi=300)
     plt.show()
 
+    # Confusion matrix graph
     class_names = label_encoder.classes_
-    for model_name, cm in conf_matrices.items():
-        plt.figure(figsize=(6, 5))
-        sns.heatmap(
-            cm,
-            annot=True,
-            fmt="d",
-            cmap="Blues",
-            xticklabels=class_names,
-            yticklabels=class_names
-        )
-        plt.title(f"Confusion Matrix - {model_name}")
-        plt.xlabel("Predicted")
-        plt.ylabel("Actual")
-        plt.tight_layout()
-        output_name = model_name.lower().replace(" ", "_") + "_confusion_matrix.png"
-        plt.savefig(output_name, dpi=300)
-        plt.show()
+    plt.figure(figsize=(6, 5))
+    sns.heatmap(
+        cm,
+        annot=True,
+        fmt="d",
+        cmap="Blues",
+        xticklabels=class_names,
+        yticklabels=class_names,
+    )
+    plt.title("Confusion Matrix - Decision Tree")
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.tight_layout()
+    plt.show()
 else:
     print(
         "Plotting skipped: install packages with "

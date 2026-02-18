@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Doctor Dashboard</title>
+  <style>
+    body { margin: 0; font-family: Consolas, monospace; background: #f6f9ff; color: #1b1f2a; }
+    .shell { max-width: 1100px; margin: 0 auto; padding: 24px 18px; }
+    .card { background: #fff; border: 1px solid #d9dce7; border-radius: 12px; padding: 14px; margin-top: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    th, td { border-bottom: 1px solid #e5e9f5; text-align: left; padding: 10px 8px; vertical-align: top; }
+    th { background: #eef4ff; }
+    tr.clickable { cursor: pointer; }
+    tr.selected { background: #e6f3ff; }
+    .pill { padding: 2px 8px; border-radius: 999px; font-weight: 700; }
+    .high { background: #fee2e2; color: #991b1b; }
+    .medium { background: #fef3c7; color: #92400e; }
+    .low { background: #dcfce7; color: #166534; }
+    .links a { color: #0b7a75; text-decoration: none; font-weight: 700; margin-right: 10px; }
+    pre { margin: 0; white-space: pre-wrap; }
+    textarea, button {
+      width: 100%;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+    textarea {
+      min-height: 130px;
+      border: 1px solid #d9dce7;
+      padding: 10px 12px;
+      background: #fbfcff;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border: 0;
+      background: linear-gradient(120deg, #0b7a75, #1164a3);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .output {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #f7f9ff;
+      border: 1px solid #d5dcf0;
+      min-height: 58px;
+    }
+    .error { color: #9f1239; }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <h1>Doctor Dashboard</h1>
+    <p>New bookings appear automatically.</p>
+    <div class="links">
+      <a href="/patient">Open Patient Page</a>
+      <a href="/docs">Open API Docs</a>
+    </div>
+    <div class="card">
+      <h2>Predict Risk</h2>
+      <label for="riskFeatures">Patient Features (JSON)</label>
+      <textarea id="riskFeatures" placeholder="No appointment booked yet."></textarea>
+      <button id="predictBtn" type="button">Run Prediction</button>
+      <pre class="output" id="predictOutput">No appointment booked yet.</pre>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Booked At</th>
+            <th>Patient ID</th>
+            <th>Doctor ID</th>
+            <th>Appointment Time</th>
+            <th>Predicted Risk</th>
+            <th>Patient Details</th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          <tr><td colspan="6">No appointments yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+  <script>
+    let cachedAppointments = [];
+    let selectedAppointmentKey = null;
+
+    async function postJson(url, payload) {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const detail = data && data.detail ? data.detail : "Request failed";
+        throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+      }
+      return data;
+    }
+
+    function parseFeatures() {
+      const raw = document.getElementById("riskFeatures").value;
+      if (!raw.trim()) {
+        throw new Error("No appointment booked yet.");
+      }
+      try {
+        return JSON.parse(raw);
+      } catch (_) {
+        throw new Error("Invalid JSON in patient features.");
+      }
+    }
+
+    function renderOutput(targetId, value, isError) {
+      const el = document.getElementById(targetId);
+      el.textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+      el.className = isError ? "output error" : "output";
+    }
+
+    function riskPill(level) {
+      const cls = (level || "low").toLowerCase();
+      return `<span class="pill ${cls}">${level || "-"}</span>`;
+    }
+
+    function toSafeText(value) {
+      return value == null ? "" : String(value);
+    }
+
+    function appointmentKey(item) {
+      return `${toSafeText(item.booked_at)}|${toSafeText(item.patient_id)}|${toSafeText(item.doctor_id)}`;
+    }
+
+    function selectAppointment(index) {
+      if (!cachedAppointments[index]) {
+        return;
+      }
+      const item = cachedAppointments[index];
+      selectedAppointmentKey = appointmentKey(item);
+      const features = item.patient_features || {};
+      document.getElementById("riskFeatures").value = JSON.stringify(features, null, 2);
+      renderOutput("predictOutput", `Loaded Patient_ID ${toSafeText(item.patient_id)} for prediction.`, false);
+
+      const rows = document.querySelectorAll("#rows tr[data-index]");
+      rows.forEach((row) => {
+        if (Number(row.dataset.index) === index) {
+          row.classList.add("selected");
+        } else {
+          row.classList.remove("selected");
+        }
+      });
+    }
+
+    async function refreshAppointments() {
+      const res = await fetch("/appointments");
+      const data = await res.json();
+      const rows = document.getElementById("rows");
+      if (!data.appointments || data.appointments.length === 0) {
+        cachedAppointments = [];
+        selectedAppointmentKey = null;
+        document.getElementById("riskFeatures").value = "";
+        renderOutput("predictOutput", "No appointment booked yet.", false);
+        rows.innerHTML = '<tr><td colspan="6">No appointments yet.</td></tr>';
+        return;
+      }
+      cachedAppointments = data.appointments;
+      rows.innerHTML = data.appointments.map((item, idx) => `
+        <tr class="clickable" data-index="${idx}">
+          <td>${toSafeText(item.booked_at)}</td>
+          <td>${toSafeText(item.patient_id)}</td>
+          <td>${toSafeText(item.doctor_id)}</td>
+          <td>${toSafeText(item.appointment_time)}</td>
+          <td>${riskPill(item.risk_assessment && item.risk_assessment.risk_level)}</td>
+          <td><pre>${toSafeText(JSON.stringify(item.patient_features, null, 2))}</pre></td>
+        </tr>
+      `).join("");
+
+      rows.querySelectorAll("tr[data-index]").forEach((row) => {
+        row.addEventListener("click", () => {
+          const idx = Number(row.dataset.index);
+          selectAppointment(idx);
+        });
+      });
+
+      let selectedIndex = -1;
+      if (selectedAppointmentKey !== null) {
+        selectedIndex = data.appointments.findIndex((item) => appointmentKey(item) === selectedAppointmentKey);
+      }
+      if (selectedIndex === -1) {
+        selectedIndex = data.appointments.length - 1;
+      }
+      selectAppointment(selectedIndex);
+    }
+
+    document.getElementById("predictBtn").addEventListener("click", async () => {
+      try {
+        const patient_features = parseFeatures();
+        renderOutput("predictOutput", "Submitting...", false);
+        const data = await postJson("/predict-risk", { patient_features });
+        renderOutput("predictOutput", data, false);
+      } catch (err) {
+        renderOutput("predictOutput", err.message, true);
+      }
+    });
+
+    refreshAppointments();
+    setInterval(refreshAppointments, 4000);
+  </script>
+</body>
+</html>
