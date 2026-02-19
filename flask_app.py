@@ -14,7 +14,7 @@ from predict import LABEL_ENCODER_PATH, MODEL_PATH, RiskEngine, to_jsonable
 
 
 BASE_DIR = Path(__file__).resolve().parent
-NEW_PATIENT_CSV = BASE_DIR / "new_patient.csv"
+NEW_PATIENT_DATA_CSV = BASE_DIR / "new_patient_data.csv"
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "change-this-secret-key")
@@ -45,7 +45,7 @@ def _to_float(value: str, field_name: str, min_value: float, max_value: float) -
     return parsed
 
 
-def append_to_new_patient_csv(row: Dict[str, Any], csv_path: Path = NEW_PATIENT_CSV) -> None:
+def append_to_new_patient_csv(row: Dict[str, Any], csv_path: Path = NEW_PATIENT_DATA_CSV) -> None:
     new_row_df = pd.DataFrame([row])
     if csv_path.exists():
         existing_df = pd.read_csv(csv_path)
@@ -162,10 +162,10 @@ def _build_features_from_new_patient_row(row: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _load_new_patient_features(patient_id: str) -> Optional[Dict[str, Any]]:
-    if not NEW_PATIENT_CSV.exists():
+    if not NEW_PATIENT_DATA_CSV.exists():
         return None
     try:
-        df = pd.read_csv(NEW_PATIENT_CSV)
+        df = pd.read_csv(NEW_PATIENT_DATA_CSV)
     except Exception:
         return None
 

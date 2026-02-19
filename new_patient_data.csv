@@ -1,3 +1,4 @@
 Patient_ID,Age,Gender,Symptoms,Symptom_Count,Disease,Glucose,BloodPressure,BMI
 101,22,male,"fever, cough",2,flu,110.0,120.0,23.5
 102,22,female,"fever ,cough",2,fever,123.0,123.0,12.0
+55,22,female,"chestpain,headache ,fever",3,,211.0,122.0,13.0
