@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Access - Exafluence Hospital</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --paper: #ffffff;
+      --line: #d7dfef;
+      --ok: #0f766e;
+      --warn: #b91c1c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 10% 8%, rgba(15, 118, 110, 0.18), transparent 35%),
+        radial-gradient(circle at 90% 18%, rgba(29, 78, 216, 0.16), transparent 30%),
+        linear-gradient(150deg, #eef4ff, #f7faff 45%, #f5f8ff);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .shell {
+      width: min(980px, 100%);
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 22px 44px rgba(23, 32, 51, 0.14);
+      overflow: hidden;
+    }
+
+    .top {
+      background: linear-gradient(105deg, #0f766e, #1d4ed8);
+      color: #fff;
+      padding: 18px 22px;
+    }
+
+    .top h1 {
+      margin: 0;
+      font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+    }
+
+    .top p {
+      margin: 6px 0 0;
+      opacity: 0.95;
+    }
+
+    .grid {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1.18rem;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 6px;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    input, button {
+      width: 100%;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+
+    input {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      background: #fcfdff;
+    }
+
+    button {
+      margin-top: 12px;
+      border: 0;
+      color: #fff;
+      padding: 10px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(115deg, #0f766e, #0ea5a6);
+    }
+
+    .signup-btn {
+      background: linear-gradient(115deg, #1d4ed8, #2563eb);
+    }
+
+    .status {
+      margin-top: 10px;
+      min-height: 24px;
+      white-space: pre-wrap;
+      font-size: 0.92rem;
+    }
+
+    .ok { color: var(--ok); }
+    .err { color: var(--warn); }
+
+    .links {
+      padding: 0 20px 20px;
+    }
+
+    .links a {
+      text-decoration: none;
+      color: #0f766e;
+      font-weight: 700;
+      margin-right: 14px;
+    }
+
+    @media (max-width: 880px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <h1>Exafluence Hospital - Patient Access</h1>
+      <p>Login as old patient or signup as new patient.</p>
+    </header>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Login (Old Patient)</h2>
+        <label for="loginPatientId">Patient ID</label>
+        <input id="loginPatientId" placeholder="Enter Patient ID" />
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" placeholder="Enter Password" />
+        <button id="loginBtn" type="button">Login</button>
+        <div id="loginStatus" class="status"></div>
+      </article>
+
+      <article class="card">
+        <h2>Signup (New Patient)</h2>
+        <label for="signupPatientId">New Patient ID</label>
+        <input id="signupPatientId" placeholder="Create Patient ID" />
+        <label for="signupPassword">Password</label>
+        <input id="signupPassword" type="password" placeholder="Create Password" />
+        <button id="signupBtn" class="signup-btn" type="button">Signup</button>
+        <div id="signupStatus" class="status"></div>
+      </article>
+    </section>
+
+    <div class="links">
+      <a href="/login">Back to Main Login</a>
+      <a href="/doctor">Doctor Page</a>
+    </div>
+  </main>
+
+  <script>
+    async function postJson(url, payload) {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const detail = data && data.detail ? data.detail : "Request failed";
+        throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+      }
+      return data;
+    }
+
+    function setStatus(targetId, message, isError) {
+      const el = document.getElementById(targetId);
+      el.textContent = message;
+      el.className = isError ? "status err" : "status ok";
+    }
+
+    function goToPatientPage(patientId) {
+      const url = `/patient?patient_id=${encodeURIComponent(patientId)}`;
+      window.location.href = url;
+    }
+
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      try {
+        const patient_id = document.getElementById("loginPatientId").value.trim();
+        const password = document.getElementById("loginPassword").value.trim();
+        const data = await postJson("/patient-login", { patient_id, password });
+        setStatus("loginStatus", data.message, false);
+        goToPatientPage(patient_id);
+      } catch (err) {
+        setStatus("loginStatus", err.message, true);
+      }
+    });
+
+    document.getElementById("signupBtn").addEventListener("click", async () => {
+      try {
+        const patient_id = document.getElementById("signupPatientId").value.trim();
+        const password = document.getElementById("signupPassword").value.trim();
+        const data = await postJson("/patient-signup", { patient_id, password });
+        setStatus("signupStatus", data.message, false);
+        goToPatientPage(patient_id);
+      } catch (err) {
+        setStatus("signupStatus", err.message, true);
+      }
+    });
+  </script>
+</body>
+</html>

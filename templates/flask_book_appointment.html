@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book Appointment</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Consolas", "Lucida Console", monospace;
+      background: #e6ebf2;
+      color: #111a2e;
+    }
+    .wrap {
+      max-width: 660px;
+      margin: 0 auto;
+      padding: 10px 16px 20px;
+      background: #f7f9fd;
+      border: 1px solid #c8d0e3;
+      border-radius: 0 0 14px 14px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-family: "Palatino Linotype", "Book Antiqua", serif;
+      font-size: 1.45rem;
+      line-height: 1;
+      color: #12244a;
+    }
+    label {
+      display: block;
+      margin: 12px 0 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #111a2e;
+    }
+    input, textarea, button {
+      width: 100%;
+      border-radius: 14px;
+      font-family: inherit;
+      border: 1px solid #c7d1e7;
+      box-sizing: border-box;
+    }
+    input, textarea {
+      padding: 12px 14px;
+      background: #e9eef7;
+      color: #0f1b33;
+      font-size: 0.95rem;
+    }
+    textarea {
+      min-height: 220px;
+      resize: vertical;
+      background: #f3f6fb;
+    }
+    button {
+      margin-top: 10px;
+      border: 0;
+      padding: 12px 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(110deg, #0f7f78, #1e6bb9);
+      cursor: pointer;
+    }
+    .output {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #c7d1e7;
+      background: #eef3fb;
+      white-space: pre-wrap;
+      font-size: 0.9rem;
+      min-height: 120px;
+    }
+    .error { color: #9f1239; }
+    .toplink {
+      display: inline-block;
+      margin-bottom: 8px;
+      color: #0f6ba8;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 20, 40, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 1000;
+    }
+    .modal-backdrop.active { display: flex; }
+    .confirm-modal {
+      width: min(420px, 100%);
+      border-radius: 16px;
+      border: 1px solid #8fd8ef;
+      background: #fff;
+      box-shadow: 0 24px 44px rgba(5, 30, 68, 0.3);
+      overflow: hidden;
+    }
+    .confirm-top {
+      padding: 12px 16px;
+      color: #fff;
+      background: linear-gradient(110deg, #1c6dd0, #26b6cf);
+      font-weight: 700;
+    }
+    .confirm-body { padding: 16px; text-align: center; }
+    .confirm-title {
+      margin: 0 0 8px;
+      font-family: "Palatino Linotype", "Book Antiqua", serif;
+      font-size: 1.5rem;
+      color: #0f766e;
+    }
+    .confirm-text { margin: 0; color: #41516f; }
+    .confirm-meta {
+      margin-top: 12px;
+      padding: 10px;
+      border: 1px solid #d5dcf0;
+      border-radius: 10px;
+      background: #f8fbff;
+      text-align: left;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+    }
+    .confirm-close {
+      margin-top: 12px;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      min-width: 130px;
+      color: #fff;
+      font-weight: 700;
+      background: linear-gradient(120deg, #148a82, #2477d0);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <a class="toplink" href="/login">Back</a>
+    <h1>Book Appointment</h1>
+    <label for="patientId">Patient ID</label>
+    <input id="patientId" value="{{ patient_id }}" />
+
+    <button id="loadPatientBtn" type="button">Load Features From Patient ID</button>
+
+    <label for="doctorId">Doctor ID</label>
+    <input id="doctorId" placeholder="e.g. 2" />
+
+    <label for="appointmentTime">Appointment Time</label>
+    <input id="appointmentTime" type="datetime-local" />
+
+    <label for="bookFeatures">Patient Features (JSON)</label>
+    <textarea id="bookFeatures" placeholder="Features will appear here after loading by Patient ID"></textarea>
+
+    <button id="bookBtn" type="button">Book Appointment</button>
+    <pre class="output" id="bookOutput">Waiting for input...</pre>
+  </main>
+
+  <div class="modal-backdrop" id="bookingConfirmModal" aria-hidden="true">
+    <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="confirm-top">Appointment</div>
+      <div class="confirm-body">
+        <h2 class="confirm-title" id="confirmTitle">Booking Confirmed</h2>
+        <p class="confirm-text" id="confirmText">Appointment booked successfully.</p>
+        <div class="confirm-meta" id="confirmMeta">Waiting for booking details...</div>
+        <button type="button" class="confirm-close" id="closeConfirmBtn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function postJson(url, payload) {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const detail = data && data.detail ? data.detail : "Request failed";
+        throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+      }
+      return data;
+    }
+
+    function renderOutput(value, isError) {
+      const el = document.getElementById("bookOutput");
+      el.textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+      el.className = isError ? "output error" : "output";
+    }
+
+    function showBookingPopup(data) {
+      const modal = document.getElementById("bookingConfirmModal");
+      const confirmText = document.getElementById("confirmText");
+      const confirmMeta = document.getElementById("confirmMeta");
+      confirmText.textContent = `Patient ${data.patient_id} booked with Doctor ${data.doctor_id}.`;
+      confirmMeta.textContent = [
+        `Status: ${data.booking_status || "confirmed"}`,
+        `Patient ID: ${data.patient_id || "-"}`,
+        `Doctor ID: ${data.doctor_id || "-"}`,
+        `Appointment Time: ${data.appointment_time || "-"}`
+      ].join("\n");
+      modal.classList.add("active");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeBookingPopup() {
+      const modal = document.getElementById("bookingConfirmModal");
+      modal.classList.remove("active");
+      modal.setAttribute("aria-hidden", "true");
+    }
+
+    async function loadPatientFeatures() {
+      const patientId = document.getElementById("patientId").value.trim();
+      if (!patientId) {
+        throw new Error("Enter Patient ID first.");
+      }
+      renderOutput("Loading patient features...", false);
+      const res = await fetch(`/patient/features/${encodeURIComponent(patientId)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        const detail = data && data.detail ? data.detail : "Patient lookup failed";
+        throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+      }
+      document.getElementById("bookFeatures").value = JSON.stringify(data.patient_features, null, 2);
+      renderOutput(data, false);
+    }
+
+    document.getElementById("loadPatientBtn").addEventListener("click", async () => {
+      try {
+        await loadPatientFeatures();
+      } catch (err) {
+        renderOutput(err.message, true);
+      }
+    });
+
+    document.getElementById("bookBtn").addEventListener("click", async () => {
+      try {
+        const patient_id = document.getElementById("patientId").value.trim();
+        const doctor_id = document.getElementById("doctorId").value.trim();
+        const appointment_time = document.getElementById("appointmentTime").value;
+        let patient_features = null;
+        const rawFeatures = document.getElementById("bookFeatures").value.trim();
+        if (rawFeatures) {
+          try {
+            patient_features = JSON.parse(rawFeatures);
+          } catch (_) {
+            throw new Error("Invalid JSON in Patient Features.");
+          }
+        }
+
+        renderOutput("Submitting...", false);
+        const data = await postJson("/patient/book-appointment-submit", {
+          patient_id,
+          doctor_id,
+          appointment_time,
+          patient_features
+        });
+        renderOutput(data, false);
+        showBookingPopup(data);
+      } catch (err) {
+        renderOutput(err.message, true);
+      }
+    });
+
+    document.getElementById("closeConfirmBtn").addEventListener("click", closeBookingPopup);
+    document.getElementById("bookingConfirmModal").addEventListener("click", (event) => {
+      if (event.target.id === "bookingConfirmModal") {
+        closeBookingPopup();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeBookingPopup();
+      }
+    });
+  </script>
+</body>
+</html>

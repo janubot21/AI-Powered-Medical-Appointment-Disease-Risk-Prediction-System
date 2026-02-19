@@ -188,12 +188,27 @@ class RiskEngine:
         return found
 
     def _rule_based_risk_class(self, features: Dict[str, Any]) -> str:
-        symptoms = self._extract_reported_symptoms(features)
-        if symptoms & self.HIGH_RISK_SYMPTOMS:
-            return "High"
-        if symptoms & self.MEDIUM_RISK_SYMPTOMS:
-            return "Medium"
-        return "Low"
+        def to_number(value: Any, field_name: str) -> float:
+            if value is None:
+                return 0.0
+            if isinstance(value, str):
+                value = value.strip()
+            try:
+                return float(value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"{field_name} must be a valid number") from exc
+
+        age = to_number(features.get("Age"), "Age")
+        symptom_count = to_number(
+            features.get("Symptom_Count", features.get("Sympton_Count")),
+            "Symptom_Count",
+        )
+        glucose = to_number(features.get("Glucose"), "Glucose")
+        blood_pressure = to_number(features.get("BloodPressure"), "BloodPressure")
+
+        if (age > 50 and symptom_count > 0) or glucose > 150 or blood_pressure > 120:
+            return "High Risk"
+        return "Low Risk"
 
     def predict(self, features: Dict[str, Any]) -> RiskPredictionResponse:
         if not features:
@@ -210,15 +225,16 @@ class RiskEngine:
             row = row[list(expected_cols)]
 
         predicted_class = self._rule_based_risk_class(normalized_features)
-        confidence_breakdown = {"Low": 0.0, "Medium": 0.0, "High": 0.0}
+        confidence_breakdown = {"Low Risk": 0.0, "High Risk": 0.0}
         confidence_breakdown[predicted_class] = 1.0
         risk_probability = 1.0
+        risk_level = "high" if predicted_class == "High Risk" else "low"
 
         return RiskPredictionResponse(
             predicted_class=str(predicted_class),
             risk_probability=risk_probability,
             confidence_breakdown=confidence_breakdown,
-            risk_level=predicted_class.lower(),
+            risk_level=risk_level,
         )
 
 

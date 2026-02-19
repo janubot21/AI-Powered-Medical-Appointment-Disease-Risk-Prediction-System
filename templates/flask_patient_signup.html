@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Signup</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f3f7ff; color: #162033; }
+    .wrap { max-width: 620px; margin: 36px auto; background: #fff; border: 1px solid #d8dfef; border-radius: 12px; padding: 18px; }
+    h1 { margin-top: 0; }
+    label { display: block; margin: 10px 0 6px; font-weight: 700; }
+    input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cad5ee; }
+    button { margin-top: 14px; width: 100%; padding: 10px; border: 0; border-radius: 8px; color: #fff; background: #176b9d; font-weight: 700; }
+    .errors { margin: 10px 0; padding: 10px; border: 1px solid #f0c2c2; background: #fff0f0; border-radius: 8px; color: #921d1d; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Patient Signup</h1>
+    <p>Create a patient account first.</p>
+
+    {% if errors %}
+      <div class="errors">
+        {% for error in errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="post">
+      <label for="patient_id">Patient ID</label>
+      <input id="patient_id" name="patient_id" value="{{ form_data.patient_id }}" required />
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required />
+
+      <label for="confirm_password">Confirm Password</label>
+      <input id="confirm_password" name="confirm_password" type="password" required />
+
+      <button type="submit">Signup and Continue</button>
+    </form>
+  </main>
+</body>
+</html>

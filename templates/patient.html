@@ -338,6 +338,15 @@
   <script>
     let hasLoadedPatientFeatures = false;
 
+    function prefillPatientIdFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const patientId = (params.get("patient_id") || "").trim();
+      if (!patientId) {
+        return;
+      }
+      document.getElementById("patientId").value = patientId;
+    }
+
     async function postJson(url, payload) {
       const res = await fetch(url, {
         method: "POST",
@@ -481,6 +490,8 @@
         closeBookingPopup();
       }
     });
+
+    prefillPatientIdFromQuery();
   </script>
 </body>
 </html>

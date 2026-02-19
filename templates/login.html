@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exafluence Hospital Role Login</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --soft: #eef4ff;
+      --line: #d6deef;
+      --paper: #ffffff;
+      --primary: #0f766e;
+      --secondary: #1d4ed8;
+      --accent: #f59e0b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 10%, rgba(15, 118, 110, 0.2), transparent 36%),
+        radial-gradient(circle at 90% 15%, rgba(29, 78, 216, 0.2), transparent 32%),
+        linear-gradient(155deg, #eef4ff, #f8fbff 48%, #f5f8ff);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .shell {
+      width: min(1040px, 100%);
+      background: rgba(255, 255, 255, 0.84);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 24px 54px rgba(23, 32, 51, 0.12);
+      overflow: hidden;
+      backdrop-filter: blur(4px);
+    }
+
+    .topbar {
+      padding: 20px 24px;
+      background: linear-gradient(105deg, #0f766e, #1d4ed8);
+      color: #fff;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 2.8vw, 2rem);
+      letter-spacing: 0.02em;
+    }
+
+    .topbar p {
+      margin: 6px 0 0;
+      opacity: 0.95;
+    }
+
+    .roles {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      padding: 22px;
+    }
+
+    .role-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--paper);
+      overflow: hidden;
+    }
+
+    .cover {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .role-content {
+      padding: 12px;
+    }
+
+    .role-btn {
+      display: inline-block;
+      width: 100%;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 700;
+      color: #fff;
+      padding: 24px 14px;
+      border-radius: 14px;
+      font-size: 1.15rem;
+      letter-spacing: 0.01em;
+      transition: transform 150ms ease, filter 150ms ease;
+    }
+
+    .role-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    .patient-btn {
+      background: linear-gradient(110deg, #0f766e, #0ea5a6);
+    }
+
+    .doctor-btn {
+      background: linear-gradient(110deg, #1d4ed8, #2563eb);
+    }
+
+    .quick {
+      padding: 0 22px 20px;
+      font-size: 0.95rem;
+    }
+
+    .quick a {
+      color: #0f766e;
+      font-weight: 700;
+      text-decoration: none;
+      margin-right: 14px;
+    }
+
+    @media (max-width: 860px) {
+      .roles { grid-template-columns: 1fr; }
+      .cover { height: 200px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <h1>Exafluence Hospital</h1>
+      <p>Select login type.</p>
+    </header>
+
+    <section class="roles">
+      <article class="role-card">
+        <img
+          class="cover"
+          src="https://images.pexels.com/photos/6129688/pexels-photo-6129688.jpeg?auto=compress&cs=tinysrgb&w=1200"
+          alt="Patient support"
+        />
+        <div class="role-content">
+          <a class="role-btn patient-btn" href="/patient-auth">Patient</a>
+        </div>
+      </article>
+
+      <article class="role-card">
+        <img
+          class="cover"
+          src="https://images.pexels.com/photos/7088530/pexels-photo-7088530.jpeg?auto=compress&cs=tinysrgb&w=1200"
+          alt="Doctor reviewing records"
+        />
+        <div class="role-content">
+          <a class="role-btn doctor-btn" href="/doctor-auth">Doctor</a>
+        </div>
+      </article>
+    </section>
+
+    <div class="quick">
+      <a href="/home">Old Home</a>
+      <a href="/docs" target="_blank" rel="noreferrer">API Docs</a>
+      <a href="/health" target="_blank" rel="noreferrer">Health Check</a>
+    </div>
+  </main>
+</body>
+</html>

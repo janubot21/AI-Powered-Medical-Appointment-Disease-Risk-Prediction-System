@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Health Details Confirmation</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f3f7ff; color: #162033; }
+    .wrap { max-width: 700px; margin: 36px auto; background: #fff; border: 1px solid #d8dfef; border-radius: 12px; padding: 18px; }
+    h1 { margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    td { border-bottom: 1px solid #e3e8f5; padding: 9px 6px; }
+    td:first-child { font-weight: 700; width: 220px; }
+    .next { margin-top: 14px; }
+    a { color: #176b9d; font-weight: 700; text-decoration: none; }
+  </style>
+  <script>
+    setTimeout(function () {
+      window.location.href = "/patient/login";
+    }, 2500);
+  </script>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Health Details Saved</h1>
+    <p>Your details were saved to <code>new_patient.csv</code>. Redirecting to patient login...</p>
+
+    <table>
+      {% for key, value in row.items() %}
+        <tr>
+          <td>{{ key }}</td>
+          <td>{{ value }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+
+    <p class="next">
+      If you are not redirected, <a href="/patient/login">click here to login</a>.
+    </p>
+  </main>
+</body>
+</html>
