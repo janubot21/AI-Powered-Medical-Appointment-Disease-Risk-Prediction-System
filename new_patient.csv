@@ -2,3 +2,4 @@ Patient_ID,Age,Gender,Symptoms,Symptom_Count,Glucose,BloodPressure,BMI
 42,20,female,"fever,cold",2,202.0,125.0,12.0
 14,23,male,fever,1,231.0,169.0,13.0
 15,100,male,fever,100,123.0,120.0,89.0
+13,12,female,fever,1,231.0,123.0,13.0
