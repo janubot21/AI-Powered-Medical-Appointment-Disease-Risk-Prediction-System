@@ -210,50 +210,8 @@ class RiskEngine:
             return "High Risk"
         return "Low Risk"
 
-    def predict(self, features: Dict[str, Any]) -> RiskPredictionResponse:
-        if not features:
-            raise ValueError("patient_features cannot be empty")
-
-        normalized_features = self._normalize_features(features)
-        row = pd.DataFrame([normalized_features])
-
-        expected_cols = getattr(self.model, "feature_names_in_", None)
-        if expected_cols is not None:
-            missing = [col for col in expected_cols if col not in row.columns]
-            if missing:
-                raise ValueError(f"Missing required feature(s): {missing}")
-            row = row[list(expected_cols)]
-
-        predicted_class = self._rule_based_risk_class(normalized_features)
-        confidence_breakdown = {"Low Risk": 0.0, "High Risk": 0.0}
-        confidence_breakdown[predicted_class] = 1.0
-        risk_probability = 1.0
-        risk_level = "high" if predicted_class == "High Risk" else "low"
-
-        return RiskPredictionResponse(
-            predicted_class=str(predicted_class),
-            risk_probability=risk_probability,
-            confidence_breakdown=confidence_breakdown,
-            risk_level=risk_level,
-        )
-
-
-def to_jsonable(value: Any) -> Any:
-    if value is None:
-        return None
-    if isinstance(value, dict):
-        return {str(k): to_jsonable(v) for k, v in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [to_jsonable(v) for v in value]
-    if isinstance(value, (np.integer, np.floating)):
-        return value.item()
-    if pd.isna(value):
-        return None
-    return value
-
-
-def default_features_json(risk_engine: RiskEngine) -> str:
-    def default_value_for_feature(feature_name: str) -> Any:
+    @staticmethod
+    def _default_value_for_feature(feature_name: str) -> Any:
         numeric_defaults = {
             "Age": 45,
             "Symptom_Count": 1,
@@ -277,9 +235,99 @@ def default_features_json(risk_engine: RiskEngine) -> str:
             return 0
         return 0
 
+    def _model_based_risk(self, row: pd.DataFrame) -> tuple[str, float]:
+        # Model-first scoring; maps model output into a binary High/Low risk view.
+        prediction = self.model.predict(row)[0]
+
+        decoded_label = str(prediction)
+        if self.label_encoder is not None:
+            try:
+                decoded_label = str(self.label_encoder.inverse_transform([int(prediction)])[0])
+            except Exception:
+                decoded_label = str(prediction)
+
+        decoded_lower = decoded_label.strip().lower()
+        model_class = "High Risk" if "high" in decoded_lower else "Low Risk"
+
+        high_prob = 1.0 if model_class == "High Risk" else 0.0
+        if hasattr(self.model, "predict_proba"):
+            try:
+                probs = self.model.predict_proba(row)[0]
+                class_names: List[str]
+                if self.label_encoder is not None:
+                    class_names = [str(c).lower() for c in self.label_encoder.classes_]
+                else:
+                    model_classes = getattr(self.model, "classes_", [])
+                    class_names = [str(c).lower() for c in model_classes]
+
+                high_idx = next((i for i, c in enumerate(class_names) if "high" in c), None)
+                if high_idx is not None and 0 <= high_idx < len(probs):
+                    high_prob = float(probs[high_idx])
+                else:
+                    high_prob = 1.0 if model_class == "High Risk" else 0.0
+            except Exception:
+                high_prob = 1.0 if model_class == "High Risk" else 0.0
+
+        return model_class, float(np.clip(high_prob, 0.0, 1.0))
+
+    def predict(self, features: Dict[str, Any]) -> RiskPredictionResponse:
+        if not features:
+            raise ValueError("patient_features cannot be empty")
+
+        normalized_features = self._normalize_features(features)
+        row = pd.DataFrame([normalized_features])
+
+        expected_cols = getattr(self.model, "feature_names_in_", None)
+        if expected_cols is not None:
+            # Keep prediction robust when input JSON is partial.
+            missing = [col for col in expected_cols if col not in row.columns]
+            for col in missing:
+                row[col] = self._default_value_for_feature(str(col))
+            row = row[list(expected_cols)]
+
+        model_class, model_high_prob = self._model_based_risk(row)
+        rule_class = self._rule_based_risk_class(normalized_features)
+
+        # Hybrid decision: model-first, with rule-based high-risk override as guardrail.
+        if rule_class == "High Risk":
+            predicted_class = "High Risk"
+            risk_probability = max(model_high_prob, 0.9)
+        else:
+            predicted_class = model_class
+            risk_probability = model_high_prob
+
+        confidence_breakdown = {
+            "Low Risk": float(np.clip(1.0 - risk_probability, 0.0, 1.0)),
+            "High Risk": float(np.clip(risk_probability, 0.0, 1.0)),
+        }
+        risk_level = "high" if predicted_class == "High Risk" else "low"
+
+        return RiskPredictionResponse(
+            predicted_class=str(predicted_class),
+            risk_probability=float(risk_probability),
+            confidence_breakdown=confidence_breakdown,
+            risk_level=risk_level,
+        )
+
+
+def to_jsonable(value: Any) -> Any:
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        return {str(k): to_jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [to_jsonable(v) for v in value]
+    if isinstance(value, (np.integer, np.floating)):
+        return value.item()
+    if pd.isna(value):
+        return None
+    return value
+
+
+def default_features_json(risk_engine: RiskEngine) -> str:
     expected_cols = getattr(risk_engine.model, "feature_names_in_", None)
     if expected_cols is not None:
-        default_features = {col: default_value_for_feature(str(col)) for col in expected_cols}
+        default_features = {col: risk_engine._default_value_for_feature(str(col)) for col in expected_cols}
     else:
         default_features = {
             "Age": 45,
