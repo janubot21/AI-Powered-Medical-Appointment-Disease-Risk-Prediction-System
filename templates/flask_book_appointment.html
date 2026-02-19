@@ -221,8 +221,8 @@
       const res = await fetch(`/patient/features/${encodeURIComponent(patientId)}`);
       const data = await res.json();
       if (!res.ok) {
-        const detail = data && data.detail ? data.detail : "Patient lookup failed";
-        throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+        document.getElementById("bookFeatures").value = "Patient ID data not found";
+        throw new Error("Patient ID data not found");
       }
       document.getElementById("bookFeatures").value = JSON.stringify(data.patient_features, null, 2);
       renderOutput(data, false);
@@ -232,7 +232,10 @@
       try {
         await loadPatientFeatures();
       } catch (err) {
-        renderOutput(err.message, true);
+        const msg = (err && typeof err.message === "string" && err.message.includes("Patient_ID not found"))
+          ? "Patient ID data not found"
+          : err.message;
+        renderOutput(msg, true);
       }
     });
 
@@ -261,7 +264,13 @@
         renderOutput(data, false);
         showBookingPopup(data);
       } catch (err) {
-        renderOutput(err.message, true);
+        const msg = (err && typeof err.message === "string" && err.message.includes("Patient_ID not found"))
+          ? "Patient ID data not found"
+          : err.message;
+        if (msg === "Patient ID data not found") {
+          document.getElementById("bookFeatures").value = "Patient ID data not found";
+        }
+        renderOutput(msg, true);
       }
     });
 
