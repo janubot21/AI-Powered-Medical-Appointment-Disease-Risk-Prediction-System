@@ -1,125 +1,123 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login</title>
+  <title>EXAFLUENCE | Portal Access</title>
   <style>
     :root {
-      --bg: #f1f3f8;
-      --ink: #20283a;
-      --muted: #7a8398;
-      --line: #dde3ef;
-      --primary: #2e76b8;
-      --primary-dark: #215f99;
-      --white: #ffffff;
+      --bg-left: #e9e5e9;
+      --bg-right: #b8d4ea;
+      --card: #f4f5f6;
+      --ink: #1f2c42;
+      --muted: #4c5c78;
+      --blue: #2b70b6;
+      --blue-dark: #26639f;
+      --line: #cfd7e3;
+      --red: #dc2a30;
+      --shadow: 0 20px 45px rgba(45, 66, 96, 0.18);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
       min-height: 100vh;
-      position: relative;
       display: grid;
       place-items: center;
-      background:
-        radial-gradient(circle at 12% 12%, rgba(255, 159, 67, 0.26), transparent 38%),
-        radial-gradient(circle at 88% 18%, rgba(46, 125, 216, 0.24), transparent 40%),
-        radial-gradient(circle at 70% 88%, rgba(20, 184, 166, 0.2), transparent 42%),
-        url("/static/login-bg.svg?v=6") center center / cover no-repeat fixed;
-      background-color: #f5efe6;
-      font-family: Arial, sans-serif;
+      padding: 24px;
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      background: linear-gradient(90deg, var(--bg-left) 0%, var(--bg-right) 100%);
       color: var(--ink);
-      padding: 18px;
     }
 
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.48), rgba(255, 244, 225, 0.3));
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .card {
-      width: min(920px, 100%);
+    .frame {
+      width: min(1100px, 100%);
+      aspect-ratio: 16 / 9;
       min-height: 560px;
-      position: relative;
-      z-index: 1;
+      background: var(--card);
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
       display: grid;
       grid-template-columns: 1fr 1fr;
-      border-radius: 4px;
-      overflow: hidden;
-      background: var(--white);
-      box-shadow: 0 20px 40px rgba(28, 40, 68, 0.12);
-      border: 1px solid #e5e9f2;
     }
 
-    .left {
+    .media {
       position: relative;
       background:
-        linear-gradient(180deg, rgba(40, 84, 131, 0.32), rgba(35, 130, 173, 0.58)),
-        url("https://images.pexels.com/photos/7089401/pexels-photo-7089401.jpeg?auto=compress&cs=tinysrgb&w=1200") center/cover no-repeat;
+        linear-gradient(180deg, rgba(42, 96, 150, 0.22), rgba(74, 161, 220, 0.36)),
+        url("https://images.pexels.com/photos/7089401/pexels-photo-7089401.jpeg?auto=compress&cs=tinysrgb&w=1800") center / cover no-repeat;
       display: flex;
       align-items: flex-end;
-      padding: 26px;
-      color: #eaf6ff;
+      padding: 32px;
     }
 
-    .brand p {
-      margin: 0;
-      font-size: 0.86rem;
-      max-width: 260px;
-      line-height: 1.4;
-      opacity: 0.95;
+    .media::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(190, 226, 246, 0.18), rgba(140, 200, 233, 0.22));
+      pointer-events: none;
     }
 
-    .right {
-      padding: 58px 56px;
-      display: flex;
-      align-items: center;
+    .caption {
+      position: relative;
+      z-index: 1;
+      color: #eaf5ff;
+      max-width: 360px;
+      font-size: clamp(1rem, 1.2vw, 1.12rem);
+      line-height: 1.5;
+      text-wrap: balance;
     }
 
     .panel {
-      width: 100%;
-      max-width: 330px;
-      margin: 0 auto;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: clamp(52px, 8vw, 86px) clamp(34px, 4vw, 56px);
+      background: #f3f4f6;
     }
 
-    .logo-title {
-      margin: 0 0 14px;
-      font-size: clamp(2rem, 4vw, 2.6rem);
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
+    .content {
+      width: min(420px, 100%);
+    }
+
+    .logo {
+      margin: 0;
+      font-size: clamp(2.9rem, 4.2vw, 4rem);
       line-height: 1;
-      text-align: center;
+      letter-spacing: 0.02em;
+      font-weight: 800;
+      text-transform: uppercase;
+      font-family: "Montserrat", "Avenir Next", sans-serif;
     }
 
-    .logo-title .exa { color: #1f5eaf; }
-    .logo-title .fluence { color: #d62828; }
+    .logo .exa {
+      color: #1f5fb4;
+    }
 
-    .badge {
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.07em;
-      color: #4f5a72;
+    .logo .fluence {
+      color: var(--red);
+    }
+
+    .sub {
+      margin: 12px 0 8px;
       text-transform: uppercase;
-      margin-bottom: 8px;
+      letter-spacing: 0.09em;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 1rem;
     }
 
     h1 {
-      margin: 0;
-      font-size: 1.6rem;
-      letter-spacing: 0.01em;
-    }
-
-    .hint {
-      margin: 8px 0 20px;
-      color: var(--muted);
-      font-size: 0.9rem;
+      margin: 0 0 16px;
+      font-size: clamp(2.3rem, 3vw, 3rem);
+      line-height: 1.05;
+      font-weight: 700;
+      color: #1f2a3f;
     }
 
     .btn {
@@ -127,80 +125,73 @@
       width: 100%;
       text-align: center;
       text-decoration: none;
-      padding: 11px 14px;
       border-radius: 999px;
-      font-size: 0.93rem;
+      padding: 13px 18px;
       font-weight: 700;
-      transition: 160ms ease;
+      transition: filter 140ms ease, transform 140ms ease;
+      font-size: 1.08rem;
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+    }
+
+    .btn + .btn {
+      margin-top: 14px;
     }
 
     .btn-primary {
-      background: linear-gradient(180deg, var(--primary), var(--primary-dark));
       color: #fff;
-      border: 1px solid #2b699f;
-      margin-bottom: 10px;
+      background: linear-gradient(180deg, #357fc4, var(--blue-dark));
+      border: 1px solid #2b6ca8;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
     }
 
-    .btn-primary:hover { filter: brightness(1.04); }
-
-    .btn-outline {
-      background: #fff;
-      color: #2f3a4f;
-      border: 1px solid var(--line);
-      margin-bottom: 16px;
+    .btn-secondary {
+      color: #2c394f;
+      background: #f1f2f4;
+      border: 1px solid #c8d1de;
     }
 
-    .btn-outline:hover { background: #f8fbff; }
-
-    .links {
-      display: grid;
-      gap: 8px;
-      font-size: 0.86rem;
-      color: var(--muted);
-      text-align: center;
+    .btn:hover {
+      filter: brightness(1.03);
+      transform: translateY(-1px);
     }
 
-    .links a {
-      color: #2a6ba8;
-      text-decoration: none;
-      font-weight: 700;
-    }
+    @media (max-width: 980px) {
+      body {
+        padding: 0;
+      }
 
-    @media (max-width: 820px) {
-      .card { grid-template-columns: 1fr; }
-      .left { min-height: 260px; }
-      .right { padding: 30px 24px; }
+      .frame {
+        min-height: 100vh;
+        aspect-ratio: auto;
+        border-radius: 0;
+        grid-template-columns: 1fr;
+      }
+
+      .media {
+        min-height: 340px;
+      }
+
+      .panel {
+        padding-top: 32px;
+      }
     }
-                          /* Shared app background theme */
-    body {
-      background: linear-gradient(160deg, #FFE3E1 0%, #9CD5FF 100%) !important;
-      background-color: #FFE3E1 !important;
-    }</style>
+  </style>
 </head>
 <body>
-  <main class="card">
-    <section class="left">
-      <div class="brand">
-        <p>Empowering Healthcare, One Click at a Time: Your Health, Your Records, Your Control.</p>
-      </div>
+  <main class="frame">
+    <section class="media">
+      <p class="caption">Empowering Healthcare, One Click at a Time: Your Health, Your Records, Your Control.</p>
     </section>
 
-    <section class="right">
-      <div class="panel">
-        <div class="logo-title"><span class="exa">EXA</span><span class="fluence">FLUENCE</span></div>
-        <div class="badge">Portal Access</div>
+    <section class="panel">
+      <div class="content">
+        <p class="logo"><span class="exa">EXA</span><span class="fluence">FLUENCE</span></p>
+        <p class="sub">PORTAL ACCESS</p>
         <h1>Login</h1>
         <a class="btn btn-primary" href="/patient/login">Patient</a>
-        <a class="btn btn-outline" href="/doctor/login">Doctor</a>
+        <a class="btn btn-secondary" href="/doctor/login">Doctor</a>
       </div>
     </section>
   </main>
 </body>
 </html>
-
-
-
-
-
-
-
