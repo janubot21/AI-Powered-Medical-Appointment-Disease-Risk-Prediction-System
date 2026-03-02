@@ -333,6 +333,37 @@
       border-radius: 12px;
     }
 
+    .db-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .db-search {
+      min-width: 260px;
+      flex: 1;
+      border: 1px solid #cbdcf3;
+      border-radius: 10px;
+      background: #f8fbff;
+      color: #1f3f67;
+      font-family: inherit;
+      font-size: 0.85rem;
+      padding: 8px 10px;
+    }
+
+    .db-meta {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #3c618f;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid #cee0f8;
+      background: #edf5ff;
+    }
+
     tr.clickable {
       cursor: pointer;
     }
@@ -573,6 +604,37 @@
       </section>
 
       <section class="panel" style="margin-top:12px;">
+        <h2>Patient Database</h2>
+        <div class="db-toolbar">
+          <input id="dbSearch" class="db-search" type="search" placeholder="Search by Patient ID, Name, Symptoms, Gender..." />
+          <span id="dbCount" class="db-meta">0 records</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Patient ID</th>
+                <th>Patient Name</th>
+                <th>Age</th>
+                <th>Gender</th>
+                <th>Symptoms</th>
+                <th>Glucose</th>
+                <th>BP (Sys/Dia)</th>
+                <th>BMI</th>
+                <th>Smoking</th>
+                <th>Alcohol</th>
+                <th>Family History</th>
+                <th>Updated</th>
+              </tr>
+            </thead>
+            <tbody id="patientDbRows">
+              <tr><td colspan="12">No patient data found.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" style="margin-top:12px;">
         <h2>AI Risk Analytics</h2>
         <div class="risk-layout">
           <div>
@@ -619,6 +681,7 @@
 
   <script>
     let cachedAppointments = [];
+    let cachedPatientDbRows = [];
     let selectedAppointmentKey = null;
     let selectedPatientFeatures = null;
 
@@ -731,6 +794,12 @@
     function setText(id, value) {
       const el = document.getElementById(id);
       if (el) el.textContent = safeText(value);
+    }
+
+    function fmtNumber(value, decimals = 1) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "-";
+      return n.toFixed(decimals).replace(/\\.0+$/, "");
     }
 
     function updateOverview(appointments) {
@@ -987,6 +1056,60 @@
       selectAppointment(selectedIndex);
     }
 
+    function patientDbSearchText(item) {
+      return [
+        safeText(item.patient_id),
+        safeText(item.patient_name),
+        safeText(item.gender),
+        safeText(item.symptoms),
+        safeText(item.medical_history),
+        safeText(item.family_history)
+      ].join(" ").toLowerCase();
+    }
+
+    function renderPatientDatabaseTable(rows, searchText) {
+      const tbody = document.getElementById("patientDbRows");
+      const query = safeText(searchText).trim().toLowerCase();
+      const filtered = !query ? rows : rows.filter((item) => patientDbSearchText(item).includes(query));
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="12">No patient data found.</td></tr>';
+      } else {
+        tbody.innerHTML = filtered.map((item) => {
+          const bpSys = fmtNumber(item.blood_pressure_systolic, 0);
+          const bpDia = fmtNumber(item.blood_pressure_diastolic, 0);
+          const bpText = bpSys === "-" && bpDia === "-" ? "-" : `${bpSys}/${bpDia === "-" ? "--" : bpDia}`;
+          const updated = parseDate(item.updated_at);
+          const updatedText = updated ? updated.toLocaleString() : safeText(item.updated_at || "-");
+          return `
+            <tr>
+              <td>${safeText(item.patient_id)}</td>
+              <td>${safeText(item.patient_name || "-")}</td>
+              <td>${fmtNumber(item.age, 0)}</td>
+              <td>${safeText(item.gender || "-")}</td>
+              <td>${safeText(item.symptoms || "-")}</td>
+              <td>${fmtNumber(item.glucose, 1)}</td>
+              <td>${bpText}</td>
+              <td>${fmtNumber(item.calculated_bmi, 1)}</td>
+              <td>${safeText(item.smoking_habit || "-")}</td>
+              <td>${safeText(item.alcohol_habit || "-")}</td>
+              <td>${safeText(item.family_history || "-")}</td>
+              <td>${updatedText}</td>
+            </tr>
+          `;
+        }).join("");
+      }
+      setText("dbCount", `${filtered.length} records`);
+    }
+
+    async function refreshPatientDatabase() {
+      const res = await fetch("/doctor/patient-database");
+      const data = await res.json();
+      cachedPatientDbRows = Array.isArray(data.patients) ? data.patients : [];
+      const q = document.getElementById("dbSearch").value;
+      renderPatientDatabaseTable(cachedPatientDbRows, q);
+    }
+
     async function refreshDashboard() {
       const res = await fetch("/doctor/appointments");
       const data = await res.json();
@@ -998,7 +1121,12 @@
       updateInsights(appointments);
       updatePriorityAlerts(appointments);
       renderAppointmentsTable(appointments);
+      await refreshPatientDatabase();
     }
+
+    document.getElementById("dbSearch").addEventListener("input", (event) => {
+      renderPatientDatabaseTable(cachedPatientDbRows, event.target.value);
+    });
 
     document.getElementById("predictBtn").addEventListener("click", async () => {
       try {

@@ -11,7 +11,8 @@ import pandas as pd
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 
 from doctor_auth import DoctorAuthManager
-from paths import DOCTOR_ACCOUNTS_CSV, NEW_PATIENT_CSV, PATIENTS_CSV, ensure_csv_exists
+from paths import DOCTOR_ACCOUNTS_CSV, NEW_PATIENT_CSV, PATIENTS_CSV, PATIENT_DB_PATH, ensure_csv_exists
+from patient_db import PatientDatabase
 from predict import LABEL_ENCODER_PATH, MODEL_PATH, RiskEngine, to_jsonable
 
 
@@ -28,6 +29,7 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "change-this-secret-key")
 
 doctor_auth_manager = DoctorAuthManager()
 risk_engine = RiskEngine(MODEL_PATH, LABEL_ENCODER_PATH)
+patient_db = PatientDatabase(PATIENT_DB_PATH)
 APPOINTMENTS: list[Dict[str, Any]] = []
 
 
@@ -114,6 +116,8 @@ def append_to_new_patient_csv(row: Dict[str, Any], csv_path: Path = NEW_PATIENT_
     existing_df = pd.read_csv(csv_path)
     updated_df = pd.concat([existing_df, new_row_df], ignore_index=True)
     updated_df.to_csv(csv_path, index=False)
+    patient_name = _get_patient_name_by_id(str(row.get("Patient_ID", "")).strip())
+    _save_patient_profile_to_db(row, patient_name)
 
 
 def _gender_to_csv_value(value: Any) -> str:
@@ -163,6 +167,52 @@ def _extract_systolic_bp(value: Any) -> Optional[float]:
     return _to_float_or_none(parts[0])
 
 
+def _extract_diastolic_bp(value: Any) -> Optional[float]:
+    text = str(value).strip()
+    if not text:
+        return None
+    parts = re.split(r"[/\s]+", text)
+    if len(parts) < 2:
+        return None
+    return _to_float_or_none(parts[1])
+
+
+def _safe_db_text(value: Any) -> str:
+    if value is None:
+        return ""
+    text = str(value).strip()
+    if text.lower() in {"nan", "none"}:
+        return ""
+    return text
+
+
+def _save_patient_profile_to_db(row: Dict[str, Any], patient_name: str = "") -> None:
+    patient_id = _safe_db_text(row.get("Patient_ID"))
+    if not patient_id:
+        return
+    bmi = _to_float_or_none(row.get("BMI"))
+    payload = {
+        "patient_id": patient_id,
+        "patient_name": _safe_db_text(patient_name),
+        "age": _to_float_or_none(row.get("Age")),
+        "gender": _safe_db_text(row.get("Gender")),
+        "symptoms": _safe_db_text(row.get("Symptoms")),
+        "symptom_count": _to_float_or_none(row.get("Symptom_Count")),
+        "glucose": _to_float_or_none(row.get("Glucose")),
+        "height_cm": _to_float_or_none(row.get("Height_cm")),
+        "weight_kg": _to_float_or_none(row.get("Weight_kg")),
+        "weight_category": _safe_db_text(row.get("BMI_Category")) or patient_db.weight_category_from_bmi(bmi),
+        "calculated_bmi": bmi,
+        "blood_pressure_systolic": _extract_systolic_bp(row.get("BloodPressure")),
+        "blood_pressure_diastolic": _extract_diastolic_bp(row.get("BloodPressure")),
+        "smoking_habit": _safe_db_text(row.get("Smoking_Habit")),
+        "alcohol_habit": _safe_db_text(row.get("Alcohol_Habit")),
+        "family_history": _safe_db_text(row.get("Family_History")),
+        "medical_history": _safe_db_text(row.get("Medical_History")),
+    }
+    patient_db.upsert_profile(payload)
+
+
 def _build_csv_row_from_features(patient_id: str, patient_features: Dict[str, Any]) -> Dict[str, Any]:
     symptom_count = patient_features.get("Symptom_Count", patient_features.get("Sympton_Count"))
     normalized_pid = _normalize_patient_id(patient_id)
@@ -179,6 +229,9 @@ def _build_csv_row_from_features(patient_id: str, patient_features: Dict[str, An
         "Glucose": _to_float_or_none(patient_features.get("Glucose")),
         "BloodPressure": _extract_systolic_bp(patient_features.get("BloodPressure")),
         "BMI": _to_float_or_none(patient_features.get("BMI")),
+        "Height_cm": _to_float_or_none(patient_features.get("Height_cm")),
+        "Weight_kg": _to_float_or_none(patient_features.get("Weight_kg")),
+        "BMI_Category": str(patient_features.get("BMI_Category", "")).strip(),
         "Smoking_Habit": _yes_no_to_csv_value(patient_features.get("Smoking_Habit")),
         "Alcohol_Habit": _yes_no_to_csv_value(patient_features.get("Alcohol_Habit")),
         "Medical_History": str(patient_features.get("Medical_History", "")).strip(),
@@ -199,6 +252,9 @@ def upsert_new_patient_csv_from_features(
         "Glucose",
         "BloodPressure",
         "BMI",
+        "Height_cm",
+        "Weight_kg",
+        "BMI_Category",
         "Smoking_Habit",
         "Alcohol_Habit",
         "Medical_History",
@@ -237,6 +293,7 @@ def upsert_new_patient_csv_from_features(
         df = pd.concat([df, pd.DataFrame([{col: row.get(col) for col in columns}])], ignore_index=True)
 
     df.to_csv(csv_path, index=False)
+    _save_patient_profile_to_db(row, _get_patient_name_by_id(patient_id))
 
 
 def _load_patients_df() -> pd.DataFrame:
@@ -386,6 +443,31 @@ def _normalize_patient_id(value: Any) -> str:
         return str(int(float(text)))
     except ValueError:
         return text
+
+
+def _bootstrap_patient_db_from_csv() -> None:
+    try:
+        ensure_csv_exists(NEW_PATIENT_CSV)
+        records_df = pd.read_csv(NEW_PATIENT_CSV)
+    except Exception:
+        return
+
+    name_lookup: Dict[str, str] = {}
+    try:
+        patients_df = _load_patients_df()
+        for _, rec in patients_df.iterrows():
+            pid = _normalize_patient_id(rec.get("patient_id"))
+            name_lookup[pid] = str(rec.get("name", "")).strip()
+    except Exception:
+        name_lookup = {}
+
+    for _, rec in records_df.iterrows():
+        row = rec.to_dict()
+        pid = _normalize_patient_id(row.get("Patient_ID"))
+        _save_patient_profile_to_db(row, name_lookup.get(pid, ""))
+
+
+_bootstrap_patient_db_from_csv()
 
 
 def _default_feature_value(feature_name: str) -> Any:
@@ -1060,6 +1142,14 @@ def doctor_appointments() -> Any:
         return jsonify({"detail": "Unauthorized"}), 401
     appointments = sorted(APPOINTMENTS, key=_doctor_appointment_sort_key)
     return jsonify({"appointments": appointments})
+
+
+@app.get("/doctor/patient-database")
+def doctor_patient_database() -> Any:
+    doctor_id = session.get("doctor_id")
+    if not doctor_id:
+        return jsonify({"detail": "Unauthorized"}), 401
+    return jsonify({"patients": patient_db.list_profiles()})
 
 
 @app.post("/patient/predict-risk")
