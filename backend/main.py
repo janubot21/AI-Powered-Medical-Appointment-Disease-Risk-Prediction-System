@@ -145,6 +145,11 @@ def health() -> Dict[str, str]:
     return {"status": "ok", "service": "risk_prediction_engine"}
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon() -> RedirectResponse:
+    return RedirectResponse(url="/static/favicon.svg", status_code=307)
+
+
 @app.post("/predict-risk", response_model=RiskPredictionResponse)
 def predict_risk(payload: RiskPredictionRequest) -> RiskPredictionResponse:
     try:

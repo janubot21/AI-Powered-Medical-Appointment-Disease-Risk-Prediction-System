@@ -41,6 +41,37 @@ def _parse_appointment_time(value: Any) -> Optional[datetime]:
         return None
 
 
+def _normalize_risk_label(value: Any) -> str:
+    text = str(value or "").strip().lower()
+    if "high" in text:
+        return "High Risk"
+    if "medium" in text:
+        return "Medium Risk"
+    return "Low Risk"
+
+
+def _risk_rank(value: Any) -> int:
+    label = _normalize_risk_label(value)
+    if label == "High Risk":
+        return 0
+    if label == "Medium Risk":
+        return 1
+    return 2
+
+
+def _doctor_appointment_sort_key(item: Dict[str, Any]) -> tuple[int, datetime, float]:
+    risk_raw = (item.get("risk_assessment") or {}).get("predicted_class")
+    rank = _risk_rank(risk_raw)
+    at = _parse_appointment_time(item.get("appointment_time")) or datetime.max
+    booked_at = str(item.get("booked_at", "")).strip()
+    try:
+        booked_ts = datetime.fromisoformat(booked_at.replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        booked_ts = 0.0
+    # Risk priority first; then earliest appointment time; then latest booked record.
+    return (rank, at, -booked_ts)
+
+
 def _format_date_label(dt: Optional[datetime]) -> str:
     if dt is None:
         return "--"
@@ -1027,7 +1058,8 @@ def doctor_appointments() -> Any:
     doctor_id = session.get("doctor_id")
     if not doctor_id:
         return jsonify({"detail": "Unauthorized"}), 401
-    return jsonify({"appointments": APPOINTMENTS})
+    appointments = sorted(APPOINTMENTS, key=_doctor_appointment_sort_key)
+    return jsonify({"appointments": appointments})
 
 
 @app.post("/patient/predict-risk")

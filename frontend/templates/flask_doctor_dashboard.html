@@ -632,6 +632,13 @@
       return "Low Risk";
     }
 
+    function riskRank(level) {
+      const risk = normalizeRisk(level);
+      if (risk === "High Risk") return 0;
+      if (risk === "Medium Risk") return 1;
+      return 2;
+    }
+
     function riskClass(level) {
       const risk = normalizeRisk(level).toLowerCase();
       if (risk.includes("high")) return "high";
@@ -902,9 +909,17 @@
       }
 
       const sorted = [...appointments].sort((a, b) => {
+        const ar = riskRank(a.risk_assessment && a.risk_assessment.predicted_class);
+        const br = riskRank(b.risk_assessment && b.risk_assessment.predicted_class);
+        if (ar !== br) return ar - br;
+
         const ad = parseDate(a.appointment_time)?.getTime() || Number.MAX_SAFE_INTEGER;
         const bd = parseDate(b.appointment_time)?.getTime() || Number.MAX_SAFE_INTEGER;
-        return ad - bd;
+        if (ad !== bd) return ad - bd;
+
+        const ab = parseDate(a.booked_at)?.getTime() || 0;
+        const bb = parseDate(b.booked_at)?.getTime() || 0;
+        return bb - ab;
       });
 
       cachedAppointments = sorted;
