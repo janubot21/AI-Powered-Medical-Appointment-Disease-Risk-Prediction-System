@@ -202,10 +202,25 @@
     .pie {
       width: 150px;
       height: 150px;
+      display: grid;
+      place-items: center;
+      position: relative;
       border-radius: 50%;
       border: 1px solid #c8d8ef;
       background: conic-gradient(#22c55e 0deg 360deg);
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+    }
+
+    .pie-note {
+      font-size: 0.72rem;
+      color: #56779e;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid #d0dff4;
+      border-radius: 999px;
+      padding: 3px 8px;
     }
 
     .legend {
@@ -748,10 +763,11 @@
     }
 
     function updateRiskCharts(counts, total) {
-      const safeTotal = total > 0 ? total : 1;
-      const pHigh = Math.round((counts.high / safeTotal) * 100);
-      const pMed = Math.round((counts.medium / safeTotal) * 100);
-      const pLow = Math.max(0, 100 - pHigh - pMed);
+      const hasData = total > 0;
+      const safeTotal = hasData ? total : 1;
+      const pHigh = hasData ? Math.round((counts.high / safeTotal) * 100) : 0;
+      const pMed = hasData ? Math.round((counts.medium / safeTotal) * 100) : 0;
+      const pLow = hasData ? Math.max(0, 100 - pHigh - pMed) : 0;
 
       document.getElementById("barHigh").style.width = `${pHigh}%`;
       document.getElementById("barMedium").style.width = `${pMed}%`;
@@ -760,10 +776,17 @@
       setText("pctMedium", `${pMed}%`);
       setText("pctLow", `${pLow}%`);
 
+      const pie = document.getElementById("riskPie");
+      if (!hasData) {
+        pie.style.background = "conic-gradient(#d7e4f4 0deg 360deg)";
+        pie.innerHTML = '<span class="pie-note">No Data</span>';
+        return;
+      }
+
       const d1 = Math.round((counts.high / safeTotal) * 360);
       const d2 = Math.round((counts.medium / safeTotal) * 360);
-      const pie = document.getElementById("riskPie");
       pie.style.background = `conic-gradient(#ef4444 0deg ${d1}deg, #f59e0b ${d1}deg ${d1 + d2}deg, #22c55e ${d1 + d2}deg 360deg)`;
+      pie.innerHTML = "";
     }
 
     function updateTrend(appointments) {
@@ -790,6 +813,7 @@
       const meds = days.map((d) => map[d].medium);
       const lows = days.map((d) => map[d].low);
       const maxY = Math.max(1, ...highs, ...meds, ...lows);
+      const hasData = appointments.length > 0;
 
       function linePath(values) {
         return values.map((v, i) => {
@@ -800,17 +824,26 @@
       }
 
       const svg = document.getElementById("trendSvg");
-      svg.innerHTML = [
-        `<path d="${linePath(highs)}" fill="none" stroke="#ef4444" stroke-width="3" />`,
-        `<path d="${linePath(meds)}" fill="none" stroke="#f59e0b" stroke-width="3" />`,
-        `<path d="${linePath(lows)}" fill="none" stroke="#22c55e" stroke-width="3" />`
-      ].join("");
+      if (!hasData) {
+        svg.innerHTML = [
+          '<line x1="0" y1="112" x2="700" y2="112" stroke="#c7d8ef" stroke-width="2" stroke-dasharray="5 5" />',
+          '<text x="350" y="58" text-anchor="middle" fill="#6a86ab" font-size="14" font-weight="700">No trend data available</text>'
+        ].join("");
+      } else {
+        svg.innerHTML = [
+          `<path d="${linePath(highs)}" fill="none" stroke="#ef4444" stroke-width="3" />`,
+          `<path d="${linePath(meds)}" fill="none" stroke="#f59e0b" stroke-width="3" />`,
+          `<path d="${linePath(lows)}" fill="none" stroke="#22c55e" stroke-width="3" />`
+        ].join("");
+      }
 
       const labels = document.getElementById("trendLabels");
-      labels.innerHTML = days.map((d) => {
-        const parts = d.split("-");
-        return `<span>${parts[1]}/${parts[2]}</span>`;
-      }).join("");
+      labels.innerHTML = hasData
+        ? days.map((d) => {
+            const parts = d.split("-");
+            return `<span>${parts[1]}/${parts[2]}</span>`;
+          }).join("")
+        : "";
     }
 
     function updateInsights(appointments) {
