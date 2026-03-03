@@ -29,18 +29,113 @@
 
     body {
       margin: 0;
+      position: relative;
+      min-height: 100vh;
+      overflow-x: hidden;
       font-family: "IBM Plex Mono", Consolas, monospace;
       color: var(--ink);
       background:
         radial-gradient(1200px 500px at -10% -15%, #b8d7ff 0%, rgba(184, 215, 255, 0) 66%),
         radial-gradient(1000px 520px at 105% 0%, #b4ece5 0%, rgba(180, 236, 229, 0) 66%),
         linear-gradient(170deg, var(--bg-0) 0%, var(--bg-1) 100%);
+      background-size: 130% 130%;
+      animation: bgShift 18s ease-in-out infinite alternate;
+    }
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: -8%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      background:
+        radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.34) 0 4px, transparent 5px),
+        radial-gradient(circle at 72% 30%, rgba(255, 255, 255, 0.26) 0 3px, transparent 4px),
+        radial-gradient(circle at 52% 72%, rgba(255, 255, 255, 0.2) 0 2px, transparent 3px),
+        radial-gradient(circle at 10% 80%, rgba(255, 255, 255, 0.24) 0 3px, transparent 4px),
+        radial-gradient(circle at 84% 78%, rgba(255, 255, 255, 0.2) 0 2px, transparent 3px);
+      opacity: 0.8;
+      animation: floatSpark 16s linear infinite;
+    }
+    body::after {
+      background:
+        radial-gradient(42% 36% at 16% 12%, rgba(255, 221, 240, 0.24), transparent 75%),
+        radial-gradient(45% 35% at 85% 18%, rgba(190, 230, 255, 0.2), transparent 76%),
+        radial-gradient(45% 42% at 53% 90%, rgba(188, 239, 222, 0.18), transparent 75%);
+      animation: floatSpark 24s ease-in-out infinite reverse;
+    }
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    @keyframes softPulse {
+      0%, 100% {
+        box-shadow: inset 3px 0 0 rgba(194, 39, 66, 0.18);
+      }
+      50% {
+        box-shadow: inset 3px 0 0 rgba(194, 39, 66, 0.36);
+      }
+    }
+    @keyframes badgePulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(36, 87, 142, 0.18);
+      }
+      50% {
+        transform: scale(1.06);
+        box-shadow: 0 0 0 7px rgba(36, 87, 142, 0.06);
+      }
+    }
+    @keyframes iconFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+    @keyframes countPop {
+      0% { transform: scale(1); }
+      45% { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+    @keyframes bgShift {
+      0% {
+        background-position: 0% 0%, 100% 0%, 0% 0%;
+      }
+      100% {
+        background-position: 8% -5%, 92% 6%, 100% 100%;
+      }
+    }
+    @keyframes floatSpark {
+      0% {
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+      50% {
+        transform: translate3d(-12px, -16px, 0) scale(1.02);
+      }
+      100% {
+        transform: translate3d(10px, -28px, 0) scale(1);
+      }
+    }
+    @keyframes sheenSweep {
+      0% { transform: translateX(-120%); }
+      70%, 100% { transform: translateX(140%); }
+    }
+    @keyframes drawLine {
+      to { stroke-dashoffset: 0; }
     }
 
     .shell {
       max-width: 1280px;
       margin: 0 auto;
       padding: 24px 16px 30px;
+      position: relative;
+      z-index: 1;
     }
 
     .frame {
@@ -50,6 +145,18 @@
       border-radius: 20px;
       padding: 18px;
       box-shadow: 0 20px 48px rgba(18, 45, 84, 0.12);
+      overflow: hidden;
+    }
+    .frame::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: -45%;
+      width: 38%;
+      background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+      animation: sheenSweep 8s ease-in-out infinite;
+      pointer-events: none;
     }
 
     .topbar {
@@ -91,6 +198,12 @@
       border-radius: 999px;
       border: 1px solid rgba(135, 167, 208, 0.56);
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(237, 245, 255, 0.96));
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .links a:hover {
+      transform: translateY(-1px);
+      border-color: #8eb2df;
+      box-shadow: 0 8px 18px rgba(26, 67, 112, 0.16);
     }
     .corner-badge {
       width: 30px;
@@ -106,6 +219,7 @@
       top: 14px;
       right: 14px;
       z-index: 3;
+      animation: badgePulse 2.2s ease-in-out infinite;
     }
     .corner-badge::after {
       content: "1";
@@ -136,6 +250,14 @@
       border-radius: 14px;
       padding: 12px;
       box-shadow: 0 6px 16px rgba(14, 41, 80, 0.08);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+    }
+    .kpi:hover {
+      transform: translateY(-3px);
+      border-color: #9cbbe0;
+      box-shadow: 0 12px 26px rgba(15, 54, 99, 0.16);
     }
 
     .kpi .k {
@@ -151,6 +273,10 @@
       font-weight: 700;
       color: #0f2b4e;
       line-height: 1.2;
+      transform-origin: left center;
+    }
+    .kpi .v.count-bump {
+      animation: countPop 0.32s ease;
     }
     .kpi .v-row {
       display: flex;
@@ -169,7 +295,13 @@
       border: 1px solid #d2e2f7;
       background: #eaf2ff;
       color: #2a5f9d;
+      animation: iconFloat 2.8s ease-in-out infinite;
     }
+    .grid-cards .kpi:nth-child(2) .icon-badge { animation-delay: 0.12s; }
+    .grid-cards .kpi:nth-child(3) .icon-badge { animation-delay: 0.24s; }
+    .grid-cards .kpi:nth-child(4) .icon-badge { animation-delay: 0.36s; }
+    .grid-cards .kpi:nth-child(5) .icon-badge { animation-delay: 0.48s; }
+    .grid-cards .kpi:nth-child(6) .icon-badge { animation-delay: 0.60s; }
     .kpi .icon-badge svg {
       width: 16px;
       height: 16px;
@@ -209,6 +341,14 @@
       border-radius: 14px;
       padding: 12px;
       box-shadow: 0 6px 16px rgba(14, 41, 80, 0.08);
+      opacity: 0;
+      transform: translateY(14px);
+      transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+    }
+    .panel:hover {
+      transform: translateY(-2px);
+      border-color: #9bbce2;
+      box-shadow: 0 14px 28px rgba(11, 54, 100, 0.14);
     }
 
     .panel h2 {
@@ -251,6 +391,7 @@
     .bar-fill {
       height: 100%;
       width: 0%;
+      transition: width 0.55s cubic-bezier(0.2, 0.9, 0.2, 1);
     }
 
     .fill-high { background: #ef4444; }
@@ -332,6 +473,18 @@
       height: 120px;
       display: block;
     }
+    .trend-line {
+      fill: none;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 800;
+      stroke-dashoffset: 800;
+      animation: drawLine 1s ease-out forwards;
+    }
+    .trend-line.high { stroke: #ef4444; }
+    .trend-line.medium { stroke: #f59e0b; animation-delay: 0.1s; }
+    .trend-line.low { stroke: #22c55e; animation-delay: 0.2s; }
 
     .trend-labels {
       display: grid;
@@ -482,6 +635,51 @@
 
     tr.high-row {
       background: #fff4f5;
+      animation: softPulse 2.5s ease-in-out infinite;
+    }
+    tr.row-enter {
+      animation: fadeUp 0.35s ease-out both;
+    }
+    tr.clickable {
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+    tr.clickable:hover {
+      transform: translateX(2px);
+    }
+    body.dashboard-ready .kpi,
+    body.dashboard-ready .panel {
+      animation: fadeUp 0.5s ease-out both;
+    }
+    body.dashboard-ready .grid-cards .kpi:nth-child(1) { animation-delay: 0.04s; }
+    body.dashboard-ready .grid-cards .kpi:nth-child(2) { animation-delay: 0.08s; }
+    body.dashboard-ready .grid-cards .kpi:nth-child(3) { animation-delay: 0.12s; }
+    body.dashboard-ready .grid-cards .kpi:nth-child(4) { animation-delay: 0.16s; }
+    body.dashboard-ready .grid-cards .kpi:nth-child(5) { animation-delay: 0.20s; }
+    body.dashboard-ready .grid-cards .kpi:nth-child(6) { animation-delay: 0.24s; }
+    body.dashboard-ready .main-grid .panel:nth-child(1) { animation-delay: 0.28s; }
+    body.dashboard-ready .main-grid .panel:nth-child(2) { animation-delay: 0.34s; }
+    body.dashboard-ready .frame > .panel:nth-of-type(1) { animation-delay: 0.38s; }
+    body.dashboard-ready .frame > .panel:nth-of-type(2) { animation-delay: 0.42s; }
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      .kpi,
+      .panel {
+        opacity: 1;
+        transform: none;
+      }
+      body {
+        animation: none;
+      }
+      body::before,
+      body::after,
+      .frame::before {
+        animation: none;
+      }
     }
 
     .pill {
@@ -589,6 +787,12 @@
       background: linear-gradient(120deg, var(--brand-a), var(--brand-b));
       cursor: pointer;
       box-shadow: 0 10px 18px rgba(11, 67, 116, 0.2);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 24px rgba(11, 67, 116, 0.28);
+      filter: brightness(1.03);
     }
 
     .output {
@@ -628,8 +832,11 @@
     }
                           /* Shared app background theme */
     body {
-      background: linear-gradient(160deg, #FFE3E1 0%, #9CD5FF 100%) !important;
-      background-color: #FFE3E1 !important;
+      background:
+        radial-gradient(1200px 500px at -10% -15%, rgba(243, 204, 222, 0.62) 0%, rgba(184, 215, 255, 0) 66%),
+        radial-gradient(1000px 520px at 105% 0%, rgba(169, 223, 255, 0.5) 0%, rgba(180, 236, 229, 0) 66%),
+        linear-gradient(160deg, #ffe3e1 0%, #9cd5ff 100%) !important;
+      background-color: #ffe3e1 !important;
     }</style>
 </head>
 <body>
@@ -856,6 +1063,7 @@
     let selectedAppointmentKey = null;
     let selectedPatientFeatures = null;
     let activeMonthKey = "";
+    const animatedAppointmentKeys = new Set();
 
     async function postJson(url, payload) {
       const res = await fetch(url, {
@@ -1028,7 +1236,15 @@
 
     function setText(id, value) {
       const el = document.getElementById(id);
-      if (el) el.textContent = safeText(value);
+      if (!el) return;
+      const nextValue = safeText(value);
+      if (el.textContent === nextValue) return;
+      el.textContent = nextValue;
+      if (el.classList.contains("v")) {
+        el.classList.remove("count-bump");
+        void el.offsetWidth;
+        el.classList.add("count-bump");
+      }
     }
 
     function fmtNumber(value, decimals = 1) {
@@ -1135,9 +1351,9 @@
         ].join("");
       } else {
         svg.innerHTML = [
-          `<path d="${linePath(highs)}" fill="none" stroke="#ef4444" stroke-width="3" />`,
-          `<path d="${linePath(meds)}" fill="none" stroke="#f59e0b" stroke-width="3" />`,
-          `<path d="${linePath(lows)}" fill="none" stroke="#22c55e" stroke-width="3" />`
+          `<path class="trend-line high" d="${linePath(highs)}" />`,
+          `<path class="trend-line medium" d="${linePath(meds)}" />`,
+          `<path class="trend-line low" d="${linePath(lows)}" />`
         ].join("");
       }
 
@@ -1266,12 +1482,15 @@
 
       rows.innerHTML = sorted.map((item, idx) => {
         const risk = normalizeRisk(item.risk_assessment && item.risk_assessment.predicted_class);
-        const rowClass = risk === "High Risk" ? "clickable high-row" : "clickable";
+        const key = appointmentKey(item);
+        const shouldAnimate = !animatedAppointmentKeys.has(key);
+        if (shouldAnimate) animatedAppointmentKeys.add(key);
+        const rowClass = `${risk === "High Risk" ? "clickable high-row" : "clickable"}${shouldAnimate ? " row-enter" : ""}`;
         const status = appointmentStatus(item);
         const priority = risk === "High Risk" ? "Immediate" : (risk === "Medium Risk" ? "Review" : "Routine");
         const priorityPillClass = riskClass(risk);
         return `
-          <tr class="${rowClass}" data-index="${idx}">
+          <tr class="${rowClass}" data-index="${idx}" style="${shouldAnimate ? `animation-delay:${Math.min(idx * 60, 360)}ms;` : ""}">
             <td>${safeText(item.patient_id)}</td>
             <td>${safeText(item.patient_name)}</td>
             <td>${fmtDateTime(item.appointment_time)}</td>
@@ -1393,6 +1612,11 @@
     });
 
     populateDateFilterOptions();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.body.classList.add("dashboard-ready");
+      });
+    });
     refreshDashboard();
     setInterval(refreshDashboard, 5000);
   </script>
