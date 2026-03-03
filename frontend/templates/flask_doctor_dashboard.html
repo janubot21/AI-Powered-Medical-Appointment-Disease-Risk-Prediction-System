@@ -44,6 +44,7 @@
     }
 
     .frame {
+      position: relative;
       background: linear-gradient(160deg, rgba(255, 255, 255, 0.97) 0%, rgba(242, 248, 255, 0.96) 100%);
       border: 1px solid rgba(151, 176, 210, 0.45);
       border-radius: 20px;
@@ -91,6 +92,37 @@
       border: 1px solid rgba(135, 167, 208, 0.56);
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(237, 245, 255, 0.96));
     }
+    .corner-badge {
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 0.9rem;
+      color: #24578e;
+      background: linear-gradient(180deg, #eaf3ff, #d9e9ff);
+      border: 1px solid #bfd6f5;
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 3;
+    }
+    .corner-badge::after {
+      content: "1";
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 0.64rem;
+      font-weight: 700;
+      color: #fff;
+      background: #c92137;
+      border: 2px solid #fff;
+    }
 
     .grid-cards {
       display: grid;
@@ -119,6 +151,45 @@
       font-weight: 700;
       color: #0f2b4e;
       line-height: 1.2;
+    }
+    .kpi .v-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+    }
+    .kpi .icon-badge {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      display: inline-grid;
+      place-items: center;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border: 1px solid #d2e2f7;
+      background: #eaf2ff;
+      color: #2a5f9d;
+    }
+    .kpi .icon-badge svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+      display: block;
+    }
+    .kpi .icon-badge.high {
+      background: #ffe9ee;
+      border-color: #f7c7d2;
+      color: #b4243f;
+    }
+    .kpi .icon-badge.medium {
+      background: #fff4dc;
+      border-color: #f3ddb0;
+      color: #996700;
+    }
+    .kpi .icon-badge.low {
+      background: #e6faef;
+      border-color: #c2ead4;
+      color: #1f6c44;
     }
 
     .kpi.high .v { color: var(--high-fg); }
@@ -574,14 +645,63 @@
           <a href="/patient/book-appointment">Patient Booking Page</a>
         </nav>
       </header>
+      <span class="corner-badge" aria-label="Doctor notifications">DR</span>
 
       <section class="grid-cards">
-        <article class="kpi"><div class="k">Total Patients</div><div class="v" id="kpiPatients">0</div></article>
-        <article class="kpi"><div class="k">Total Appointments</div><div class="v" id="kpiAppointments">0</div></article>
-        <article class="kpi high"><div class="k">High Risk</div><div class="v" id="kpiHigh">0</div></article>
-        <article class="kpi medium"><div class="k">Medium Risk</div><div class="v" id="kpiMedium">0</div></article>
-        <article class="kpi low"><div class="k">Low Risk</div><div class="v" id="kpiLow">0</div></article>
-        <article class="kpi"><div class="k">Today's Appointments</div><div class="v" id="kpiToday">0</div></article>
+        <article class="kpi">
+          <div class="k">Total Patients</div>
+          <div class="v-row">
+            <span class="icon-badge" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.4 0-8 2.3-8 5v1h16v-1c0-2.7-3.6-5-8-5Z"/></svg>
+            </span>
+            <div class="v" id="kpiPatients">0</div>
+          </div>
+        </article>
+        <article class="kpi">
+          <div class="k">Total Appointments</div>
+          <div class="v-row">
+            <span class="icon-badge" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3v18H4V4h3V2Zm11 8H6v10h12V10ZM6 8h12V6H6v2Z"/></svg>
+            </span>
+            <div class="v" id="kpiAppointments">0</div>
+          </div>
+        </article>
+        <article class="kpi high">
+          <div class="k">High Risk</div>
+          <div class="v-row">
+            <span class="icon-badge high" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="m12 3 10 18H2L12 3Zm-1 6v6h2V9h-2Zm0 8v2h2v-2h-2Z"/></svg>
+            </span>
+            <div class="v" id="kpiHigh">0</div>
+          </div>
+        </article>
+        <article class="kpi medium">
+          <div class="k">Medium Risk</div>
+          <div class="v-row">
+            <span class="icon-badge medium" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="m12 4 8 16H4L12 4Zm0 4.8L7.2 18h9.6L12 8.8Z"/></svg>
+            </span>
+            <div class="v" id="kpiMedium">0</div>
+          </div>
+        </article>
+        <article class="kpi low">
+          <div class="k">Low Risk</div>
+          <div class="v-row">
+            <span class="icon-badge low" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 1 0 8 8 8 8 0 0 0-8-8Zm0 14a6 6 0 1 1 6-6 6 6 0 0 1-6 6Z"/></svg>
+            </span>
+            <div class="v" id="kpiLow">0</div>
+          </div>
+        </article>
+        <article class="kpi">
+          <div class="k">Today's Appointments</div>
+          <div class="v-row">
+            <span class="icon-badge" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 1 0 8 8 8 8 0 0 0-8-8Zm1 8.4 3 1.8-1 1.7-4-2.4V8h2v4.4Z"/></svg>
+            </span>
+            <div class="v" id="kpiToday">0</div>
+          </div>
+        </article>
       </section>
 
       <section class="main-grid">
