@@ -34,37 +34,94 @@
       overflow-x: hidden;
       font-family: "IBM Plex Mono", Consolas, monospace;
       color: var(--ink);
-      background:
-        radial-gradient(1200px 500px at -10% -15%, #b8d7ff 0%, rgba(184, 215, 255, 0) 66%),
-        radial-gradient(1000px 520px at 105% 0%, #b4ece5 0%, rgba(180, 236, 229, 0) 66%),
-        linear-gradient(170deg, var(--bg-0) 0%, var(--bg-1) 100%);
-      background-size: 130% 130%;
-      animation: bgShift 18s ease-in-out infinite alternate;
+      background: linear-gradient(92deg, #fbe7e5 0%, #e3e4f2 52%, #dbe6fa 100%);
+      animation: fade-in 700ms ease both;
     }
-    body::before,
-    body::after {
-      content: "";
+    .scene {
       position: fixed;
-      inset: -8%;
+      inset: 0;
       pointer-events: none;
       z-index: 0;
+      overflow: hidden;
     }
-    body::before {
+    .scene::before {
+      content: "";
+      position: absolute;
+      inset: 0;
       background:
-        radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.34) 0 4px, transparent 5px),
-        radial-gradient(circle at 72% 30%, rgba(255, 255, 255, 0.26) 0 3px, transparent 4px),
-        radial-gradient(circle at 52% 72%, rgba(255, 255, 255, 0.2) 0 2px, transparent 3px),
-        radial-gradient(circle at 10% 80%, rgba(255, 255, 255, 0.24) 0 3px, transparent 4px),
-        radial-gradient(circle at 84% 78%, rgba(255, 255, 255, 0.2) 0 2px, transparent 3px);
-      opacity: 0.8;
-      animation: floatSpark 16s linear infinite;
+        radial-gradient(circle at 14% 8%, rgba(255, 243, 228, 0.65) 0%, rgba(255, 243, 228, 0) 38%),
+        radial-gradient(circle at 78% 14%, rgba(238, 244, 255, 0.75) 0%, rgba(238, 244, 255, 0) 36%),
+        radial-gradient(circle at 88% 78%, rgba(173, 210, 255, 0.35) 0%, rgba(173, 210, 255, 0) 40%);
+      animation: drift-bg 16s ease-in-out infinite alternate;
     }
-    body::after {
-      background:
-        radial-gradient(42% 36% at 16% 12%, rgba(255, 221, 240, 0.24), transparent 75%),
-        radial-gradient(45% 35% at 85% 18%, rgba(190, 230, 255, 0.2), transparent 76%),
-        radial-gradient(45% 42% at 53% 90%, rgba(188, 239, 222, 0.18), transparent 75%);
-      animation: floatSpark 24s ease-in-out infinite reverse;
+    .sparkles {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 2% 20%, rgba(255, 255, 255, 0.85) 0 3px, transparent 4px),
+        radial-gradient(circle at 8% 36%, rgba(255, 255, 255, 0.85) 0 2px, transparent 4px),
+        radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.65) 0 1px, transparent 3px),
+        radial-gradient(circle at 64% 16%, rgba(255, 255, 255, 0.76) 0 2px, transparent 4px),
+        radial-gradient(circle at 83% 26%, rgba(255, 255, 255, 0.7) 0 2px, transparent 4px),
+        radial-gradient(circle at 92% 64%, rgba(255, 255, 255, 0.82) 0 2px, transparent 4px),
+        radial-gradient(circle at 34% 68%, rgba(255, 255, 255, 0.62) 0 1px, transparent 3px),
+        radial-gradient(circle at 70% 84%, rgba(255, 255, 255, 0.74) 0 1px, transparent 3px),
+        radial-gradient(circle at 26% 88%, rgba(255, 255, 255, 0.72) 0 2px, transparent 4px);
+      opacity: 1;
+      animation: float-spark 12s linear infinite alternate;
+    }
+    .medical-icon {
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      stroke: rgba(74, 126, 201, 0.95);
+      stroke-width: 2.4;
+      fill: none;
+      filter: drop-shadow(0 8px 18px rgba(64, 106, 168, 0.35));
+      animation: float-icon 4.2s ease-in-out infinite;
+    }
+    .icon-plus-left { left: 3%; top: 43%; width: 56px; height: 56px; }
+    .icon-lock { left: 7%; top: 53%; animation-delay: -1.5s; }
+    .icon-kit { left: 40%; top: 43%; animation-delay: -0.9s; }
+    .icon-plus-right { right: 2%; top: 62%; width: 56px; height: 56px; animation-delay: -1.9s; }
+    .icon-user { left: 4%; bottom: 14%; animation-delay: -2.4s; }
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes drift-bg {
+      from { transform: translateY(0) scale(1); }
+      to { transform: translateY(-1.3%) scale(1.03); }
+    }
+    @keyframes rise-in {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    @keyframes float-icon {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-9px); }
+    }
+    @keyframes float-spark {
+      from { transform: translateY(0); opacity: 0.72; }
+      to { transform: translateY(-20px); opacity: 1; }
+    }
+    @keyframes card-float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    @keyframes gentle-bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    @keyframes title-glow {
+      0%, 100% { text-shadow: 0 0 0 rgba(31, 94, 175, 0); }
+      50% { text-shadow: 0 4px 14px rgba(31, 94, 175, 0.22); }
     }
     @keyframes fadeUp {
       from {
@@ -103,25 +160,6 @@
       45% { transform: scale(1.12); }
       100% { transform: scale(1); }
     }
-    @keyframes bgShift {
-      0% {
-        background-position: 0% 0%, 100% 0%, 0% 0%;
-      }
-      100% {
-        background-position: 8% -5%, 92% 6%, 100% 100%;
-      }
-    }
-    @keyframes floatSpark {
-      0% {
-        transform: translate3d(0, 0, 0) scale(1);
-      }
-      50% {
-        transform: translate3d(-12px, -16px, 0) scale(1.02);
-      }
-      100% {
-        transform: translate3d(10px, -28px, 0) scale(1);
-      }
-    }
     @keyframes sheenSweep {
       0% { transform: translateX(-120%); }
       70%, 100% { transform: translateX(140%); }
@@ -146,6 +184,7 @@
       padding: 18px;
       box-shadow: 0 20px 48px rgba(18, 45, 84, 0.12);
       overflow: hidden;
+      animation: rise-in 880ms ease 120ms both, card-float 7.5s ease-in-out 1.2s infinite;
     }
     .frame::before {
       content: "";
@@ -167,6 +206,7 @@
       flex-wrap: wrap;
       margin-bottom: 14px;
       padding-bottom: 14px;
+      padding-right: 90px;
       border-bottom: 1px solid rgba(122, 156, 200, 0.34);
     }
 
@@ -176,6 +216,7 @@
       font-size: clamp(1.9rem, 3vw, 2.6rem);
       color: #10223f;
       letter-spacing: 0.02em;
+      animation: title-glow 3.6s ease-in-out infinite;
     }
 
     .title p {
@@ -205,37 +246,185 @@
       border-color: #8eb2df;
       box-shadow: 0 8px 18px rgba(26, 67, 112, 0.16);
     }
-    .corner-badge {
-      width: 30px;
-      height: 30px;
-      border-radius: 999px;
-      display: grid;
-      place-items: center;
-      font-size: 0.9rem;
-      color: #24578e;
-      background: linear-gradient(180deg, #eaf3ff, #d9e9ff);
-      border: 1px solid #bfd6f5;
+    .doctor-profile {
       position: absolute;
-      top: 14px;
-      right: 14px;
-      z-index: 3;
-      animation: badgePulse 2.2s ease-in-out infinite;
+      top: 12px;
+      right: 12px;
+      z-index: 8;
     }
-    .corner-badge::after {
-      content: "1";
-      position: absolute;
-      top: -6px;
-      right: -6px;
-      width: 16px;
-      height: 16px;
+    .profile-trigger {
+      width: 50px;
+      height: 50px;
       border-radius: 999px;
+      border: 1px solid #bbd4f7;
+      background: linear-gradient(180deg, #f7fbff, #e8f2ff);
+      box-shadow: 0 12px 24px rgba(19, 67, 122, 0.2);
+      display: inline-grid;
+      place-items: center;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      position: relative;
+      padding: 0;
+    }
+    .profile-trigger:hover {
+      transform: translateY(-1px);
+      border-color: #8eb7ea;
+      box-shadow: 0 16px 28px rgba(19, 67, 122, 0.24);
+    }
+    .profile-trigger:focus-visible {
+      outline: 0;
+      box-shadow: 0 0 0 4px rgba(118, 169, 232, 0.26), 0 16px 28px rgba(19, 67, 122, 0.2);
+    }
+    .profile-photo {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background: linear-gradient(150deg, #f6fbff, #d9ebff);
+      border: 1px solid #c7defa;
       display: grid;
       place-items: center;
-      font-size: 0.64rem;
-      font-weight: 700;
-      color: #fff;
-      background: #c92137;
+      overflow: hidden;
+      color: #356da9;
+    }
+    .profile-photo svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+      opacity: 0.96;
+    }
+    .profile-presence-dot {
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: #23b26d;
       border: 2px solid #fff;
+      box-shadow: 0 0 0 2px rgba(35, 178, 109, 0.18);
+    }
+    .profile-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: 292px;
+      border-radius: 16px;
+      border: 1px solid #c6dcf7;
+      background: linear-gradient(170deg, rgba(252, 254, 255, 0.98) 0%, rgba(235, 245, 255, 0.98) 100%);
+      box-shadow: 0 20px 38px rgba(14, 60, 110, 0.18);
+      overflow: hidden;
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      transform: translateY(-8px) scale(0.98);
+      transform-origin: top right;
+      pointer-events: none;
+      visibility: hidden;
+      transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
+    }
+    .doctor-profile.open .profile-menu {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+      visibility: visible;
+    }
+    .profile-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 12px 10px;
+      border-bottom: 1px solid #d7e6fb;
+      background: linear-gradient(180deg, rgba(240, 248, 255, 0.9), rgba(229, 242, 255, 0.9));
+    }
+    .profile-head .profile-photo {
+      width: 48px;
+      height: 48px;
+      border-color: #bcd8fa;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+    }
+    .profile-head .profile-photo svg {
+      width: 27px;
+      height: 27px;
+    }
+    .profile-name-wrap {
+      min-width: 0;
+    }
+    .profile-name {
+      margin: 0;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      font-size: 1.02rem;
+      color: #143a69;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .profile-sub {
+      margin: 3px 0 0;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #4a6d96;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .profile-body {
+      padding: 11px 12px 12px;
+    }
+    .profile-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 9px;
+    }
+    .profile-item {
+      border: 1px solid #d5e6fb;
+      border-radius: 10px;
+      background: rgba(250, 253, 255, 0.92);
+      padding: 7px 8px;
+    }
+    .profile-item .lbl {
+      font-size: 0.67rem;
+      color: #5378a4;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 3px;
+      font-weight: 700;
+    }
+    .profile-item .val {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #173f70;
+    }
+    .profile-speciality {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #174779;
+      border-radius: 999px;
+      border: 1px solid #cce0fa;
+      background: linear-gradient(180deg, #f6fbff, #ecf5ff);
+      padding: 6px 9px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .profile-status {
+      margin-top: 9px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #1f6f4a;
+      border-radius: 999px;
+      padding: 4px 8px;
+      border: 1px solid #bde9d1;
+      background: #ebfff4;
+    }
+    .profile-status .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #24b267;
+      box-shadow: 0 0 0 4px rgba(36, 178, 103, 0.14);
     }
 
     .grid-cards {
@@ -295,7 +484,7 @@
       border: 1px solid #d2e2f7;
       background: #eaf2ff;
       color: #2a5f9d;
-      animation: iconFloat 2.8s ease-in-out infinite;
+      animation: iconFloat 1.9s ease-in-out infinite;
     }
     .grid-cards .kpi:nth-child(2) .icon-badge { animation-delay: 0.12s; }
     .grid-cards .kpi:nth-child(3) .icon-badge { animation-delay: 0.24s; }
@@ -648,7 +837,7 @@
     }
     body.dashboard-ready .kpi,
     body.dashboard-ready .panel {
-      animation: fadeUp 0.5s ease-out both;
+      animation: fadeUp 0.5s ease-out both, gentle-bob 4.6s ease-in-out 0.8s infinite;
     }
     body.dashboard-ready .grid-cards .kpi:nth-child(1) { animation-delay: 0.04s; }
     body.dashboard-ready .grid-cards .kpi:nth-child(2) { animation-delay: 0.08s; }
@@ -675,10 +864,17 @@
       body {
         animation: none;
       }
-      body::before,
-      body::after,
+      .scene::before,
+      .sparkles,
+      .medical-icon,
       .frame::before {
         animation: none;
+      }
+      .frame {
+        animation: none;
+      }
+      .profile-menu {
+        transition: none;
       }
     }
 
@@ -776,7 +972,8 @@
       gap: 8px;
     }
 
-    button {
+    .actions button,
+    .cookie-actions button {
       border: 0;
       border-radius: 10px;
       padding: 10px 12px;
@@ -789,7 +986,8 @@
       box-shadow: 0 10px 18px rgba(11, 67, 116, 0.2);
       transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
     }
-    button:hover {
+    .actions button:hover,
+    .cookie-actions button:hover {
       transform: translateY(-1px);
       box-shadow: 0 14px 24px rgba(11, 67, 116, 0.28);
       filter: brightness(1.03);
@@ -853,6 +1051,12 @@
     }
 
     @media (max-width: 1100px) {
+      .topbar {
+        padding-right: 74px;
+      }
+      .profile-menu {
+        width: min(292px, calc(100vw - 44px));
+      }
       .grid-cards {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
@@ -862,6 +1066,17 @@
     }
 
     @media (max-width: 760px) {
+      .topbar {
+        padding-right: 62px;
+      }
+      .profile-trigger {
+        width: 44px;
+        height: 44px;
+      }
+      .profile-photo {
+        width: 34px;
+        height: 34px;
+      }
       .grid-cards {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -874,16 +1089,17 @@
         max-height: 300px;
       }
     }
-                          /* Shared app background theme */
-    body {
-      background:
-        radial-gradient(1200px 500px at -10% -15%, rgba(243, 204, 222, 0.62) 0%, rgba(184, 215, 255, 0) 66%),
-        radial-gradient(1000px 520px at 105% 0%, rgba(169, 223, 255, 0.5) 0%, rgba(180, 236, 229, 0) 66%),
-        linear-gradient(160deg, #ffe3e1 0%, #9cd5ff 100%) !important;
-      background-color: #ffe3e1 !important;
-    }</style>
+  </style>
 </head>
 <body>
+  <div class="scene" aria-hidden="true">
+    <div class="sparkles"></div>
+    <svg class="medical-icon icon-plus-left" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" /></svg>
+    <svg class="medical-icon icon-lock" viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v10H5z" /></svg>
+    <svg class="medical-icon icon-kit" viewBox="0 0 24 24"><path d="M9 4h6v3H9zM4 8h16v12H4zM12 11v6M9 14h6" /></svg>
+    <svg class="medical-icon icon-plus-right" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" /></svg>
+    <svg class="medical-icon icon-user" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-7 8a7 7 0 0 1 14 0" /></svg>
+  </div>
   <main class="shell">
     <section class="frame">
       <header class="topbar">
@@ -896,7 +1112,47 @@
           <a href="/patient/book-appointment">Patient Booking Page</a>
         </nav>
       </header>
-      <span class="corner-badge" aria-label="Doctor notifications">DR</span>
+      <section class="doctor-profile" id="doctorProfile">
+        <button
+          id="profileTrigger"
+          class="profile-trigger"
+          type="button"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="profileMenu"
+          aria-label="Open doctor profile summary"
+        >
+          <span class="profile-photo" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 12a4.6 4.6 0 1 0-4.6-4.6A4.6 4.6 0 0 0 12 12Zm0 1.7c-4 0-7.4 2.3-8.2 5.5h16.4c-.8-3.2-4.2-5.5-8.2-5.5Z"/></svg>
+          </span>
+          <span class="profile-presence-dot" aria-hidden="true"></span>
+        </button>
+        <div class="profile-menu" id="profileMenu" role="dialog" aria-label="Doctor profile summary">
+          <div class="profile-head">
+            <span class="profile-photo" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 12a4.6 4.6 0 1 0-4.6-4.6A4.6 4.6 0 0 0 12 12Zm0 1.7c-4 0-7.4 2.3-8.2 5.5h16.4c-.8-3.2-4.2-5.5-8.2-5.5Z"/></svg>
+            </span>
+            <div class="profile-name-wrap">
+              <h3 class="profile-name" id="profileDoctorName">Dr. Vishnu</h3>
+              <p class="profile-sub">Doctor Profile Summary</p>
+            </div>
+          </div>
+          <div class="profile-body">
+            <div class="profile-stats">
+              <div class="profile-item">
+                <div class="lbl">Experience</div>
+                <div class="val">8+ Years Experience</div>
+              </div>
+              <div class="profile-item">
+                <div class="lbl">Patients</div>
+                <div class="val">1,240 Patients</div>
+              </div>
+            </div>
+            <div class="profile-speciality">Specialization: Cardiologist</div>
+            <div class="profile-status"><span class="dot"></span>Online / Available</div>
+          </div>
+        </div>
+      </section>
 
       <section class="grid-cards">
         <article class="kpi">
@@ -1135,6 +1391,63 @@
 
     function safeText(value) {
       return value == null ? "" : String(value);
+    }
+
+    function formatDoctorNameFromId(rawId) {
+      const raw = safeText(rawId).trim();
+      const head = raw.split("@")[0] || raw;
+      const normalized = head
+        .replace(/[^a-zA-Z\s]/g, " ")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+        .join(" ");
+      return normalized ? `Dr. ${normalized}` : "Dr. Vishnu";
+    }
+
+    function initDoctorProfileCard() {
+      const wrap = document.getElementById("doctorProfile");
+      const trigger = document.getElementById("profileTrigger");
+      const menu = document.getElementById("profileMenu");
+      const nameEl = document.getElementById("profileDoctorName");
+      const doctorIdEl = document.querySelector(".title p strong");
+      if (!wrap || !trigger || !menu) return;
+
+      if (nameEl && doctorIdEl) {
+        nameEl.textContent = formatDoctorNameFromId(doctorIdEl.textContent);
+      }
+
+      const closeMenu = () => {
+        wrap.classList.remove("open");
+        trigger.setAttribute("aria-expanded", "false");
+      };
+      const openMenu = () => {
+        wrap.classList.add("open");
+        trigger.setAttribute("aria-expanded", "true");
+      };
+      const toggleMenu = () => {
+        if (wrap.classList.contains("open")) closeMenu();
+        else openMenu();
+      };
+
+      trigger.addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleMenu();
+      });
+      menu.addEventListener("click", (event) => {
+        event.stopPropagation();
+      });
+      document.addEventListener("click", (event) => {
+        if (!wrap.contains(event.target)) {
+          closeMenu();
+        }
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          closeMenu();
+        }
+      });
     }
 
     function normalizeRisk(level) {
@@ -1699,6 +2012,7 @@
 
     populateDateFilterOptions();
     initCookieBanner();
+    initDoctorProfileCard();
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         document.body.classList.add("dashboard-ready");
