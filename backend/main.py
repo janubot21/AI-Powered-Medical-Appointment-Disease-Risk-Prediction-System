@@ -277,6 +277,11 @@ def doctor_appointments_portal() -> RedirectResponse:
     return RedirectResponse(url="/portal/doctor/appointments", status_code=307)
 
 
+@app.get("/doctor/patient-database", include_in_schema=False)
+def doctor_patient_database_portal() -> RedirectResponse:
+    return RedirectResponse(url="/portal/doctor/patient-database", status_code=307)
+
+
 @app.post("/doctor/predict-risk", include_in_schema=False)
 def doctor_predict_risk_portal() -> RedirectResponse:
     return RedirectResponse(url="/portal/doctor/predict-risk", status_code=307)
