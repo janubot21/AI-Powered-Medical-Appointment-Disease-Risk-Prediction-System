@@ -332,6 +332,39 @@
       overflow: auto;
       border-radius: 12px;
     }
+    .table-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: end;
+      margin: 8px 0 12px;
+    }
+    .filter-group {
+      display: grid;
+      gap: 6px;
+      min-width: 220px;
+    }
+    .filter-group label {
+      font-size: 0.76rem;
+      color: #3f5f88;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .filter-group select {
+      border: 1px solid #c8d9ef;
+      border-radius: 10px;
+      background: #f8fbff;
+      color: #1f3f67;
+      font-family: inherit;
+      font-size: 0.86rem;
+      padding: 8px 10px;
+      outline: none;
+    }
+    .filter-group select:focus {
+      border-color: #74a9e4;
+      box-shadow: 0 0 0 3px rgba(116, 169, 228, 0.2);
+    }
 
     .db-toolbar {
       display: flex;
@@ -554,6 +587,23 @@
       <section class="main-grid">
         <section class="panel">
           <h2>Upcoming Appointments</h2>
+          <div class="table-filters" aria-label="Appointment Filters">
+            <div class="filter-group">
+              <label for="riskFilter">Risk Level</label>
+              <select id="riskFilter">
+                <option value="all">All</option>
+                <option value="High Risk">High Risk</option>
+                <option value="Medium Risk">Medium Risk</option>
+                <option value="Low Risk">Low Risk</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="dateFilter">Appointment Date</label>
+              <select id="dateFilter">
+                <option value="all">All Dates</option>
+              </select>
+            </div>
+          </div>
           <div class="table-wrap">
             <table>
               <thead>
@@ -680,10 +730,12 @@
   </main>
 
   <script>
+    let cachedAllAppointments = [];
     let cachedAppointments = [];
     let cachedPatientDbRows = [];
     let selectedAppointmentKey = null;
     let selectedPatientFeatures = null;
+    let activeMonthKey = "";
 
     async function postJson(url, payload) {
       const res = await fetch(url, {
@@ -745,6 +797,69 @@
       const m = String(dateObj.getMonth() + 1).padStart(2, "0");
       const d = String(dateObj.getDate()).padStart(2, "0");
       return `${y}-${m}-${d}`;
+    }
+
+    function toDdMmYyyy(dateObj) {
+      const d = String(dateObj.getDate()).padStart(2, "0");
+      const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const y = String(dateObj.getFullYear());
+      return `${d}-${m}-${y}`;
+    }
+
+    function monthKey(dateObj) {
+      return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    function populateDateFilterOptions() {
+      const select = document.getElementById("dateFilter");
+      if (!select) return;
+
+      const now = new Date();
+      activeMonthKey = monthKey(now);
+      const previousValue = select.value || "all";
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      select.innerHTML = '<option value="all">All Dates</option>';
+      for (let day = 1; day <= daysInMonth; day += 1) {
+        const dt = new Date(year, month, day);
+        const option = document.createElement("option");
+        option.value = toIsoDay(dt);
+        option.textContent = toDdMmYyyy(dt);
+        select.appendChild(option);
+      }
+
+      if (select.querySelector(`option[value="${previousValue}"]`)) {
+        select.value = previousValue;
+      } else {
+        select.value = "all";
+      }
+    }
+
+    function ensureCurrentMonthDateOptions() {
+      if (monthKey(new Date()) !== activeMonthKey) {
+        populateDateFilterOptions();
+      }
+    }
+
+    function getFilteredAppointments(appointments) {
+      const riskFilter = document.getElementById("riskFilter")?.value || "all";
+      const dateFilter = document.getElementById("dateFilter")?.value || "all";
+
+      return appointments.filter((item) => {
+        const itemRisk = normalizeRisk(item.risk_assessment && item.risk_assessment.predicted_class);
+        if (riskFilter !== "all" && itemRisk !== riskFilter) return false;
+
+        if (dateFilter === "all") return true;
+        const at = parseDate(item.appointment_time);
+        return !!at && toIsoDay(at) === dateFilter;
+      });
+    }
+
+    function applyAppointmentFiltersAndRender() {
+      const filteredAppointments = getFilteredAppointments(cachedAllAppointments);
+      renderAppointmentsTable(filteredAppointments);
     }
 
     function fmtDateTime(value) {
@@ -999,7 +1114,10 @@
     function renderAppointmentsTable(appointments) {
       const rows = document.getElementById("rows");
       if (appointments.length === 0) {
-        rows.innerHTML = '<tr><td colspan="6">No appointments yet.</td></tr>';
+        const emptyMessage = cachedAllAppointments.length > 0
+          ? "No appointments match selected filters."
+          : "No appointments yet.";
+        rows.innerHTML = `<tr><td colspan="6">${emptyMessage}</td></tr>`;
         setText("rvPatient", "-");
         setText("rvDoctor", "-");
         setText("rvTime", "-");
@@ -1114,18 +1232,26 @@
       const res = await fetch("/doctor/appointments");
       const data = await res.json();
       const appointments = Array.isArray(data.appointments) ? data.appointments : [];
+      cachedAllAppointments = appointments;
+      ensureCurrentMonthDateOptions();
 
       const counts = updateOverview(appointments);
       updateRiskCharts(counts, appointments.length);
       updateTrend(appointments);
       updateInsights(appointments);
       updatePriorityAlerts(appointments);
-      renderAppointmentsTable(appointments);
+      applyAppointmentFiltersAndRender();
       await refreshPatientDatabase();
     }
 
     document.getElementById("dbSearch").addEventListener("input", (event) => {
       renderPatientDatabaseTable(cachedPatientDbRows, event.target.value);
+    });
+    document.getElementById("riskFilter").addEventListener("change", () => {
+      applyAppointmentFiltersAndRender();
+    });
+    document.getElementById("dateFilter").addEventListener("change", () => {
+      applyAppointmentFiltersAndRender();
     });
 
     document.getElementById("predictBtn").addEventListener("click", async () => {
@@ -1146,6 +1272,7 @@
       }
     });
 
+    populateDateFilterOptions();
     refreshDashboard();
     setInterval(refreshDashboard, 5000);
   </script>
