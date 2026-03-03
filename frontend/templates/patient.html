@@ -341,13 +341,35 @@
   <script>
     let hasLoadedPatientFeatures = false;
 
+    function setCookie(name, value, days) {
+      const ttlDays = Number.isFinite(days) ? days : 14;
+      const expiresAt = new Date(Date.now() + ttlDays * 24 * 60 * 60 * 1000).toUTCString();
+      document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expiresAt}; path=/; SameSite=Lax`;
+    }
+
+    function getCookie(name) {
+      const needle = `${name}=`;
+      const entries = document.cookie.split(";");
+      for (const entry of entries) {
+        const item = entry.trim();
+        if (item.startsWith(needle)) {
+          return decodeURIComponent(item.slice(needle.length));
+        }
+      }
+      return "";
+    }
+
     function prefillPatientIdFromQuery() {
       const params = new URLSearchParams(window.location.search);
-      const patientId = (params.get("patient_id") || "").trim();
+      const fromQuery = (params.get("patient_id") || "").trim();
+      const patientId = fromQuery || getCookie("patient_id");
       if (!patientId) {
         return;
       }
       document.getElementById("patientId").value = patientId;
+      if (fromQuery) {
+        setCookie("patient_id", fromQuery, 14);
+      }
     }
 
     async function postJson(url, payload) {
@@ -444,6 +466,10 @@
     document.getElementById("patientId").addEventListener("input", () => {
       hasLoadedPatientFeatures = false;
       document.getElementById("bookFeatures").value = "";
+      const currentPatientId = document.getElementById("patientId").value.trim();
+      if (currentPatientId) {
+        setCookie("patient_id", currentPatientId, 14);
+      }
     });
 
     document.getElementById("bookBtn").addEventListener("click", async () => {

@@ -807,6 +807,50 @@
     }
 
     .output.error { color: #a31f35; }
+    .cookie-banner {
+      position: fixed;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      z-index: 20;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      border: 1px solid #bcd3f1;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.97);
+      backdrop-filter: blur(4px);
+      box-shadow: 0 16px 28px rgba(17, 58, 102, 0.24);
+      padding: 12px 14px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .cookie-banner.show {
+      display: flex;
+      animation: fadeUp 0.3s ease-out both;
+    }
+    .cookie-banner p {
+      margin: 0;
+      color: #22446f;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      flex: 1;
+      min-width: 240px;
+    }
+    .cookie-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .cookie-actions button {
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      border-radius: 9px;
+    }
+    .cookie-actions .btn-decline {
+      background: linear-gradient(120deg, #5f7898, #37597f);
+    }
 
     @media (max-width: 1100px) {
       .grid-cards {
@@ -1055,6 +1099,13 @@
       </section>
     </section>
   </main>
+  <aside id="cookieBanner" class="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie consent">
+    <p>This site uses cookies to keep your dashboard preferences and session behavior reliable.</p>
+    <div class="cookie-actions">
+      <button id="cookieAcceptBtn" type="button">Accept</button>
+      <button id="cookieDeclineBtn" class="btn-decline" type="button">Decline</button>
+    </div>
+  </aside>
 
   <script>
     let cachedAllAppointments = [];
@@ -1064,6 +1115,9 @@
     let selectedPatientFeatures = null;
     let activeMonthKey = "";
     const animatedAppointmentKeys = new Set();
+    const cookieBanner = document.getElementById("cookieBanner");
+    const cookieAcceptBtn = document.getElementById("cookieAcceptBtn");
+    const cookieDeclineBtn = document.getElementById("cookieDeclineBtn");
 
     async function postJson(url, payload) {
       const res = await fetch(url, {
@@ -1132,6 +1186,38 @@
       const m = String(dateObj.getMonth() + 1).padStart(2, "0");
       const y = String(dateObj.getFullYear());
       return `${d}-${m}-${y}`;
+    }
+    function setCookie(name, value, days) {
+      const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+      document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+    }
+
+    function getCookie(name) {
+      const key = `${name}=`;
+      const items = document.cookie.split(";");
+      for (let i = 0; i < items.length; i += 1) {
+        const part = items[i].trim();
+        if (part.startsWith(key)) {
+          return decodeURIComponent(part.slice(key.length));
+        }
+      }
+      return "";
+    }
+
+    function initCookieBanner() {
+      if (!cookieBanner || !cookieAcceptBtn || !cookieDeclineBtn) return;
+      const consent = getCookie("cookie_consent");
+      if (!consent) {
+        cookieBanner.classList.add("show");
+      }
+      cookieAcceptBtn.addEventListener("click", () => {
+        setCookie("cookie_consent", "accepted", 180);
+        cookieBanner.classList.remove("show");
+      });
+      cookieDeclineBtn.addEventListener("click", () => {
+        setCookie("cookie_consent", "declined", 180);
+        cookieBanner.classList.remove("show");
+      });
     }
 
     function monthKey(dateObj) {
@@ -1612,6 +1698,7 @@
     });
 
     populateDateFilterOptions();
+    initCookieBanner();
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         document.body.classList.add("dashboard-ready");

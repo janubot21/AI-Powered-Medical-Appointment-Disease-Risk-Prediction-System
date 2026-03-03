@@ -173,6 +173,24 @@
   </main>
 
   <script>
+    function setCookie(name, value, days) {
+      const ttlDays = Number.isFinite(days) ? days : 7;
+      const expiresAt = new Date(Date.now() + ttlDays * 24 * 60 * 60 * 1000).toUTCString();
+      document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expiresAt}; path=/; SameSite=Lax`;
+    }
+
+    function getCookie(name) {
+      const needle = `${name}=`;
+      const entries = document.cookie.split(";");
+      for (const entry of entries) {
+        const item = entry.trim();
+        if (item.startsWith(needle)) {
+          return decodeURIComponent(item.slice(needle.length));
+        }
+      }
+      return "";
+    }
+
     async function postJson(url, payload) {
       const res = await fetch(url, {
         method: "POST",
@@ -198,12 +216,19 @@
       window.location.href = url;
     }
 
+    const rememberedPatientId = getCookie("patient_id");
+    if (rememberedPatientId) {
+      document.getElementById("loginPatientId").value = rememberedPatientId;
+    }
+
     document.getElementById("loginBtn").addEventListener("click", async () => {
       try {
         const patient_id = document.getElementById("loginPatientId").value.trim();
         const password = document.getElementById("loginPassword").value.trim();
         const data = await postJson("/patient-login", { patient_id, password });
         setStatus("loginStatus", data.message, false);
+        setCookie("patient_id", patient_id, 14);
+        setCookie("user_role", "patient", 14);
         goToPatientPage(patient_id);
       } catch (err) {
         setStatus("loginStatus", err.message, true);
@@ -216,6 +241,8 @@
         const password = document.getElementById("signupPassword").value.trim();
         const data = await postJson("/patient-signup", { patient_id, password });
         setStatus("signupStatus", data.message, false);
+        setCookie("patient_id", patient_id, 14);
+        setCookie("user_role", "patient", 14);
         goToPatientPage(patient_id);
       } catch (err) {
         setStatus("signupStatus", err.message, true);
