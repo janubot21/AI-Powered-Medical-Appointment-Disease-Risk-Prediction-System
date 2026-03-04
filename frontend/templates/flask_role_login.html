@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -175,7 +175,7 @@
       z-index: 2;
       display: flex;
       align-items: flex-end;
-      padding: 34px 34px 30px;
+      padding: 34px 34px 86px;
       background:
         linear-gradient(180deg, rgba(8, 84, 110, 0.18), rgba(5, 58, 89, 0.62)),
         url("https://images.pexels.com/photos/7089401/pexels-photo-7089401.jpeg?auto=compress&cs=tinysrgb&w=1800") center/cover no-repeat;
@@ -406,6 +406,59 @@
       .ambient .heart-wrap,
       .ambient .p3,
       .ambient .hud-grid { display: none; }
+      .left { padding-bottom: 30px; }
+    }
+  
+    .global-page-footer {
+      position: absolute;
+      left: 50%;
+      bottom: 10px;
+      transform: translateX(-50%);
+      z-index: 5;
+      width: min(86%, 920px);
+      margin: 0;
+      padding: 0.46rem 0.8rem;
+      border-radius: 0.82rem;
+      border: 1px solid rgba(170, 188, 214, 0.85);
+      background: rgba(224, 232, 243, 0.82);
+      color: #607089;
+      text-align: center;
+      line-height: 1.2;
+      font-size: clamp(0.72rem, 0.9vw, 0.82rem);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      box-shadow: 0 6px 14px rgba(83, 97, 127, 0.08);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+
+    .global-page-footer-line {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      white-space: nowrap;
+    }
+
+    .global-page-footer .sep {
+      opacity: 0.6;
+      font-weight: 700;
+    }
+
+    @media (max-width: 840px) {
+      .global-page-footer {
+        position: static;
+        transform: none;
+        width: min(96vw, 980px);
+        margin: 0.25rem auto 0.2rem;
+        font-size: 0.76rem;
+        padding: 0.52rem 0.72rem;
+      }
+
+      .global-page-footer-line {
+        white-space: normal;
+        line-height: 1.35;
+      }
     }
   </style>
 </head>
@@ -463,8 +516,18 @@
       </article>
     </section>
 
+    <footer class="global-page-footer">
+      <div class="global-page-footer-line">
+        <span>&copy; 2026 AIHealth Hub</span>
+        <span class="sep">|</span>
+        <span>Powered by AI Healthcare System</span>
+        <span class="sep">|</span>
+        <span>Contact: support@aihealthhub.com</span>
+      </div>
+    </footer>
+
     <div class="particles" id="particles" aria-hidden="true"></div>
-  </main>
+</main>
 
   <script>
     (function createParticles() {
@@ -491,6 +554,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 

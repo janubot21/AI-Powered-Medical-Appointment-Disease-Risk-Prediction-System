@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -463,6 +463,50 @@
         transition-duration: 0.01ms !important;
       }
     }
+  
+    .global-page-footer {
+      width: min(92vw, 980px);
+      margin: 0.25rem auto 0.2rem;
+      padding: 0.56rem 0.95rem;
+      border-radius: 0.82rem;
+      border: 1px solid rgba(170, 188, 214, 0.85);
+      background: rgba(233, 238, 246, 0.84);
+      color: #607089;
+      text-align: center;
+      line-height: 1.2;
+      font-size: clamp(0.74rem, 0.95vw, 0.84rem);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      box-shadow: 0 6px 14px rgba(83, 97, 127, 0.08);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+
+    .global-page-footer-line {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      white-space: nowrap;
+    }
+
+    .global-page-footer .sep {
+      opacity: 0.6;
+      font-weight: 700;
+    }
+
+    @media (max-width: 840px) {
+      .global-page-footer {
+        width: min(96vw, 980px);
+        font-size: 0.76rem;
+        padding: 0.52rem 0.72rem;
+      }
+
+      .global-page-footer-line {
+        white-space: normal;
+        line-height: 1.35;
+      }
+    }
   </style>
 </head>
 <body>
@@ -728,8 +772,19 @@
       }
     });
   </script>
+  <footer class="global-page-footer">
+    <div class="global-page-footer-line">
+      <span>&copy; 2026 AIHealth Hub</span>
+      <span class="sep">|</span>
+      <span>Powered by AI Healthcare System</span>
+      <span class="sep">|</span>
+      <span>Contact: support@aihealthhub.com</span>
+    </div>
+  </footer>
 </body>
 </html>
+
+
 
 
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -87,13 +87,13 @@
       position: relative;
       z-index: 2;
       width: min(1320px, 95vw);
-      min-height: 100vh;
+      min-height: auto;
       margin: 0 auto;
-      padding: clamp(1.2rem, 2.8vw, 2.2rem);
+      padding: clamp(1rem, 2.2vw, 1.8rem) clamp(1.2rem, 2.8vw, 2.2rem);
       display: grid;
       grid-template-columns: 1.05fr 0.95fr;
       gap: clamp(1.1rem, 2.2vw, 2rem);
-      align-items: center;
+      align-items: start;
     }
 
     .hospital {
@@ -177,6 +177,41 @@
       box-shadow: 0 20px 38px rgba(54, 71, 114, 0.16), 0 0 0 1px rgba(255, 255, 255, 0.38) inset;
       padding: clamp(1.35rem, 2.4vw, 2rem);
       animation: rise-in 880ms ease 220ms both, card-float 7.5s ease-in-out 1.2s infinite;
+    }
+
+    .signup-footer {
+      position: fixed;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      z-index: 4;
+      width: min(92vw, 860px);
+      padding: 0.58rem 1rem;
+      border-radius: 0.82rem;
+      border: 1px solid rgba(177, 191, 214, 0.85);
+      background: rgba(233, 238, 246, 0.82);
+      text-align: center;
+      line-height: 1.2;
+      font-size: clamp(0.74rem, 0.95vw, 0.84rem);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      color: #607089;
+      box-shadow: 0 6px 14px rgba(83, 97, 127, 0.08);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+
+    .signup-footer-line {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      white-space: nowrap;
+    }
+
+    .signup-footer .sep {
+      opacity: 0.6;
+      font-weight: 700;
     }
 
     .card h2 {
@@ -316,6 +351,8 @@
       .left-image { max-width: 100%; max-height: 34vh; }
       .right { justify-content: stretch; }
       .card { width: 100%; }
+      .signup-footer { position: static; transform: none; width: 100%; margin-top: 0.9rem; font-size: 0.76rem; padding: 0.52rem 0.72rem; }
+      .signup-footer-line { white-space: normal; line-height: 1.35; }
       .dna-wave { height: 140px; bottom: -22px; }
     }
 
@@ -324,6 +361,50 @@
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+      }
+    }
+  
+    .global-page-footer {
+      width: min(92vw, 980px);
+      margin: 0.25rem auto 0.2rem;
+      padding: 0.56rem 0.95rem;
+      border-radius: 0.82rem;
+      border: 1px solid rgba(170, 188, 214, 0.85);
+      background: rgba(233, 238, 246, 0.84);
+      color: #607089;
+      text-align: center;
+      line-height: 1.2;
+      font-size: clamp(0.74rem, 0.95vw, 0.84rem);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      box-shadow: 0 6px 14px rgba(83, 97, 127, 0.08);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+
+    .global-page-footer-line {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      white-space: nowrap;
+    }
+
+    .global-page-footer .sep {
+      opacity: 0.6;
+      font-weight: 700;
+    }
+
+    @media (max-width: 840px) {
+      .global-page-footer {
+        width: min(96vw, 980px);
+        font-size: 0.76rem;
+        padding: 0.52rem 0.72rem;
+      }
+
+      .global-page-footer-line {
+        white-space: normal;
+        line-height: 1.35;
       }
     }
   </style>
@@ -403,7 +484,7 @@
         <a class="create" href="/doctor/login">Already have account? Doctor Login</a>
       </div>
     </section>
-  </main>
+</main>
   <script>
     const SIGNUP_COOKIE_DAYS = 30;
 
@@ -480,8 +561,19 @@
       setCookie("doctor_signup_id_number", idNumber, SIGNUP_COOKIE_DAYS);
     });
   </script>
+  <footer class="global-page-footer">
+    <div class="global-page-footer-line">
+      <span>&copy; 2026 AIHealth Hub</span>
+      <span class="sep">|</span>
+      <span>Powered by AI Healthcare System</span>
+      <span class="sep">|</span>
+      <span>Contact: support@aihealthhub.com</span>
+    </div>
+  </footer>
 </body>
 </html>
+
+
 
 
 

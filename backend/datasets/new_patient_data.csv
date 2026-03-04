@@ -5,6 +5,6 @@ Patient_ID,Age,Gender,Symptoms,Symptom_Count,Glucose,BloodPressure,BMI,Height_cm
 2,21.0,female,fever,1.0,86.0,120.0,19.6,175.0,60.0,no,no,,no,Normal
 6,21.0,female,swelling,1.0,86.0,120.0,19.6,175.0,60.0,no,no,,no,
 7,30.0,female,fever,1.0,87.0,120.0,17.959183673469386,175.0,55.0,no,no,,no,
-8,22.0,female,chest pain,1.0,89.0,120.0,17.0,180.0,55.0,no,no,,no,Underweight
+8,22.0,female,chest pain,1.0,89.0,120.0,17.0,180.0,55.0,no,no,nan,no,Underweight
 9,21.0,female,1234,2.0,86.0,120.0,17.0,180.0,55.0,no,no,,no,Underweight
 10,21.0,female,12345,1.0,89.0,120.0,16.52892561983471,220.0,80.0,no,no,,no,
