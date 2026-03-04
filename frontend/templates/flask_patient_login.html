@@ -780,7 +780,7 @@
           </div>
         {% endif %}
 
-        <form method="post">
+        <form method="post" autocomplete="off">
           <label for="login_using">Login Using</label>
           <select id="login_using" name="login_using">
             <option value="patient_name" {% if form_data.login_using == "patient_name" %}selected{% endif %}>Patient Name</option>
@@ -789,7 +789,7 @@
 
           <div id="namePanel" class="switch-panel">
             <label for="patient_name">Enter Patient Name</label>
-            <input id="patient_name" name="patient_name" value="{{ form_data.patient_name }}" placeholder="Enter patient name" />
+            <input id="patient_name" name="patient_name" value="{{ form_data.patient_name }}" placeholder="Enter patient name" autocomplete="off" />
           </div>
 
           <div id="idPanel" class="switch-panel">
@@ -801,11 +801,11 @@
             </select>
 
             <label for="id_number">ID Number</label>
-            <input id="id_number" name="id_number" value="{{ form_data.id_number }}" placeholder="Enter ID number" />
+            <input id="id_number" name="id_number" value="{{ form_data.id_number }}" placeholder="Enter ID number" autocomplete="off" />
           </div>
 
           <label for="password">Password</label>
-          <input id="password" name="password" type="password" required />
+          <input id="password" name="password" type="password" required autocomplete="new-password" />
 
           <button type="submit">Login</button>
         </form>
@@ -856,50 +856,6 @@
 
     initSidebar();
 
-    const LOGIN_COOKIE_DAYS = 30;
-
-    function setCookie(name, value, days) {
-      const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
-      document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
-    }
-
-    function getCookie(name) {
-      const key = `${name}=`;
-      const items = document.cookie.split(";");
-      for (let i = 0; i < items.length; i += 1) {
-        const part = items[i].trim();
-        if (part.startsWith(key)) {
-          return decodeURIComponent(part.slice(key.length));
-        }
-      }
-      return "";
-    }
-
-    function initLoginCookies() {
-      const modeEl = document.getElementById("login_using");
-      const nameEl = document.getElementById("patient_name");
-      const typeEl = document.getElementById("id_type");
-      const numberEl = document.getElementById("id_number");
-
-      const savedMode = getCookie("patient_login_using");
-      const savedName = getCookie("patient_login_name");
-      const savedType = getCookie("patient_login_id_type");
-      const savedNumber = getCookie("patient_login_id_number");
-
-      if (savedMode && ["patient_name", "id_number"].includes(savedMode)) {
-        modeEl.value = savedMode;
-      }
-      if (!nameEl.value && savedName) {
-        nameEl.value = savedName;
-      }
-      if (savedType && ["aadhaar", "pan"].includes(savedType)) {
-        typeEl.value = savedType;
-      }
-      if (!numberEl.value && savedNumber) {
-        numberEl.value = savedNumber;
-      }
-    }
-
     function syncLoginPanels() {
       const mode = document.getElementById("login_using").value;
       const namePanel = document.getElementById("namePanel");
@@ -942,7 +898,6 @@
 
     document.getElementById("login_using").addEventListener("change", syncLoginPanels);
     document.getElementById("id_type").addEventListener("change", syncIdRules);
-    initLoginCookies();
     syncLoginPanels();
     syncIdRules();
 
@@ -979,10 +934,6 @@
         return;
       }
 
-      setCookie("patient_login_using", mode, LOGIN_COOKIE_DAYS);
-      setCookie("patient_login_name", name, LOGIN_COOKIE_DAYS);
-      setCookie("patient_login_id_type", idType, LOGIN_COOKIE_DAYS);
-      setCookie("patient_login_id_number", idNumber, LOGIN_COOKIE_DAYS);
     });
   </script>
   <footer class="global-page-footer">
