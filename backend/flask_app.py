@@ -824,6 +824,12 @@ def patient_login() -> Any:
     errors: list[str] = []
     form_data = {"patient_name": "", "id_type": "", "id_number": "", "login_using": "patient_name"}
 
+    if request.method == "GET":
+        # Force explicit patient re-auth when user opens patient login route.
+        session.pop("patient_id", None)
+        session.pop("patient_name", None)
+        session.pop("patient_authenticated", None)
+
     if request.method == "POST":
         login_using = request.form.get("login_using", "patient_name").strip().lower()
         if login_using not in {"patient_name", "id_number"}:
@@ -860,11 +866,22 @@ def patient_login() -> Any:
                 if not patient:
                     raise ValueError("Invalid patient name, unique code, or password.")
                 patient_id = str(patient.get("patient_id", "")).strip()
+                # Patient login should not inherit doctor portal access.
+                session.pop("doctor_id", None)
+                session.pop("doctor_name", None)
+                session.pop("doctor_authenticated", None)
                 session["patient_id"] = patient_id
                 session["patient_name"] = patient_name
+                session["patient_authenticated"] = True
                 session.pop("health_confirmation", None)
                 session.pop("allow_health_details", None)
-                return redirect(url_for("book_appointment"))
+                return render_template(
+                    "flask_patient_login.html",
+                    errors=[],
+                    form_data={"patient_name": "", "id_type": "", "id_number": "", "login_using": "patient_name"},
+                    login_success=True,
+                    redirect_url=url_for("book_appointment"),
+                )
             except ValueError as exc:
                 errors.append(str(exc))
             except Exception as exc:  # pragma: no cover - guard
@@ -876,7 +893,8 @@ def patient_login() -> Any:
 @app.route("/patient/book-appointment")
 def book_appointment() -> Any:
     patient_id = session.get("patient_id")
-    if not patient_id:
+    patient_authenticated = bool(session.get("patient_authenticated"))
+    if not patient_id or not patient_authenticated:
         return redirect(url_for("patient_login"))
     patient_name = str(session.get("patient_name", "")).strip()
     if not patient_name:
@@ -894,6 +912,7 @@ def book_appointment() -> Any:
 def patient_logout() -> Any:
     session.pop("patient_id", None)
     session.pop("patient_name", None)
+    session.pop("patient_authenticated", None)
     session.pop("health_confirmation", None)
     session.pop("allow_health_details", None)
     return redirect(url_for("patient_login"))
@@ -1126,6 +1145,12 @@ def doctor_login() -> Any:
     errors: list[str] = []
     form_data = {"doctor_id": "", "id_type": "", "id_number": "", "login_using": "doctor_id"}
 
+    if request.method == "GET":
+        # Force explicit doctor re-auth when user opens doctor login route.
+        session.pop("doctor_id", None)
+        session.pop("doctor_name", None)
+        session.pop("doctor_authenticated", None)
+
     if request.method == "POST":
         login_using = request.form.get("login_using", "doctor_id").strip().lower()
         if login_using not in {"doctor_id", "id_number"}:
@@ -1163,9 +1188,20 @@ def doctor_login() -> Any:
         if not errors:
             try:
                 resolved_doctor_id = doctor_auth_manager.login(doctor_id, id_type, id_number, password)
+                # Doctor login should not inherit patient portal access.
+                session.pop("patient_id", None)
+                session.pop("patient_name", None)
+                session.pop("patient_authenticated", None)
                 session["doctor_id"] = resolved_doctor_id
                 session["doctor_name"] = resolved_doctor_id
-                return redirect(url_for("doctor_dashboard"))
+                session["doctor_authenticated"] = True
+                return render_template(
+                    "flask_doctor_login.html",
+                    errors=[],
+                    form_data={"doctor_id": "", "id_type": "", "id_number": "", "login_using": "doctor_id"},
+                    login_success=True,
+                    redirect_url=url_for("doctor_dashboard"),
+                )
             except ValueError as exc:
                 errors.append(str(exc))
             except Exception as exc:  # pragma: no cover - guard
@@ -1177,7 +1213,8 @@ def doctor_login() -> Any:
 @app.route("/doctor/dashboard")
 def doctor_dashboard() -> Any:
     doctor_id = session.get("doctor_id")
-    if not doctor_id:
+    doctor_authenticated = bool(session.get("doctor_authenticated"))
+    if not doctor_id or not doctor_authenticated:
         return redirect(url_for("doctor_login"))
     doctor_name = str(session.get("doctor_name", "")).strip() or str(doctor_id)
     return render_template("flask_doctor_dashboard.html", doctor_id=doctor_id, doctor_name=doctor_name)
@@ -1187,6 +1224,7 @@ def doctor_dashboard() -> Any:
 def doctor_logout() -> Any:
     session.pop("doctor_id", None)
     session.pop("doctor_name", None)
+    session.pop("doctor_authenticated", None)
     return redirect(url_for("doctor_login"))
 
 

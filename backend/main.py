@@ -280,6 +280,11 @@ def patient_booking_confirmation_portal() -> RedirectResponse:
     return RedirectResponse(url="/portal/patient/booking-confirmation", status_code=302)
 
 
+@app.get("/patient/logout", include_in_schema=False)
+def patient_logout_portal() -> RedirectResponse:
+    return RedirectResponse(url="/portal/patient/logout", status_code=302)
+
+
 @app.get("/patient/features/{patient_id}", include_in_schema=False)
 def patient_features_portal(patient_id: str) -> RedirectResponse:
     return RedirectResponse(url=f"/portal/patient/features/{patient_id}", status_code=302)
@@ -318,6 +323,11 @@ def doctor_signup_portal_post() -> RedirectResponse:
 @app.get("/doctor/dashboard", include_in_schema=False)
 def doctor_dashboard_portal() -> RedirectResponse:
     return RedirectResponse(url="/portal/doctor/dashboard", status_code=302)
+
+
+@app.get("/doctor/logout", include_in_schema=False)
+def doctor_logout_portal() -> RedirectResponse:
+    return RedirectResponse(url="/portal/doctor/logout", status_code=302)
 
 
 @app.get("/doctor/appointments", include_in_schema=False)
