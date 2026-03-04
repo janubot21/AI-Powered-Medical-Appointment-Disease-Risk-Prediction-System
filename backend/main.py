@@ -270,6 +270,11 @@ def patient_book_appointment_portal() -> RedirectResponse:
     return RedirectResponse(url="/portal/patient/book-appointment", status_code=302)
 
 
+@app.get("/patient/booking-confirmation", include_in_schema=False)
+def patient_booking_confirmation_portal() -> RedirectResponse:
+    return RedirectResponse(url="/portal/patient/booking-confirmation", status_code=302)
+
+
 @app.get("/patient/features/{patient_id}", include_in_schema=False)
 def patient_features_portal(patient_id: str) -> RedirectResponse:
     return RedirectResponse(url=f"/portal/patient/features/{patient_id}", status_code=302)

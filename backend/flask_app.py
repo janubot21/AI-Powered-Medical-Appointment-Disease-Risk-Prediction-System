@@ -1159,6 +1159,7 @@ def doctor_login() -> Any:
             try:
                 resolved_doctor_id = doctor_auth_manager.login(doctor_id, id_type, id_number, password)
                 session["doctor_id"] = resolved_doctor_id
+                session["doctor_name"] = resolved_doctor_id
                 return redirect(url_for("doctor_dashboard"))
             except ValueError as exc:
                 errors.append(str(exc))
@@ -1173,12 +1174,14 @@ def doctor_dashboard() -> Any:
     doctor_id = session.get("doctor_id")
     if not doctor_id:
         return redirect(url_for("doctor_login"))
-    return render_template("flask_doctor_dashboard.html", doctor_id=doctor_id)
+    doctor_name = str(session.get("doctor_name", "")).strip() or str(doctor_id)
+    return render_template("flask_doctor_dashboard.html", doctor_id=doctor_id, doctor_name=doctor_name)
 
 
 @app.route("/doctor/logout")
 def doctor_logout() -> Any:
     session.pop("doctor_id", None)
+    session.pop("doctor_name", None)
     return redirect(url_for("doctor_login"))
 
 

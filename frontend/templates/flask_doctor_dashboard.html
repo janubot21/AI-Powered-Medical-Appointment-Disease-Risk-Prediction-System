@@ -23,6 +23,8 @@
       --med-fg: #8d5c00;
       --low-bg: #dcfce7;
       --low-fg: #166534;
+      --sidebar-expanded: 252px;
+      --sidebar-collapsed: 86px;
     }
 
     * { box-sizing: border-box; }
@@ -36,6 +38,390 @@
       color: var(--ink);
       background: linear-gradient(92deg, #fbe7e5 0%, #e3e4f2 52%, #dbe6fa 100%);
       animation: fade-in 700ms ease both;
+    }
+    .app-sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: var(--sidebar-expanded);
+      background: #fbfdff;
+      border-right: 1px solid #d8e3f3;
+      box-shadow: 10px 0 28px rgba(22, 56, 96, 0.12);
+      padding: 14px 12px;
+      z-index: 70;
+      transition: width 0.28s ease, box-shadow 0.28s ease;
+      overflow: hidden;
+    }
+    .sidebar-top {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .sidebar-headline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .menu-title {
+      margin: 0;
+      font-size: 0.76rem;
+      letter-spacing: 0.16em;
+      color: #557198;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .sidebar-toggle {
+      display: grid;
+      place-items: center;
+      line-height: 1;
+      border: 1px solid #d3e0f2;
+      background: #ffffff;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      color: #204f85;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+    .sidebar-toggle:hover {
+      transform: translateY(-1px);
+      background: #f2f7ff;
+    }
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border: 1px solid #dbe7f6;
+      border-radius: 14px;
+      background: linear-gradient(145deg, #ffffff, #f3f8ff);
+      white-space: nowrap;
+    }
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid #cde0f7;
+      background: #eef5ff;
+      display: grid;
+      place-items: center;
+      color: #2f65a4;
+      flex: 0 0 auto;
+    }
+    .brand-icon svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .brand-title {
+      font-size: 0.86rem;
+      color: #173760;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .brand-sub {
+      font-size: 0.68rem;
+      color: #5b799f;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .sidebar-menu {
+      list-style: none;
+      margin: 6px 0 0;
+      padding: 0;
+      display: grid;
+      gap: 6px;
+    }
+    .sidebar-link {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 10px 11px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: #24476f;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+      white-space: nowrap;
+    }
+    .sidebar-link:hover {
+      background: #eff5ff;
+      color: #143a6a;
+      transform: translateX(1px);
+    }
+    .sidebar-link.active {
+      background: #ece8ff;
+      color: #4a2a96;
+      box-shadow: inset 0 0 0 1px #d8ceff;
+    }
+    .sidebar-link.active::before {
+      content: "";
+      position: absolute;
+      left: -12px;
+      top: 8px;
+      bottom: 8px;
+      width: 4px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #88a7ff, #a186ff);
+    }
+    .sidebar-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #f0f6ff;
+      border: 1px solid #d9e7f9;
+      color: #356ca8;
+      flex: 0 0 auto;
+    }
+    .sidebar-icon svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .sidebar-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    body.sidebar-collapsed .app-sidebar {
+      width: var(--sidebar-collapsed);
+    }
+    body.sidebar-collapsed .menu-title,
+    body.sidebar-collapsed .brand-text,
+    body.sidebar-collapsed .sidebar-label {
+      opacity: 0;
+      visibility: hidden;
+      width: 0;
+    }
+    body.sidebar-collapsed .sidebar-headline {
+      justify-content: center;
+    }
+    body.sidebar-collapsed .sidebar-brand {
+      justify-content: center;
+      padding: 8px;
+    }
+    body.sidebar-collapsed .sidebar-link {
+      justify-content: center;
+      padding: 10px 8px;
+    }
+    body.sidebar-collapsed .sidebar-link.active::before {
+      left: 0;
+    }
+    .app-sidebar.doctor-theme {
+      background: linear-gradient(165deg, #243a67 0%, #1d2f57 48%, #172645 100%);
+      border-right-color: rgba(152, 183, 230, 0.24);
+      box-shadow: 14px 0 30px rgba(8, 17, 34, 0.34);
+    }
+    .app-sidebar.doctor-theme .menu-title {
+      color: #cde0ff;
+    }
+    .app-sidebar.doctor-theme .sidebar-toggle {
+      border-color: rgba(152, 183, 230, 0.42);
+      background: rgba(27, 50, 89, 0.9);
+      color: #e8f2ff;
+    }
+    .app-sidebar.doctor-theme .sidebar-toggle:hover {
+      background: rgba(37, 64, 108, 0.96);
+    }
+    .app-sidebar.doctor-theme .sidebar-brand {
+      border-color: rgba(153, 186, 235, 0.34);
+      background: linear-gradient(140deg, rgba(39, 66, 110, 0.92), rgba(28, 49, 86, 0.92));
+    }
+    .app-sidebar.doctor-theme .brand-icon {
+      border-color: rgba(151, 187, 238, 0.5);
+      background: rgba(183, 213, 255, 0.14);
+      color: #e0eeff;
+    }
+    .app-sidebar.doctor-theme .brand-title {
+      color: #f2f7ff;
+    }
+    .app-sidebar.doctor-theme .brand-sub {
+      color: #bcd5f9;
+    }
+    .sidebar-profile {
+      margin: 10px 0 8px;
+      padding: 10px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(157, 189, 236, 0.32);
+      background: rgba(15, 33, 62, 0.28);
+    }
+    .profile-avatar-mini {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: 2px solid rgba(181, 208, 244, 0.52);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 0.82rem;
+      color: #f1f7ff;
+      background: linear-gradient(145deg, #5a83bd, #395d90);
+      flex: 0 0 auto;
+    }
+    .profile-meta-mini {
+      min-width: 0;
+      line-height: 1.2;
+    }
+    .profile-name-mini {
+      color: #f2f7ff;
+      font-size: 0.95rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .profile-role-mini {
+      color: #b9d4fb;
+      font-size: 0.78rem;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .app-sidebar.doctor-theme .sidebar-link {
+      color: #d9e8ff;
+    }
+    .app-sidebar.doctor-theme .sidebar-link:hover {
+      background: rgba(109, 157, 224, 0.18);
+      color: #f3f8ff;
+    }
+    .app-sidebar.doctor-theme .sidebar-link.active {
+      background: linear-gradient(120deg, rgba(80, 138, 213, 0.42), rgba(57, 105, 178, 0.42));
+      color: #ffffff;
+      box-shadow: inset 0 0 0 1px rgba(143, 185, 242, 0.46);
+    }
+    .app-sidebar.doctor-theme .sidebar-link.active::before {
+      background: linear-gradient(180deg, #8bc0ff, #71a5f1);
+    }
+    .app-sidebar.doctor-theme .sidebar-icon {
+      background: rgba(160, 195, 246, 0.14);
+      border-color: rgba(157, 191, 240, 0.42);
+      color: #ddebff;
+    }
+    .app-sidebar.doctor-theme .sidebar-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .app-sidebar.patient-theme {
+      background: linear-gradient(180deg, #f7fcff 0%, #eef8f8 100%);
+      border-right-color: #d7e7e7;
+      box-shadow: 10px 0 26px rgba(44, 109, 109, 0.14);
+    }
+    .app-sidebar.patient-theme .menu-title {
+      color: #4f6f7a;
+    }
+    .app-sidebar.patient-theme .sidebar-toggle {
+      border-color: #cde4e4;
+      background: #ffffff;
+      color: #2b7f86;
+    }
+    .app-sidebar.patient-theme .sidebar-toggle:hover {
+      background: #f0f9f9;
+    }
+    .app-sidebar.patient-theme .sidebar-brand {
+      border-color: #cee6e6;
+      background: linear-gradient(135deg, #dff3f5, #ecf8f8);
+    }
+    .app-sidebar.patient-theme .brand-icon {
+      border-color: #bde0e0;
+      background: #f3fbfb;
+      color: #2f8f95;
+    }
+    .app-sidebar.patient-theme .brand-title {
+      color: #1f878d;
+    }
+    .app-sidebar.patient-theme .brand-sub {
+      color: #67939a;
+    }
+    .app-sidebar.patient-theme .sidebar-profile {
+      border-color: #cfe5e5;
+      background: rgba(229, 246, 247, 0.9);
+    }
+    .app-sidebar.patient-theme .profile-avatar-mini {
+      border-color: #b8dddd;
+      color: #1e6f78;
+      background: linear-gradient(145deg, #e8f9fb, #d2eef1);
+    }
+    .app-sidebar.patient-theme .profile-name-mini {
+      color: #1f4d56;
+    }
+    .app-sidebar.patient-theme .profile-role-mini {
+      color: #4d7d85;
+    }
+    .app-sidebar.patient-theme .sidebar-link {
+      color: #215d66;
+    }
+    .app-sidebar.patient-theme .sidebar-link:hover {
+      background: #e8f5f6;
+      color: #1d646d;
+    }
+    .app-sidebar.patient-theme .sidebar-link.active {
+      background: linear-gradient(120deg, #d6eff2, #cfeaed);
+      color: #1a7880;
+      box-shadow: inset 0 0 0 1px #b9dfe4;
+    }
+    .app-sidebar.patient-theme .sidebar-link.active::before {
+      background: linear-gradient(180deg, #63bfc6, #55aeb6);
+    }
+    .app-sidebar.patient-theme .sidebar-icon {
+      background: #eef9fa;
+      border-color: #c8e6e8;
+      color: #2e9198;
+    }
+    .app-sidebar.patient-theme .sidebar-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .notif-badge {
+      min-width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: #fff;
+      background: #ea4d63;
+      box-shadow: 0 6px 14px rgba(232, 69, 93, 0.34);
+    }
+    body.sidebar-collapsed .sidebar-profile,
+    body.sidebar-collapsed .profile-meta-mini,
+    body.sidebar-collapsed .notif-badge {
+      display: none;
     }
     .scene {
       position: fixed;
@@ -171,9 +557,13 @@
     .shell {
       max-width: 1280px;
       margin: 0 auto;
-      padding: 24px 16px 30px;
+      padding: 24px 16px 30px calc(16px + var(--sidebar-expanded));
       position: relative;
       z-index: 1;
+      transition: padding-left 0.28s ease;
+    }
+    body.sidebar-collapsed .shell {
+      padding-left: calc(16px + var(--sidebar-collapsed));
     }
 
     .frame {
@@ -1154,9 +1544,36 @@
         max-height: 300px;
       }
     }
+    @media (max-width: 900px) {
+      body {
+        padding-top: 0;
+      }
+      .app-sidebar {
+        width: var(--sidebar-collapsed);
+      }
+      .menu-title,
+      .brand-text,
+      .sidebar-label {
+        opacity: 0;
+        visibility: hidden;
+        width: 0;
+      }
+      .sidebar-headline,
+      .sidebar-brand,
+      .sidebar-link {
+        justify-content: center;
+      }
+      .shell {
+        padding-left: calc(10px + var(--sidebar-collapsed));
+      }
+      body.sidebar-collapsed .shell {
+        padding-left: calc(10px + var(--sidebar-collapsed));
+      }
+    }
   </style>
 </head>
-<body>
+<body data-nav-active="Dashboard">
+  {% set doctor_display_name = (doctor_name or doctor_id or "Doctor") %}
   <div class="scene" aria-hidden="true">
     <div class="sparkles"></div>
     <svg class="medical-icon icon-plus-left" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" /></svg>
@@ -1165,12 +1582,47 @@
     <svg class="medical-icon icon-plus-right" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" /></svg>
     <svg class="medical-icon icon-user" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-7 8a7 7 0 0 1 14 0" /></svg>
   </div>
+  <aside class="app-sidebar patient-theme" id="appSidebar" aria-label="Main navigation">
+    <div class="sidebar-top">
+      <div class="sidebar-headline">
+        <p class="menu-title">MENU</p>
+        <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Collapse sidebar" aria-expanded="true">&lsaquo;</button>
+      </div>
+      <div class="sidebar-brand">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/><path d="M7 7h10v10H7z"/></svg>
+        </span>
+        <span class="brand-text">
+          <span class="brand-title">AIHealth Hub</span>
+          <span class="brand-sub">Healthcare System</span>
+        </span>
+      </div>
+      <div class="sidebar-profile" id="sidebarProfile">
+        <span class="profile-avatar-mini">{{ doctor_display_name[:2]|upper }}</span>
+        <div class="profile-meta-mini">
+          <div class="profile-name-mini">{{ doctor_display_name }}</div>
+          <div class="profile-role-mini">Doctor Portal</div>
+        </div>
+      </div>
+    </div>
+    <ul class="sidebar-menu">
+      <li><a class="sidebar-link" data-nav="Dashboard" href="/doctor/dashboard"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8v8H3zM13 3h8v8h-8zM13 13h8v8h-8zM3 3h8v8H3z"/></svg></span><span class="sidebar-label">Dashboard</span></a></li>
+      <li><a class="sidebar-link" data-nav="Book Appointment" href="/patient/book-appointment"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 9h18M5 5h14v16H5z"/></svg></span><span class="sidebar-label">Book Appointment</span></a></li>
+      <li><a class="sidebar-link" data-nav="Doctor Login" href="/doctor/login"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></span><span class="sidebar-label">Doctor Login</span></a></li>
+      <li><a class="sidebar-link" data-nav="Patient Login" href="/patient/login"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></span><span class="sidebar-label">Patient Login</span></a></li>
+      <li><a class="sidebar-link" data-nav="Portal Login" href="/login"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></span><span class="sidebar-label">Portal Login</span></a></li>
+      <li><a class="sidebar-link" data-nav="Health Details" href="/patient/health-details"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 5.6-7 10-7 10Z"/></svg></span><span class="sidebar-label">Health Details</span></a></li>
+      <li><a class="sidebar-link" data-nav="AI Risk Prediction" href="/doctor/dashboard#ai-risk-analytics"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg></span><span class="sidebar-label">AI Risk Prediction</span></a></li>
+      <li><a class="sidebar-link" data-nav="Profile" href="/doctor/dashboard#sidebarProfile"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg></span><span class="sidebar-label">Profile</span></a></li>
+      <li><a class="sidebar-link" data-nav="Logout" href="{{ url_for('doctor_logout') }}"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><span class="sidebar-label">Logout</span></a></li>
+    </ul>
+  </aside>
   <main class="shell">
     <section class="frame">
       <header class="topbar">
         <div class="title">
           <h1>Doctor Decision Support Dashboard</h1>
-          <p>Logged in as Doctor ID: <strong>{{ doctor_id }}</strong></p>
+          <p>Logged in as Doctor: <strong>{{ doctor_display_name }}</strong></p>
         </div>
         <nav class="links">
           <a href="/login">Back to Role Login</a>
@@ -1236,7 +1688,7 @@
       </section>
 
       <section class="main-grid">
-        <section class="panel">
+        <section class="panel" id="upcoming-appointments">
           <h2>Upcoming Appointments</h2>
           <div class="table-filters" aria-label="Appointment Filters">
             <div class="filter-group">
@@ -1304,7 +1756,7 @@
         </section>
       </section>
 
-      <section class="panel" style="margin-top:12px;">
+      <section class="panel" id="past-appointments" style="margin-top:12px;">
         <h2>Patient Database</h2>
         <div class="db-toolbar">
           <input id="dbSearch" class="db-search" type="search" placeholder="Search by Patient ID, Name, Symptoms, Gender..." />
@@ -1335,7 +1787,7 @@
         </div>
       </section>
 
-      <section class="panel" style="margin-top:12px;">
+      <section class="panel" id="ai-risk-analytics" style="margin-top:12px;">
         <h2>AI Risk Analytics</h2>
         <div class="risk-layout">
           <div>
@@ -1398,6 +1850,45 @@
   </div>
 
   <script>
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const sidebarLinks = document.querySelectorAll(".sidebar-link");
+
+    function applySidebarState(collapsed) {
+      document.body.classList.toggle("sidebar-collapsed", collapsed);
+      if (sidebarToggle) {
+        sidebarToggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+        sidebarToggle.innerHTML = collapsed ? "&rsaquo;" : "&lsaquo;";
+      }
+    }
+
+    function initSidebar() {
+      const saved = localStorage.getItem("aihealth_sidebar_collapsed");
+      if (saved === "1") {
+        applySidebarState(true);
+      } else if (saved === "0") {
+        applySidebarState(false);
+      } else {
+        applySidebarState(window.matchMedia("(max-width: 900px)").matches);
+      }
+
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener("click", () => {
+          const collapsed = !document.body.classList.contains("sidebar-collapsed");
+          applySidebarState(collapsed);
+          localStorage.setItem("aihealth_sidebar_collapsed", collapsed ? "1" : "0");
+        });
+      }
+
+      const activeName = document.body.dataset.navActive || "";
+      sidebarLinks.forEach((link) => {
+        if (link.dataset.nav === activeName) {
+          link.classList.add("active");
+        }
+      });
+    }
+
+    initSidebar();
+
     let cachedAllAppointments = [];
     let cachedAppointments = [];
     let cachedPatientDbRows = [];

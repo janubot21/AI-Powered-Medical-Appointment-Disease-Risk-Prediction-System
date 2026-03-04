@@ -24,6 +24,8 @@
       margin: 0;
       min-height: 100vh;
       overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
       font-family: "Manrope", sans-serif;
       color: var(--ink);
       background: linear-gradient(92deg, #fbe7e5 0%, #e3e4f2 52%, #dbe6fa 100%);
@@ -87,12 +89,13 @@
       position: relative;
       z-index: 2;
       width: min(1320px, 95vw);
-      min-height: auto;
+      flex: 1;
+      min-height: calc(100vh - 78px);
       margin: 0 auto;
-      padding: clamp(1rem, 2.2vw, 1.8rem) clamp(1.2rem, 2.8vw, 2.2rem);
+      padding: clamp(0.8rem, 1.8vw, 1.4rem) clamp(0.9rem, 2.2vw, 1.8rem) clamp(0.6rem, 1.2vw, 1rem);
       display: grid;
       grid-template-columns: 1.05fr 0.95fr;
-      gap: clamp(1.1rem, 2.2vw, 2rem);
+      gap: clamp(0.75rem, 1.4vw, 1.2rem);
       align-items: start;
     }
 
@@ -111,7 +114,7 @@
 
     .left h1 {
       margin: 0.22rem 0 0;
-      font-size: clamp(2rem, 4.8vw, 3.9rem);
+      font-size: clamp(1.7rem, 3.8vw, 3.05rem);
       line-height: 1.03;
       letter-spacing: -0.02em;
       color: #33497e;
@@ -119,8 +122,8 @@
     }
 
     .subtitle {
-      margin: 0.85rem 0 0;
-      font-size: clamp(1.12rem, 1.75vw, 1.68rem);
+      margin: 0.65rem 0 0;
+      font-size: clamp(1rem, 1.35vw, 1.32rem);
       font-weight: 700;
       color: #364d80;
       animation: rise-in 840ms ease 180ms both;
@@ -129,17 +132,17 @@
     .desc {
       margin: 0.6rem 0 0;
       max-width: 54ch;
-      font-size: clamp(0.92rem, 1.1vw, 1.02rem);
+      font-size: clamp(0.88rem, 1vw, 0.98rem);
       line-height: 1.62;
       color: var(--muted);
       animation: rise-in 940ms ease 220ms both;
     }
 
     .bullets {
-      margin: 1rem 0 0;
+      margin: 0.75rem 0 0;
       padding-left: 1.15rem;
       color: #425481;
-      font-size: clamp(0.94rem, 1.2vw, 1.08rem);
+      font-size: clamp(0.86rem, 1.05vw, 0.98rem);
       line-height: 1.7;
       animation: rise-in 980ms ease 280ms both;
     }
@@ -148,7 +151,7 @@
       margin-top: 0.7rem;
       width: 100%;
       max-width: 660px;
-      max-height: 46vh;
+      max-height: 31vh;
       border-radius: 1.22rem;
       border: 1px solid rgba(221, 229, 245, 0.96);
       overflow: hidden;
@@ -175,7 +178,7 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       box-shadow: 0 20px 38px rgba(54, 71, 114, 0.16), 0 0 0 1px rgba(255, 255, 255, 0.38) inset;
-      padding: clamp(1.35rem, 2.4vw, 2rem);
+      padding: clamp(1rem, 1.7vw, 1.3rem);
       animation: rise-in 880ms ease 220ms both, card-float 7.5s ease-in-out 1.2s infinite;
     }
 
@@ -216,22 +219,22 @@
 
     .card h2 {
       margin: 0;
-      font-size: clamp(2.2rem, 3.4vw, 3rem);
+      font-size: clamp(1.95rem, 2.9vw, 2.5rem);
       line-height: 1.06;
       color: var(--ink-strong);
     }
 
     .hint {
       margin: 0.95rem 0 0.3rem;
-      font-size: clamp(1.05rem, 1.35vw, 1.12rem);
+      font-size: clamp(0.98rem, 1.15vw, 1.05rem);
       font-weight: 700;
       color: #364d81;
     }
 
     label {
       display: block;
-      margin: 0.82rem 0 0.35rem;
-      font-size: clamp(1.07rem, 1.26vw, 1.18rem);
+      margin: 0.5rem 0 0.2rem;
+      font-size: clamp(0.96rem, 1.08vw, 1.03rem);
       font-weight: 800;
       color: #2f457a;
     }
@@ -240,9 +243,9 @@
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 0.92rem;
-      padding: 0.86rem 1rem;
+      padding: 0.62rem 0.82rem;
       font: inherit;
-      font-size: 1rem;
+      font-size: 0.95rem;
       color: #2b4274;
       background: rgba(244, 248, 255, 0.75);
       transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease, transform 180ms ease;
@@ -259,13 +262,13 @@
     button {
       position: relative;
       overflow: hidden;
-      margin-top: 1.25rem;
+      margin-top: 0.7rem;
       width: 100%;
       border: 0;
       border-radius: 0.96rem;
-      padding: 0.9rem;
+      padding: 0.62rem;
       font: inherit;
-      font-size: clamp(1.25rem, 1.45vw, 1.38rem);
+      font-size: clamp(1.05rem, 1.2vw, 1.18rem);
       font-weight: 800;
       color: #fff;
       cursor: pointer;
@@ -293,7 +296,7 @@
     }
 
     .create {
-      margin-top: 1rem;
+      margin-top: 0.72rem;
       display: inline-block;
       font-size: clamp(1.05rem, 1.28vw, 1.15rem);
       font-weight: 700;
@@ -347,8 +350,8 @@
     @keyframes wave-rise { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
 
     @media (max-width: 1030px) {
-      .shell { grid-template-columns: 1fr; }
-      .left-image { max-width: 100%; max-height: 34vh; }
+      .shell { min-height: auto; grid-template-columns: 1fr; align-items: start; }
+      .left-image { max-width: 100%; max-height: 30vh; }
       .right { justify-content: stretch; }
       .card { width: 100%; }
       .signup-footer { position: static; transform: none; width: 100%; margin-top: 0.9rem; font-size: 0.76rem; padding: 0.52rem 0.72rem; }
@@ -366,7 +369,7 @@
   
     .global-page-footer {
       width: min(92vw, 980px);
-      margin: 0.25rem auto 0.2rem;
+      margin: 0 auto 0.5rem;
       padding: 0.56rem 0.95rem;
       border-radius: 0.82rem;
       border: 1px solid rgba(170, 188, 214, 0.85);
