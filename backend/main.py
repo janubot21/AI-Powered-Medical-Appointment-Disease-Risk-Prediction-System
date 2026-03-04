@@ -76,6 +76,11 @@ def home_page() -> RedirectResponse:
     return RedirectResponse(url="/portal/login", status_code=302)
 
 
+@app.get("/about", response_class=HTMLResponse)
+def about_page() -> RedirectResponse:
+    return RedirectResponse(url="/portal/about", status_code=302)
+
+
 @app.get("/patient", response_class=HTMLResponse)
 def patient_page() -> str:
     html = _read_template("patient.html")

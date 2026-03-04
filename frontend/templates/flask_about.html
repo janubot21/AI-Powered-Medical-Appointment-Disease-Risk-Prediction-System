@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIHealth Hub | About</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&family=Outfit:wght@400;600;700;800&display=swap");
+
+    :root {
+      --sidebar-expanded: 252px;
+      --sidebar-collapsed: 86px;
+      --ink: #123d74;
+      --copy: #314766;
+      --line: #bdd6ee;
+      --card: #f6f9ff;
+      --tile: #f9fcff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Outfit", "Segoe UI", sans-serif;
+      color: var(--copy);
+      background:
+        radial-gradient(circle at 13% 11%, rgba(76, 186, 255, 0.17), transparent 35%),
+        radial-gradient(circle at 87% 18%, rgba(255, 183, 152, 0.12), transparent 35%),
+        linear-gradient(180deg, #d9e6f3 0%, #ccdaea 100%);
+    }
+
+    .app-sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: var(--sidebar-expanded);
+      background: linear-gradient(180deg, #f7fcff 0%, #eef8f8 100%);
+      border-right: 1px solid #d7e7e7;
+      box-shadow: 10px 0 26px rgba(44, 109, 109, 0.14);
+      padding: 14px 12px;
+      overflow: hidden;
+      transition: width .28s ease;
+      z-index: 30;
+    }
+
+    .sidebar-top { display: grid; gap: 10px; margin-bottom: 12px; }
+    .sidebar-headline { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
+
+    .menu-title {
+      margin: 0;
+      font-size: .76rem;
+      letter-spacing: .16em;
+      color: #4f6f7a;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+
+    .sidebar-toggle {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      border: 1px solid #cde4e4;
+      background: #f9ffff;
+      color: #338995;
+      font-size: 1.35rem;
+      line-height: 1;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 14px;
+      border: 1px solid #c8e3e7;
+      background: #e5f2f4;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #add7de;
+      background: #f1fbfd;
+      color: #2b98aa;
+    }
+
+    .brand-icon svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .brand-title { font-size: .86rem; color: #1f878d; font-weight: 800; line-height: 1.1; white-space: nowrap; }
+    .brand-sub { font-size: .68rem; color: #67939a; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; }
+
+    .sidebar-profile {
+      margin: 10px 0 8px;
+      padding: 10px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid #bddde1;
+      background: #d6eaee;
+    }
+
+    .profile-avatar-mini {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 3px solid #b2dbe0;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #2b7e8d;
+      background: #e8f8fa;
+      flex: 0 0 auto;
+    }
+
+    .profile-name-mini { color: #1f4d56; font-size: .95rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .profile-role-mini { color: #4d7d85; font-size: .78rem; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .sidebar-menu { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
+
+    .sidebar-link {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      white-space: nowrap;
+      text-decoration: none;
+      color: #276675;
+      font-weight: 700;
+      padding: 10px 10px;
+      border-radius: 14px;
+      transition: .2s ease;
+    }
+
+    .sidebar-link:hover { background: #e8f5f6; color: #1d646d; }
+    .sidebar-link.active { background: linear-gradient(120deg, #d6eff2, #cfeaed); color: #1a7880; box-shadow: inset 0 0 0 1px #b9dfe4; }
+    .sidebar-link.active::before { content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 4px; border-radius: 8px; background: linear-gradient(180deg, #63bfc6, #55aeb6); }
+
+    .sidebar-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #add7de;
+      background: #f1fbfd;
+      color: #2b98aa;
+      flex: 0 0 auto;
+    }
+
+    .sidebar-icon svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .sidebar-label { overflow: hidden; text-overflow: ellipsis; }
+
+    .about-main {
+      width: min(1520px, calc(100vw - var(--sidebar-expanded) - 28px));
+      margin: 18px 12px 14px calc(var(--sidebar-expanded) + 12px);
+      transition: margin-left .28s ease, width .28s ease;
+    }
+
+    .shell {
+      border: 1px solid #b5cbe0;
+      border-radius: 28px;
+      background: var(--card);
+      box-shadow: 0 22px 48px rgba(42, 68, 105, 0.12);
+      padding: 36px 34px 30px;
+      position: relative;
+      overflow: hidden;
+      animation: rise .6s ease both;
+    }
+
+    .ecg-strip {
+      position: absolute;
+      left: 32px;
+      right: 32px;
+      top: 118px;
+      height: 42px;
+      opacity: .6;
+      pointer-events: none;
+    }
+
+    .ecg-strip svg { width: 100%; height: 100%; display: block; }
+
+    .shell::before {
+      content: "";
+      position: absolute;
+      left: 34px;
+      right: 34px;
+      top: 94px;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(130, 185, 233, .65), rgba(130, 185, 233, .18));
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap: 22px;
+      align-items: center;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Nunito", sans-serif;
+      font-size: clamp(2rem, 3.1vw, 3.25rem);
+      line-height: 1.03;
+      letter-spacing: .01em;
+    }
+
+    .subtitle {
+      margin: 10px 0 18px;
+      color: #466188;
+      font-size: clamp(1.12rem, 1.25vw, 1.42rem);
+      font-weight: 600;
+    }
+
+    .lead {
+      margin: 0 0 12px;
+      font-size: clamp(1rem, 1.14vw, 1.26rem);
+      line-height: 1.5;
+      color: #394f6f;
+      max-width: 94%;
+    }
+
+    .lead strong { color: #2f4163; }
+
+    .visual {
+      position: relative;
+      min-height: 520px;
+      border-radius: 220px 220px 30px 30px;
+      border: 1px solid #d5e5f4;
+      background:
+        radial-gradient(circle at 32% 40%, rgba(93, 177, 246, 0.22), transparent 42%),
+        radial-gradient(circle at 70% 72%, rgba(119, 208, 242, 0.17), transparent 45%),
+        linear-gradient(160deg, #edf6ff, #dceafb 58%, #d7e9fa);
+      overflow: hidden;
+      display: grid;
+      place-items: end center;
+      box-shadow: inset 0 0 45px rgba(95, 173, 230, 0.18);
+    }
+
+    .visual::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 18% 57%, rgba(255, 255, 255, 0.66), transparent 28%),
+        radial-gradient(circle at 77% 28%, rgba(255, 255, 255, 0.56), transparent 24%);
+      pointer-events: none;
+    }
+
+    .doctor-img {
+      width: 86%;
+      max-width: 560px;
+      object-fit: contain;
+      filter: drop-shadow(0 18px 30px rgba(56, 97, 141, 0.2));
+      transform: translateY(6px);
+      animation: float 5.5s ease-in-out infinite;
+    }
+
+    .icon-bubble {
+      position: absolute;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 1px solid #c9def0;
+      background: rgba(245, 251, 255, 0.86);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 8px 20px rgba(63, 118, 170, 0.13);
+      animation: bob 4.5s ease-in-out infinite;
+    }
+
+    .icon-bubble svg { width: 34px; height: 34px; stroke: #3e89da; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .b1 { top: 24%; left: 12%; }
+    .b2 { top: 12%; right: 14%; animation-delay: .8s; }
+    .b3 { top: 50%; right: 6%; animation-delay: 1.4s; }
+    .b4 { bottom: 16%; left: 8%; animation-delay: .5s; }
+
+    .tiles {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .tile {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--tile);
+      padding: 14px 14px 16px;
+      box-shadow: 0 10px 24px rgba(58, 97, 136, 0.08);
+      transition: transform .2s ease, box-shadow .2s ease;
+      animation: rise .6s ease both;
+    }
+
+    .tile:hover { transform: translateY(-4px); box-shadow: 0 14px 28px rgba(58, 97, 136, 0.16); }
+
+    .tile-top {
+      height: 80px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      background:
+        radial-gradient(circle at 26% 35%, rgba(74, 160, 233, 0.24), transparent 30%),
+        linear-gradient(140deg, #eef6ff, #dcecff);
+      display: grid;
+      place-items: center;
+    }
+
+    .tile-top svg { width: 42px; height: 42px; stroke: #2e86de; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+    .tile h3 {
+      margin: 0 0 6px;
+      color: #294e7c;
+      font-family: "Nunito", sans-serif;
+      font-size: 1.1rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .tile p { margin: 0; color: #516c8e; font-size: .96rem; line-height: 1.35; }
+
+    .global-page-footer {
+      width: 100%;
+      margin: 14px auto 0;
+      padding: .6rem .8rem;
+      border-radius: 999px;
+      border: 1px solid #adc9e4;
+      background: rgba(242, 248, 255, 0.85);
+      color: #5c7899;
+      text-align: center;
+      font-size: clamp(.78rem, .95vw, .92rem);
+      font-weight: 600;
+    }
+
+    body.sidebar-collapsed .app-sidebar { width: var(--sidebar-collapsed); }
+    body.sidebar-collapsed .menu-title,
+    body.sidebar-collapsed .brand-text,
+    body.sidebar-collapsed .sidebar-label,
+    body.sidebar-collapsed .profile-meta-mini { opacity: 0; visibility: hidden; width: 0; }
+    body.sidebar-collapsed .sidebar-headline,
+    body.sidebar-collapsed .sidebar-brand,
+    body.sidebar-collapsed .sidebar-link { justify-content: center; }
+    body.sidebar-collapsed .sidebar-profile { justify-content: center; }
+    body.sidebar-collapsed .about-main {
+      width: min(1520px, calc(100vw - var(--sidebar-collapsed) - 28px));
+      margin-left: calc(var(--sidebar-collapsed) + 12px);
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(6px); }
+      50% { transform: translateY(-2px); }
+    }
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    @media (max-width: 1120px) {
+      .app-sidebar { width: var(--sidebar-collapsed); }
+      .menu-title, .brand-text, .sidebar-label, .profile-meta-mini { opacity: 0; visibility: hidden; width: 0; }
+      .sidebar-headline, .sidebar-brand, .sidebar-link, .sidebar-profile { justify-content: center; }
+      .about-main {
+        width: calc(100vw - var(--sidebar-collapsed) - 16px);
+        margin: 8px 8px 10px calc(var(--sidebar-collapsed) + 8px);
+      }
+      .shell { padding: 20px 16px 18px; border-radius: 18px; }
+      .shell::before { left: 16px; right: 16px; top: 80px; }
+      .ecg-strip { left: 16px; right: 16px; top: 100px; }
+      .content { grid-template-columns: 1fr; }
+      .visual { min-height: 380px; border-radius: 24px; }
+      .tiles { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body data-nav-active="About">
+  {% set sidebar_name = session.get('patient_name') or session.get('doctor_name') or 'Patient' %}
+  {% set sidebar_role = 'Patient Portal' if session.get('patient_name') else ('Doctor Portal' if session.get('doctor_name') else 'Patient Portal') %}
+
+  <aside class="app-sidebar" id="appSidebar" aria-label="Main navigation">
+    <div class="sidebar-top">
+      <div class="sidebar-headline">
+        <p class="menu-title">MENU</p>
+        <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Collapse sidebar" aria-expanded="true">&lsaquo;</button>
+      </div>
+      <div class="sidebar-brand">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/><path d="M7 7h10v10H7z"/></svg>
+        </span>
+        <span class="brand-text">
+          <div class="brand-title">AIHealth Hub</div>
+          <div class="brand-sub">Healthcare System</div>
+        </span>
+      </div>
+      <div class="sidebar-profile" id="sidebarProfile">
+        <span class="profile-avatar-mini">{{ sidebar_name[:2]|upper }}</span>
+        <div class="profile-meta-mini">
+          <div class="profile-name-mini">{{ sidebar_name }}</div>
+          <div class="profile-role-mini">{{ sidebar_role }}</div>
+        </div>
+      </div>
+    </div>
+    <ul class="sidebar-menu">
+      <li><a class="sidebar-link" data-nav="Dashboard" href="/doctor/dashboard"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8v8H3zM13 3h8v8h-8zM13 13h8v8h-8zM3 3h8v8H3z"/></svg></span><span class="sidebar-label">Dashboard</span></a></li>
+      <li><a class="sidebar-link" data-nav="Book Appointment" href="/patient/book-appointment"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 9h18M5 5h14v16H5z"/></svg></span><span class="sidebar-label">Book Appointment</span></a></li>
+      <li><a class="sidebar-link" data-nav="Doctor Login" href="/doctor/login"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></span><span class="sidebar-label">Doctor Login</span></a></li>
+      <li><a class="sidebar-link" data-nav="Patient Login" href="/patient/login"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></span><span class="sidebar-label">Patient Login</span></a></li>
+      <li><a class="sidebar-link" data-nav="Portal Login" href="/login"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></span><span class="sidebar-label">Portal Login</span></a></li>
+      <li><a class="sidebar-link" data-nav="About" href="/about"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7h.01"/></svg></span><span class="sidebar-label">About</span></a></li>
+      <li><a class="sidebar-link" data-nav="Health Details" href="/patient/health-details"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 5.6-7 10-7 10Z"/></svg></span><span class="sidebar-label">Health Details</span></a></li>
+      <li><a class="sidebar-link" data-nav="AI Risk Prediction" href="/patient/book-appointment#overallRisk"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg></span><span class="sidebar-label">AI Risk Prediction</span></a></li>
+      <li><a class="sidebar-link" data-nav="Profile" href="/patient/booking-confirmation"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg></span><span class="sidebar-label">Profile</span></a></li>
+      <li><a class="sidebar-link" data-nav="Logout" href="/patient/logout"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><span class="sidebar-label">Logout</span></a></li>
+    </ul>
+  </aside>
+
+  <main class="about-main">
+    <section class="shell">
+      <div class="ecg-strip" aria-hidden="true">
+        <svg viewBox="0 0 1400 100" preserveAspectRatio="none">
+          <path d="M0 56 L160 56 L184 56 L206 20 L228 84 L252 38 L286 56 L560 56 L582 56 L604 22 L628 84 L650 40 L684 56 L948 56 L972 56 L994 22 L1018 82 L1040 40 L1074 56 L1400 56" fill="none" stroke="rgba(116, 184, 239, .8)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <div class="content">
+        <div class="text-block">
+          <h1>About Our AI Healthcare System</h1>
+          <p class="subtitle">AI-Powered Medical Appointment and Disease Risk Prediction System</p>
+          <p class="lead">
+            Our AI-powered platform enables patients to create accounts, enter health details, and book doctor appointments online.
+            Using advanced intelligence, the system analyzes clinical inputs such as age, symptoms, glucose, blood pressure, and BMI
+            to predict disease risk levels as <strong>Low, Medium, or High</strong>.
+          </p>
+          <p class="lead">
+            It supports doctors with <strong>AI-generated risk indicators</strong>, patient summaries, and appointment management through a
+            dedicated <strong>doctor dashboard</strong>.
+          </p>
+          <p class="lead">Our goal is to make healthcare <strong>smarter, faster, and more efficient</strong> for everyone.</p>
+        </div>
+
+        <div class="visual">
+          <span class="icon-bubble b1"><svg viewBox="0 0 24 24"><path d="M9 2h6v5H9zM4 7h16v15H4z"/><path d="M8 12h8M12 8v8"/></svg></span>
+          <span class="icon-bubble b2"><svg viewBox="0 0 24 24"><path d="M3 12h4l2-4 4 8 2-4h6"/></svg></span>
+          <span class="icon-bubble b3"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.6-7 10-7 10z"/></svg></span>
+          <span class="icon-bubble b4"><svg viewBox="0 0 24 24"><path d="M4 4h7a5 5 0 0 1 5 5v11"/><path d="M16 20a3 3 0 1 0 0-6h-1"/><path d="M5 4v5a4 4 0 0 0 4 4h3"/></svg></span>
+          <img class="doctor-img" src="https://images.pexels.com/photos/8376233/pexels-photo-8376233.png?auto=compress&cs=tinysrgb&w=1200" alt="Healthcare professional illustration" />
+        </div>
+      </div>
+
+      <div class="tiles">
+        <article class="tile">
+          <div class="tile-top"><svg viewBox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg></div>
+          <h3>AI Risk Analysis</h3>
+          <p>Predict disease risks accurately using AI-powered clinical indicators.</p>
+        </article>
+        <article class="tile">
+          <div class="tile-top"><svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 9h18M5 5h14v16H5z"/><path d="m9 14 2 2 4-4"/></svg></div>
+          <h3>Smart Appointment Booking</h3>
+          <p>Easily schedule doctor visits with priority recommendations.</p>
+        </article>
+        <article class="tile">
+          <div class="tile-top"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/><path d="M3 10h3M18 10h3"/></svg></div>
+          <h3>Doctor Decision Support</h3>
+          <p>AI insights and summaries to improve diagnosis and patient care.</p>
+        </article>
+      </div>
+    </section>
+
+    <footer class="global-page-footer">
+      &copy; 2026 AIHealth Hub | Powered by AI Healthcare System | Contact: support@aihealthhub.com
+    </footer>
+  </main>
+
+  <script>
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const sidebarLinks = document.querySelectorAll(".sidebar-link");
+
+    function applySidebarState(collapsed) {
+      document.body.classList.toggle("sidebar-collapsed", collapsed);
+      if (sidebarToggle) {
+        sidebarToggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+        sidebarToggle.innerHTML = collapsed ? "&rsaquo;" : "&lsaquo;";
+      }
+    }
+
+    function initSidebar() {
+      const saved = localStorage.getItem("aihealth_sidebar_collapsed");
+      if (saved === "1") {
+        applySidebarState(true);
+      } else if (saved === "0") {
+        applySidebarState(false);
+      } else {
+        applySidebarState(window.matchMedia("(max-width: 900px)").matches);
+      }
+
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener("click", () => {
+          const collapsed = !document.body.classList.contains("sidebar-collapsed");
+          applySidebarState(collapsed);
+          localStorage.setItem("aihealth_sidebar_collapsed", collapsed ? "1" : "0");
+        });
+      }
+
+      const activeName = document.body.dataset.navActive || "";
+      sidebarLinks.forEach((link) => {
+        if (link.dataset.nav === activeName) link.classList.add("active");
+      });
+    }
+
+    initSidebar();
+  </script>
+</body>
+</html>

@@ -653,6 +653,11 @@ def role_login() -> Any:
     return render_template("flask_role_login.html")
 
 
+@app.route("/about")
+def about_page() -> Any:
+    return render_template("flask_about.html")
+
+
 @app.route("/patient/signup", methods=["GET", "POST"])
 def patient_signup() -> Any:
     errors: list[str] = []
