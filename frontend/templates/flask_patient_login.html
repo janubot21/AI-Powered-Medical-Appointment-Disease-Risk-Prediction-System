@@ -48,16 +48,18 @@
       background: linear-gradient(180deg, #f7fcff 0%, #eef8f8 100%);
       border-right: 1px solid #d7e7e7;
       box-shadow: 10px 0 26px rgba(44, 109, 109, 0.14);
-      padding: 14px 12px;
+      padding: 12px 10px;
       z-index: 80;
       transition: width 0.28s ease;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scrollbar-width: thin;
     }
-    .sidebar-top { display: grid; gap: 10px; margin-bottom: 12px; }
+    .sidebar-top { display: grid; gap: 8px; margin-bottom: 8px; }
     .sidebar-headline { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
     .menu-title {
       margin: 0;
-      font-size: 0.76rem;
+      font-size: 0.7rem;
       letter-spacing: 0.16em;
       color: #4f6f7a;
       font-weight: 800;
@@ -101,11 +103,11 @@
     }
     .brand-icon svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
     .brand-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .brand-title { font-size: 0.86rem; color: #1f878d; font-weight: 800; line-height: 1.1; }
-    .brand-sub { font-size: 0.68rem; color: #67939a; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; }
+    .brand-title { font-size: 0.8rem; color: #1f878d; font-weight: 800; line-height: 1.1; }
+    .brand-sub { font-size: 0.62rem; color: #67939a; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; }
     .sidebar-profile {
-      margin: 10px 0 8px;
-      padding: 10px;
+      margin: 8px 0 6px;
+      padding: 8px;
       border-radius: 14px;
       display: flex;
       align-items: center;
@@ -127,21 +129,31 @@
       flex: 0 0 auto;
     }
     .profile-meta-mini { min-width: 0; line-height: 1.2; }
-    .profile-name-mini { color: #1f4d56; font-size: 0.95rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .profile-role-mini { color: #4d7d85; font-size: 0.78rem; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sidebar-menu { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
+    .profile-name-mini { color: #1f4d56; font-size: 0.88rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .profile-role-mini { color: #4d7d85; font-size: 0.72rem; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-chips { display: flex; gap: 6px; margin: 1px 0 6px; padding: 0 2px; }
+    .chip {
+      width: 26px; height: 26px; border-radius: 9px; border: 1px solid #b8dce2;
+      background: #ebf8fb; color: #2f93a4; display: grid; place-items: center;
+      box-shadow: 0 4px 10px rgba(59, 132, 147, 0.12);
+    }
+    .chip svg {
+      width: 13px; height: 13px; stroke: currentColor; stroke-width: 2; fill: none;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+    .sidebar-menu { list-style: none; margin: 4px 0 0; padding: 0 0 8px; display: grid; gap: 4px; }
     .sidebar-link {
       position: relative;
       display: flex;
       align-items: center;
       gap: 12px;
       width: 100%;
-      padding: 10px 11px;
+      padding: 8px 10px;
       border-radius: 12px;
       text-decoration: none;
       color: #215d66;
       font-weight: 700;
-      font-size: 0.9rem;
+      font-size: 0.84rem;
       white-space: nowrap;
     }
     .sidebar-link:hover { background: #e8f5f6; color: #1d646d; }
@@ -174,6 +186,7 @@
     body.sidebar-collapsed .sidebar-brand,
     body.sidebar-collapsed .sidebar-link { justify-content: center; }
     body.sidebar-collapsed .sidebar-profile { justify-content: center; }
+    body.sidebar-collapsed .sidebar-chips { display: none; }
     body.sidebar-collapsed .shell {
       width: min(1320px, calc(100vw - var(--sidebar-collapsed) - 28px));
       margin-left: calc(var(--sidebar-collapsed) + 12px);
@@ -295,7 +308,7 @@
 
     .left h1 {
       margin: 0.22rem 0 0;
-      font-size: clamp(2rem, 4.8vw, 3.9rem);
+      font-size: clamp(1.72rem, 3.9vw, 3.1rem);
       line-height: 1.03;
       letter-spacing: -0.02em;
       color: #33497e;
@@ -304,7 +317,7 @@
 
     .subtitle {
       margin: 0.85rem 0 0;
-      font-size: clamp(1.12rem, 1.75vw, 1.68rem);
+      font-size: clamp(0.98rem, 1.45vw, 1.34rem);
       font-weight: 700;
       color: #364d80;
       animation: rise-in 840ms ease 180ms both;
@@ -575,6 +588,7 @@
       .sidebar-profile {
         justify-content: center;
       }
+      .sidebar-chips { display: none; }
       .shell {
         min-height: auto;
         grid-template-columns: 1fr;
@@ -700,6 +714,11 @@
           <div class="profile-name-mini">{{ sidebar_name }}</div>
           <div class="profile-role-mini">Patient Portal</div>
         </div>
+      </div>
+      <div class="sidebar-chips" aria-hidden="true">
+        <span class="chip"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.6-7 10-7 10z"/></svg></span>
+        <span class="chip"><svg viewBox="0 0 24 24"><path d="M4 12h4l2-4 4 8 2-4h4"/></svg></span>
+        <span class="chip"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
       </div>
     </div>
     <ul class="sidebar-menu">

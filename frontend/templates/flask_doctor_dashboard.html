@@ -48,15 +48,17 @@
       background: #fbfdff;
       border-right: 1px solid #d8e3f3;
       box-shadow: 10px 0 28px rgba(22, 56, 96, 0.12);
-      padding: 14px 12px;
+      padding: 12px 10px;
       z-index: 70;
       transition: width 0.28s ease, box-shadow 0.28s ease;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scrollbar-width: thin;
     }
     .sidebar-top {
       display: grid;
-      gap: 10px;
-      margin-bottom: 12px;
+      gap: 8px;
+      margin-bottom: 8px;
     }
     .sidebar-headline {
       display: flex;
@@ -66,7 +68,7 @@
     }
     .menu-title {
       margin: 0;
-      font-size: 0.76rem;
+      font-size: 0.7rem;
       letter-spacing: 0.16em;
       color: #557198;
       font-weight: 800;
@@ -129,13 +131,13 @@
       min-width: 0;
     }
     .brand-title {
-      font-size: 0.86rem;
+      font-size: 0.8rem;
       color: #173760;
       font-weight: 800;
       line-height: 1.1;
     }
     .brand-sub {
-      font-size: 0.68rem;
+      font-size: 0.62rem;
       color: #5b799f;
       font-weight: 700;
       letter-spacing: 0.03em;
@@ -143,10 +145,10 @@
     }
     .sidebar-menu {
       list-style: none;
-      margin: 6px 0 0;
-      padding: 0;
+      margin: 4px 0 0;
+      padding: 0 0 8px;
       display: grid;
-      gap: 6px;
+      gap: 4px;
     }
     .sidebar-link {
       position: relative;
@@ -154,12 +156,12 @@
       align-items: center;
       gap: 12px;
       width: 100%;
-      padding: 10px 11px;
+      padding: 8px 10px;
       border-radius: 12px;
       text-decoration: none;
       color: #24476f;
       font-weight: 700;
-      font-size: 0.9rem;
+      font-size: 0.84rem;
       transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
       white-space: nowrap;
     }
@@ -263,8 +265,8 @@
       color: #bcd5f9;
     }
     .sidebar-profile {
-      margin: 10px 0 8px;
-      padding: 10px;
+      margin: 8px 0 6px;
+      padding: 8px;
       border-radius: 14px;
       display: flex;
       align-items: center;
@@ -291,7 +293,7 @@
     }
     .profile-name-mini {
       color: #f2f7ff;
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       font-weight: 800;
       white-space: nowrap;
       overflow: hidden;
@@ -299,11 +301,32 @@
     }
     .profile-role-mini {
       color: #b9d4fb;
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       margin-top: 2px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    .sidebar-chips { display: flex; gap: 6px; margin: 1px 0 6px; padding: 0 2px; }
+    .chip {
+      width: 26px;
+      height: 26px;
+      border-radius: 9px;
+      border: 1px solid #b8dce2;
+      background: #ebf8fb;
+      color: #2f93a4;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 4px 10px rgba(59, 132, 147, 0.12);
+    }
+    .chip svg {
+      width: 13px;
+      height: 13px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
     .app-sidebar.doctor-theme .sidebar-link {
       color: #d9e8ff;
@@ -421,6 +444,9 @@
     body.sidebar-collapsed .sidebar-profile,
     body.sidebar-collapsed .profile-meta-mini,
     body.sidebar-collapsed .notif-badge {
+      display: none;
+    }
+    body.sidebar-collapsed .sidebar-chips {
       display: none;
     }
     .scene {
@@ -629,7 +655,7 @@
     .title h1 {
       margin: 0;
       font-family: "Space Grotesk", "Segoe UI", sans-serif;
-      font-size: clamp(2.1rem, 3.4vw, 3.15rem);
+      font-size: clamp(1.76rem, 2.8vw, 2.55rem);
       color: #10223f;
       background: linear-gradient(100deg, #10223f, #1e5ca8 52%, #0f7d80 92%);
       -webkit-background-clip: text;
@@ -642,6 +668,7 @@
     .title p {
       margin: 8px 0 0;
       color: var(--muted);
+      font-size: 0.9rem;
       font-weight: 500;
     }
 
@@ -1633,6 +1660,9 @@
       .sidebar-link {
         justify-content: center;
       }
+      .sidebar-chips {
+        display: none;
+      }
       .shell {
         padding-left: calc(10px + var(--sidebar-collapsed));
       }
@@ -1673,6 +1703,11 @@
           <div class="profile-name-mini">{{ doctor_display_name }}</div>
           <div class="profile-role-mini">Doctor Portal</div>
         </div>
+      </div>
+      <div class="sidebar-chips" aria-hidden="true">
+        <span class="chip"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.6-7 10-7 10z"/></svg></span>
+        <span class="chip"><svg viewBox="0 0 24 24"><path d="M4 12h4l2-4 4 8 2-4h4"/></svg></span>
+        <span class="chip"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
       </div>
     </div>
     <ul class="sidebar-menu">
