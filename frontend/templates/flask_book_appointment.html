@@ -267,6 +267,39 @@
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       font-weight: 700;
     }
+    .triage-box {
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .triage-title {
+      color: #1e3358;
+      font-weight: 700;
+    }
+    .triage-meta {
+      color: #334155;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+    .triage-badge {
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 0.78rem;
+      color: #fff;
+      font-weight: 800;
+      background: #15803d;
+      white-space: nowrap;
+    }
+    .triage-badge.red { background: #dc2626; }
+    .triage-badge.orange { background: #ea580c; }
+    .triage-badge.green { background: #15803d; }
     .risk-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -626,6 +659,13 @@
           <h2 class="risk-head">Your Risk Assessment Results</h2>
           <p class="risk-sub">Based on your health metrics</p>
           <div class="risk-overall" id="overallRisk">Overall Risk Level: Assessing...</div>
+          <div class="triage-box">
+            <div>
+              <div class="triage-title">Appointment Priority Recommendation</div>
+              <div class="triage-meta" id="triageSlot">Recommended Slot: Assessing...</div>
+            </div>
+            <span class="triage-badge green" id="triageBadge">Normal Appointment</span>
+          </div>
 
           <div class="risk-grid">
             <div class="risk-item">
@@ -1183,6 +1223,32 @@
       overallEl.textContent = `Overall Risk Level: ${overall}`;
     }
 
+    function setTriageBanner(priorityText, slotText, badgeColor) {
+      const badgeEl = document.getElementById("triageBadge");
+      const slotEl = document.getElementById("triageSlot");
+      if (!badgeEl || !slotEl) return;
+
+      badgeEl.classList.remove("red", "orange", "green");
+      if (badgeColor === "red" || badgeColor === "orange" || badgeColor === "green") {
+        badgeEl.classList.add(badgeColor);
+      } else {
+        badgeEl.classList.add("green");
+      }
+      badgeEl.textContent = priorityText || "Normal Appointment";
+      slotEl.textContent = `Recommended Slot: ${slotText || "Next Available Date"}`;
+    }
+
+    function triageFromRiskClass(riskText) {
+      const text = String(riskText || "").toLowerCase();
+      if (text.includes("high")) {
+        return { badge: "Immediate Attention Required", slot: "Within 1 hour", color: "red" };
+      }
+      if (text.includes("medium")) {
+        return { badge: "Same Day Appointment", slot: "Today", color: "orange" };
+      }
+      return { badge: "Normal Appointment", slot: "Next Available Date", color: "green" };
+    }
+
     function updateRiskPanelFromModel(features, modelResult) {
       const age = toNumber(features.Age, null);
       const glucose = toNumber(features.Glucose, null);
@@ -1358,6 +1424,14 @@
         overall = "LOW";
       }
       setOverallBanner(overall);
+      const triage = triageFromRiskClass(
+        (modelResult && (modelResult.risk_level || modelResult.predicted_class)) || overall
+      );
+      setTriageBanner(
+        modelResult && modelResult.priority_badge_text ? modelResult.priority_badge_text : triage.badge,
+        modelResult && modelResult.recommended_slot ? modelResult.recommended_slot : triage.slot,
+        modelResult && modelResult.priority_badge_color ? modelResult.priority_badge_color : triage.color
+      );
       renderRecommendations(overall);
     }
 
@@ -1371,6 +1445,7 @@
         setRiskCard("diabetes", 0);
         setRiskCard("hypertension", 0);
         setOverallBanner("LOW");
+        setTriageBanner("Normal Appointment", "Next Available Date", "green");
         renderRecommendations("LOW");
         return;
       }
@@ -1387,6 +1462,7 @@
         setRiskCard("diabetes", 0);
         setRiskCard("hypertension", 0);
         setOverallBanner("LOW");
+        setTriageBanner("Normal Appointment", "Next Available Date", "green");
         renderRecommendations("LOW");
       }
     }

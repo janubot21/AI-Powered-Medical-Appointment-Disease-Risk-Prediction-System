@@ -27,6 +27,7 @@ from predict import (
     default_features_json,
     to_jsonable,
 )
+from triage import determine_priority
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -183,12 +184,15 @@ def book_appointment(payload: AppointmentBookingRequest) -> AppointmentBookingRe
         raise HTTPException(status_code=500, detail=f"Risk assessment failed: {exc}") from exc
 
     booking_status = "confirmed"
+    priority = determine_priority(risk_assessment.risk_level)
     response = AppointmentBookingResponse(
         booking_status=booking_status,
         patient_id=payload.patient_id,
         doctor_id=doctor_id,
         appointment_time=payload.appointment_time,
         risk_assessment=risk_assessment,
+        appointment_priority=priority.priority,
+        recommended_slot=priority.recommended_slot,
     )
     APPOINTMENTS.append(
         {
@@ -198,6 +202,10 @@ def book_appointment(payload: AppointmentBookingRequest) -> AppointmentBookingRe
             "appointment_time": payload.appointment_time.isoformat(),
             "patient_features": to_jsonable(features),
             "risk_assessment": response.risk_assessment.model_dump(),
+            "appointment_priority": response.appointment_priority,
+            "recommended_slot": response.recommended_slot,
+            "priority_badge_text": priority.badge_text,
+            "priority_badge_color": priority.badge_color,
         }
     )
     return response

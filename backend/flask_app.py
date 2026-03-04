@@ -14,6 +14,7 @@ from doctor_auth import DoctorAuthManager
 from paths import DOCTOR_ACCOUNTS_CSV, NEW_PATIENT_CSV, PATIENTS_CSV, PATIENT_DB_PATH, ensure_csv_exists
 from patient_db import PatientDatabase
 from predict import LABEL_ENCODER_PATH, MODEL_PATH, RiskEngine, to_jsonable
+from triage import determine_priority
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -74,7 +75,17 @@ def _risk_rank(value: Any) -> int:
     return 2
 
 
+def _priority_rank(value: Any) -> int:
+    text = str(value or "").strip().lower()
+    if "immediate" in text:
+        return 0
+    if "same" in text:
+        return 1
+    return 2
+
+
 def _doctor_appointment_sort_key(item: Dict[str, Any]) -> tuple[int, datetime, float]:
+    priority_rank = _priority_rank(item.get("appointment_priority"))
     risk_raw = (item.get("risk_assessment") or {}).get("predicted_class")
     rank = _risk_rank(risk_raw)
     at = _parse_appointment_time(item.get("appointment_time")) or datetime.max
@@ -83,8 +94,8 @@ def _doctor_appointment_sort_key(item: Dict[str, Any]) -> tuple[int, datetime, f
         booked_ts = datetime.fromisoformat(booked_at.replace("Z", "+00:00")).timestamp()
     except ValueError:
         booked_ts = 0.0
-    # Risk priority first; then earliest appointment time; then latest booked record.
-    return (rank, at, -booked_ts)
+    # Explicit triage priority first; fallback to risk class; then earliest slot; then newest booking.
+    return (priority_rank, rank, at, -booked_ts)
 
 
 def _format_date_label(dt: Optional[datetime]) -> str:
@@ -905,6 +916,10 @@ def patient_booking_confirmation() -> Any:
                 "appointment_time": dt,
                 "date_label": _format_date_label(dt),
                 "time_label": _format_time_label(dt),
+                "appointment_priority": str(item.get("appointment_priority", "")).strip() or "Normal",
+                "recommended_slot": str(item.get("recommended_slot", "")).strip() or "Next Available Date",
+                "priority_badge_text": str(item.get("priority_badge_text", "")).strip() or "Normal Appointment",
+                "priority_badge_color": str(item.get("priority_badge_color", "")).strip() or "green",
             }
         )
 
@@ -1023,6 +1038,7 @@ def submit_appointment() -> Any:
     except Exception as exc:  # pragma: no cover - guard
         return jsonify({"detail": f"Risk assessment failed: {exc}"}), 500
 
+    priority = determine_priority(risk_assessment.risk_level)
     appointment_id = uuid4().hex
     result = {
         "booking_status": "confirmed",
@@ -1033,6 +1049,12 @@ def submit_appointment() -> Any:
         "doctor_id": doctor_id,
         "appointment_type": appointment_type,
         "appointment_time": parsed_time.isoformat(),
+        "predicted_disease": risk_assessment.predicted_class,
+        "risk_level": risk_assessment.risk_level.title(),
+        "appointment_priority": priority.priority,
+        "recommended_slot": priority.recommended_slot,
+        "priority_badge_text": priority.badge_text,
+        "priority_badge_color": priority.badge_color,
         "redirect_url": url_for("patient_booking_confirmation"),
     }
     APPOINTMENTS.append(
@@ -1047,6 +1069,10 @@ def submit_appointment() -> Any:
             "appointment_time": parsed_time.isoformat(),
             "patient_features": to_jsonable(patient_features),
             "risk_assessment": risk_assessment.model_dump(),
+            "appointment_priority": priority.priority,
+            "recommended_slot": priority.recommended_slot,
+            "priority_badge_text": priority.badge_text,
+            "priority_badge_color": priority.badge_color,
         }
     )
     return jsonify(result)
@@ -1180,7 +1206,17 @@ def patient_predict_risk() -> Any:
 
     try:
         result = risk_engine.predict(patient_features)
-        return jsonify(result.model_dump())
+        priority = determine_priority(result.risk_level)
+        payload = result.model_dump()
+        payload.update(
+            {
+                "appointment_priority": priority.priority,
+                "recommended_slot": priority.recommended_slot,
+                "priority_badge_text": priority.badge_text,
+                "priority_badge_color": priority.badge_color,
+            }
+        )
+        return jsonify(payload)
     except ValueError as exc:
         return jsonify({"detail": str(exc)}), 400
     except Exception as exc:  # pragma: no cover - guard
@@ -1200,7 +1236,17 @@ def doctor_predict_risk() -> Any:
 
     try:
         result = risk_engine.predict(patient_features)
-        return jsonify(result.model_dump())
+        priority = determine_priority(result.risk_level)
+        payload = result.model_dump()
+        payload.update(
+            {
+                "appointment_priority": priority.priority,
+                "recommended_slot": priority.recommended_slot,
+                "priority_badge_text": priority.badge_text,
+                "priority_badge_color": priority.badge_color,
+            }
+        )
+        return jsonify(payload)
     except ValueError as exc:
         return jsonify({"detail": str(exc)}), 400
     except Exception as exc:  # pragma: no cover - guard

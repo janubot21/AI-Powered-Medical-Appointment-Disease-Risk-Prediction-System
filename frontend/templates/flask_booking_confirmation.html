@@ -124,6 +124,25 @@
     }
     .appt-row:last-child { border-bottom: 0; }
     .muted { color: var(--muted); }
+    .priority-chip {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      color: #fff;
+    }
+    .priority-chip.red { background: #dc2626; }
+    .priority-chip.orange { background: #ea580c; }
+    .priority-chip.green { background: #15803d; }
+    .slot-note {
+      margin-top: 5px;
+      font-size: 12px;
+      color: #334155;
+      font-weight: 600;
+    }
     .date-cell { display: flex; align-items: center; gap: 12px; }
     .date-icon {
       width: 34px;
@@ -224,7 +243,11 @@
                 <span>{{ ap.date_label }}</span>
               </div>
               <div>{{ ap.time_label }}</div>
-              <div>Dr. {{ ap.doctor_id }} <span class="muted">({{ ap.appointment_type }})</span></div>
+              <div>
+                <div>Dr. {{ ap.doctor_id }} <span class="muted">({{ ap.appointment_type }})</span></div>
+                <span class="priority-chip {{ ap.priority_badge_color }}">{{ ap.priority_badge_text }}</span>
+                <div class="slot-note">Recommended Slot: {{ ap.recommended_slot }}</div>
+              </div>
               <form method="post" action="{{ url_for('patient_cancel_appointment') }}">
                 <input type="hidden" name="appointment_id" value="{{ ap.appointment_id }}" />
                 <button class="btn btn-danger" type="submit">Cancel</button>
@@ -248,7 +271,11 @@
                 <span>{{ ap.date_label }}</span>
               </div>
               <div>{{ ap.time_label }}</div>
-              <div>Dr. {{ ap.doctor_id }} <span class="muted">({{ ap.appointment_type }})</span></div>
+              <div>
+                <div>Dr. {{ ap.doctor_id }} <span class="muted">({{ ap.appointment_type }})</span></div>
+                <span class="priority-chip {{ ap.priority_badge_color }}">{{ ap.priority_badge_text }}</span>
+                <div class="slot-note">Recommended Slot: {{ ap.recommended_slot }}</div>
+              </div>
               <button
                 type="button"
                 class="btn btn-view"

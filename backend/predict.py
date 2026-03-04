@@ -53,6 +53,8 @@ class AppointmentBookingResponse(BaseModel):
     doctor_id: Optional[str] = None
     appointment_time: datetime
     risk_assessment: RiskPredictionResponse
+    appointment_priority: str
+    recommended_slot: str
 
 
 class RiskEngine:
