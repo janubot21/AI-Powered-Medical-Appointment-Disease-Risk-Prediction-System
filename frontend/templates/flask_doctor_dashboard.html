@@ -643,9 +643,9 @@
 
     .topbar {
       display: flex;
-      gap: 12px;
+      gap: 14px;
       justify-content: space-between;
-      align-items: flex-end;
+      align-items: center;
       flex-wrap: wrap;
       margin-bottom: 12px;
       padding-bottom: 12px;
@@ -672,35 +672,220 @@
       font-weight: 500;
     }
 
-    .links {
+    .account-strip {
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
       gap: 10px;
+      position: fixed;
+      top: 10px;
+      right: 12px;
+      z-index: 130;
     }
 
-    .links a {
-      color: #124f7d;
+    .account-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(136, 170, 219, 0.5);
+      background: linear-gradient(135deg, rgba(41, 76, 126, 0.68), rgba(25, 55, 97, 0.72));
+      color: #e9f3ff;
+      min-width: 238px;
+    }
+    .account-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid rgba(162, 199, 244, 0.72);
+      background: linear-gradient(140deg, #2f76a0, #264f8c);
+      color: #dff1ff;
+      display: grid;
+      place-items: center;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      flex: 0 0 auto;
+    }
+    .account-meta {
+      min-width: 0;
+      line-height: 1.15;
+    }
+    .account-name {
+      margin: 1px 0 0;
+      font-size: 1.05rem;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      color: #f2f8ff;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .strip-btn {
+      color: #ecf4ff;
       text-decoration: none;
       font-weight: 700;
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(135, 167, 208, 0.56);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(237, 245, 255, 0.96));
+      border-radius: 12px;
+      border: 1px solid rgba(123, 162, 212, 0.5);
+      background: linear-gradient(180deg, rgba(33, 65, 110, 0.92), rgba(25, 51, 88, 0.96));
+      padding: 10px 14px;
       transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.92rem;
     }
-    .links a:hover {
+    .strip-btn:hover {
       transform: translateY(-1px);
-      border-color: #8eb2df;
-      box-shadow: 0 8px 18px rgba(26, 67, 112, 0.16);
+      border-color: rgba(158, 193, 239, 0.72);
+      box-shadow: 0 10px 18px rgba(16, 42, 74, 0.32);
     }
-    .links a.logout-btn {
-      background: linear-gradient(180deg, #ffefe9, #ffd9cd);
-      border-color: #f1b7a6;
-      color: #982d1b;
+    .strip-btn svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
-    .links a.logout-btn:hover {
-      border-color: #e59783;
-      box-shadow: 0 10px 20px rgba(149, 41, 20, 0.2);
+    .mode-select {
+      min-width: 142px;
+      color: #f0f7ff;
+      border-radius: 12px;
+      border: 1px solid rgba(145, 184, 233, 0.56);
+      background: linear-gradient(180deg, rgba(46, 83, 135, 0.92), rgba(31, 62, 103, 0.96));
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .strip-btn.logout-btn {
+      border-color: rgba(243, 182, 170, 0.7);
+      color: #ffdcd1;
+      background: linear-gradient(180deg, rgba(127, 42, 33, 0.94), rgba(94, 30, 23, 0.98));
+    }
+    .strip-btn.logout-btn:hover {
+      border-color: rgba(255, 195, 181, 0.88);
+      box-shadow: 0 10px 20px rgba(83, 24, 19, 0.36);
+    }
+    body.mode-light .account-chip {
+      border-color: #a3c3eb;
+      background: linear-gradient(145deg, #f4f9ff, #e6f1ff);
+      color: #183c66;
+    }
+    body.mode-light .account-avatar {
+      border-color: #94b8e8;
+      background: linear-gradient(140deg, #cae4ff, #9ec5f1);
+      color: #1e4f83;
+    }
+    body.mode-light .account-name {
+      color: #173a64;
+    }
+    body.mode-light .strip-btn {
+      color: #1d4a76;
+      border-color: #9cc0e9;
+      background: linear-gradient(180deg, #ffffff, #e7f1ff);
+    }
+    body.mode-light .mode-select {
+      color: #0e4f85;
+      border-color: #8cb7e6;
+      background: linear-gradient(180deg, #f2f8ff, #deecff);
+    }
+    body.mode-light .strip-btn.logout-btn {
+      color: #8f2f21;
+      border-color: #e8b1a1;
+      background: linear-gradient(180deg, #ffefe9, #ffd9ce);
+    }
+    body.mode-dark {
+      color: #dfe9fb;
+      background: linear-gradient(110deg, #08121f 0%, #0e1e35 52%, #15294a 100%) !important;
+    }
+    body.mode-dark .frame,
+    body.mode-dark .panel,
+    body.mode-dark .kpi,
+    body.mode-dark .table-wrap,
+    body.mode-dark .cookie-banner,
+    body.mode-dark .logout-modal {
+      background: linear-gradient(155deg, rgba(19, 33, 56, 0.96), rgba(15, 28, 49, 0.96)) !important;
+      border-color: rgba(84, 110, 150, 0.66) !important;
+      color: #e7efff !important;
+      box-shadow: 0 16px 34px rgba(4, 10, 20, 0.4) !important;
+    }
+    body.mode-dark .topbar {
+      border-bottom-color: rgba(110, 138, 179, 0.44);
+    }
+    body.mode-dark .title h1 {
+      background: linear-gradient(100deg, #eaf2ff, #8fc1ff 58%, #82dfdf 92%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    body.mode-dark .title p,
+    body.mode-dark .k,
+    body.mode-dark th,
+    body.mode-dark td,
+    body.mode-dark label,
+    body.mode-dark .sub,
+    body.mode-dark .muted {
+      color: #b8c9e4 !important;
+    }
+    body.mode-dark .v,
+    body.mode-dark h2,
+    body.mode-dark h3,
+    body.mode-dark strong {
+      color: #f3f7ff !important;
+    }
+    body,
+    .frame,
+    .panel,
+    .kpi,
+    .table-wrap,
+    .cookie-banner,
+    .logout-modal,
+    .strip-btn,
+    .mode-select {
+      transition: background 420ms cubic-bezier(0.22, 1, 0.36, 1), color 380ms ease, border-color 380ms ease, box-shadow 420ms ease;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      background: linear-gradient(112deg, rgba(160, 194, 240, 0) 0%, rgba(160, 194, 240, 0.22) 48%, rgba(160, 194, 240, 0) 100%);
+      transform: translateX(-18%);
+      z-index: 9999;
+    }
+    @keyframes modeSwitchLift {
+      0% { transform: translateY(8px) scale(0.992); opacity: 0.72; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    @keyframes modeSwitchGlow {
+      0% { box-shadow: 0 0 0 0 rgba(103, 156, 233, 0.32); transform: scale(0.985); }
+      100% { box-shadow: 0 0 0 14px rgba(103, 156, 233, 0); transform: scale(1); }
+    }
+    @keyframes modeSwitchSweep {
+      0% { opacity: 0; transform: translateX(-18%); }
+      20% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(18%); }
+    }
+    body.mode-transition::after {
+      animation: modeSwitchSweep 560ms ease-out both;
+    }
+    body.mode-transition .frame,
+    body.mode-transition .panel,
+    body.mode-transition .kpi,
+    body.mode-transition .table-wrap {
+      animation: modeSwitchLift 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+    body.mode-transition .mode-select,
+    body.mode-transition .strip-btn {
+      animation: modeSwitchGlow 520ms ease both;
     }
     .logout-modal-overlay {
       position: fixed;
@@ -1603,9 +1788,7 @@
     }
 
     @media (max-width: 1100px) {
-      .topbar {
-        padding-right: 74px;
-      }
+      .account-strip { top: 8px; right: 10px; }
       .profile-menu {
         width: min(292px, calc(100vw - 44px));
       }
@@ -1618,9 +1801,9 @@
     }
 
     @media (max-width: 760px) {
-      .topbar {
-        padding-right: 62px;
-      }
+      .account-strip { gap: 6px; }
+      .account-chip { min-width: 180px; }
+      .strip-btn { padding: 8px 10px; font-size: 0.84rem; }
       .profile-trigger {
         width: 44px;
         height: 44px;
@@ -1733,13 +1916,15 @@
       <header class="topbar">
         <div class="title">
           <h1>Doctor Decision Support Dashboard</h1>
-          <p>Logged in as Doctor: <strong>{{ doctor_display_name }}</strong></p>
+          <p>Live appointments and risk analytics for <strong>{{ doctor_display_name }}</strong></p>
         </div>
-        <nav class="links">
-          <a href="/login">Back to Role Login</a>
-          <a href="/patient/book-appointment">Patient Booking Page</a>
-          <a href="{{ url_for('doctor_logout') }}" class="logout-btn confirm-logout-trigger">Logout</a>
-        </nav>
+        <div class="account-strip" aria-label="Account controls">
+          <select id="modeSelect" class="mode-select" aria-label="Theme mode">
+            <option value="light">Light Mode</option>
+            <option value="dark">Dark Mode</option>
+          </select>
+          <a href="{{ url_for('doctor_logout') }}" class="strip-btn logout-btn confirm-logout-trigger">Logout</a>
+        </div>
       </header>
       <section class="grid-cards">
         <article class="kpi">
@@ -2010,6 +2195,47 @@
     const cookieBanner = document.getElementById("cookieBanner");
     const cookieAcceptBtn = document.getElementById("cookieAcceptBtn");
     const cookieDeclineBtn = document.getElementById("cookieDeclineBtn");
+    const modeSelect = document.getElementById("modeSelect");
+    const modeStorageKey = "doctor_dashboard_mode";
+    let modeAnimationTimer = null;
+
+    function applyDashboardMode(mode) {
+      const useLight = mode === "light";
+      document.body.classList.toggle("mode-light", useLight);
+      document.body.classList.toggle("mode-dark", !useLight);
+      if (modeSelect) modeSelect.value = useLight ? "light" : "dark";
+      document.body.classList.remove("mode-transition");
+      void document.body.offsetWidth;
+      document.body.classList.add("mode-transition");
+      if (modeAnimationTimer) clearTimeout(modeAnimationTimer);
+      modeAnimationTimer = setTimeout(() => {
+        document.body.classList.remove("mode-transition");
+      }, 580);
+    }
+
+    if (modeSelect) {
+      let savedMode = "dark";
+      try {
+        savedMode = localStorage.getItem(modeStorageKey) || "dark";
+      } catch (_) {
+        savedMode = "dark";
+      }
+      const urlMode = new URLSearchParams(window.location.search).get("mode");
+      if (urlMode === "light" || urlMode === "dark") {
+        savedMode = urlMode;
+      }
+      applyDashboardMode(savedMode);
+      modeSelect.addEventListener("change", () => {
+        const selectedMode = modeSelect.value === "light" ? "light" : "dark";
+        applyDashboardMode(selectedMode);
+        try {
+          localStorage.setItem(modeStorageKey, selectedMode);
+        } catch (_) {
+          // localStorage may be unavailable in strict browser contexts.
+        }
+      });
+    }
+
     const logoutTrigger = document.querySelector(".confirm-logout-trigger");
     const logoutModal = document.getElementById("logoutModal");
     const logoutConfirmBtn = document.getElementById("logoutConfirmBtn");

@@ -691,6 +691,54 @@
         line-height: 1.35;
       }
     }
+    .app-dialog-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(12, 23, 45, 0.45);
+      z-index: 2200;
+      padding: 16px;
+    }
+    .app-dialog-overlay.show {
+      display: flex;
+    }
+    .app-dialog {
+      width: min(560px, 100%);
+      border-radius: 16px;
+      border: 1px solid #cfddf2;
+      background: #ffffff;
+      box-shadow: 0 20px 36px rgba(13, 42, 78, 0.24);
+      padding: 20px;
+      text-align: left;
+    }
+    .app-dialog h3 {
+      margin: 0 0 8px;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      font-size: 1.45rem;
+      color: #10284d;
+    }
+    .app-dialog p {
+      margin: 0;
+      color: #38557d;
+      font-size: 1rem;
+    }
+    .app-dialog-actions {
+      margin-top: 18px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .app-dialog-ok {
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 16px;
+      min-width: 96px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #2f6fd6;
+      color: #fff;
+    }
   </style>
 </head>
 <body data-nav-active="Patient Login">
@@ -842,6 +890,15 @@
       </div>
     </section>
 </main>
+  <div class="app-dialog-overlay" id="appDialog" aria-hidden="true">
+    <div class="app-dialog" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle">
+      <h3 id="appDialogTitle">Notice</h3>
+      <p id="appDialogMessage">Message</p>
+      <div class="app-dialog-actions">
+        <button type="button" class="app-dialog-ok" id="appDialogOkBtn">OK</button>
+      </div>
+    </div>
+  </div>
 
   <script>
 
@@ -883,12 +940,57 @@
     }
 
     initSidebar();
+    const appDialog = document.getElementById("appDialog");
+    const appDialogTitle = document.getElementById("appDialogTitle");
+    const appDialogMessage = document.getElementById("appDialogMessage");
+    const appDialogOkBtn = document.getElementById("appDialogOkBtn");
+    let appDialogConfirm = null;
+
+    function closeAppDialog() {
+      if (!appDialog) return;
+      appDialog.classList.remove("show");
+      appDialog.setAttribute("aria-hidden", "true");
+    }
+
+    function openAppDialog(message, options = {}) {
+      if (!appDialog || !appDialogTitle || !appDialogMessage || !appDialogOkBtn) return;
+      appDialogTitle.textContent = options.title || "Notice";
+      appDialogMessage.textContent = message;
+      appDialogOkBtn.textContent = options.okLabel || "OK";
+      appDialogConfirm = typeof options.onConfirm === "function" ? options.onConfirm : null;
+      appDialog.classList.add("show");
+      appDialog.setAttribute("aria-hidden", "false");
+      appDialogOkBtn.focus();
+    }
+
+    if (appDialog && appDialogOkBtn) {
+      appDialogOkBtn.addEventListener("click", () => {
+        const fn = appDialogConfirm;
+        closeAppDialog();
+        if (fn) fn();
+      });
+      appDialog.addEventListener("click", (event) => {
+        if (event.target === appDialog) {
+          closeAppDialog();
+        }
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && appDialog.classList.contains("show")) {
+          closeAppDialog();
+        }
+      });
+    }
 
     const patientLoginSuccess = {{ "true" if login_success else "false" }};
     const patientRedirectUrl = {{ (redirect_url or "")|tojson }};
     if (patientLoginSuccess && patientRedirectUrl) {
-      alert("Login successful.");
-      window.location.href = patientRedirectUrl;
+      openAppDialog("Login successful.", {
+        title: "Login Successful",
+        okLabel: "Continue",
+        onConfirm: () => {
+          window.location.href = patientRedirectUrl;
+        }
+      });
     }
 
     function syncLoginPanels() {
@@ -945,27 +1047,27 @@
 
       if (mode === "patient_name" && !name) {
         event.preventDefault();
-        alert("Enter Patient Name.");
+        openAppDialog("Enter Patient Name.", { title: "Validation" });
         return;
       }
 
       if (mode === "id_number") {
         if (!idType || !idNumber) {
           event.preventDefault();
-          alert("Select ID Type and enter ID Number.");
+          openAppDialog("Select ID Type and enter ID Number.", { title: "Validation" });
           return;
         }
       }
 
       if (!name && !idNumber) {
         event.preventDefault();
-        alert("Enter Patient Name OR ID Number.");
+        openAppDialog("Enter Patient Name OR ID Number.", { title: "Validation" });
         return;
       }
 
       if (!password) {
         event.preventDefault();
-        alert("Password is required.");
+        openAppDialog("Password is required.", { title: "Validation" });
         return;
       }
 

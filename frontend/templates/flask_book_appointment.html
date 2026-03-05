@@ -897,6 +897,135 @@
     .toplink:hover::before {
       animation: arrowNudge 700ms ease-in-out infinite;
     }
+    .quick-controls {
+      position: fixed;
+      top: 10px;
+      right: 12px;
+      z-index: 2200;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .mode-select {
+      min-width: 142px;
+      color: #0e4f85;
+      border-radius: 16px;
+      border: 1px solid #8cb7e6;
+      background: linear-gradient(180deg, #f2f8ff, #deecff);
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .logout-quick {
+      text-decoration: none;
+      color: #8f2f21;
+      font-weight: 700;
+      border-radius: 16px;
+      border: 1px solid #e8b1a1;
+      background: linear-gradient(180deg, #ffefe9, #ffd9ce);
+      padding: 10px 16px;
+      display: inline-flex;
+      align-items: center;
+    }
+    body.mode-dark {
+      color: #dfe9fb;
+      background: linear-gradient(112deg, #08121f 0%, #0e1e35 52%, #15294a 100%) !important;
+    }
+    body.mode-dark .dashboard-shell,
+    body.mode-dark .patient-card,
+    body.mode-dark .risk-dashboard,
+    body.mode-dark .risk-item,
+    body.mode-dark .snapshot-card,
+    body.mode-dark .care-track,
+    body.mode-dark .triage-box,
+    body.mode-dark .right-panel,
+    body.mode-dark .output,
+    body.mode-dark .confirm-modal {
+      background: linear-gradient(155deg, rgba(19, 33, 56, 0.96), rgba(15, 28, 49, 0.96)) !important;
+      border-color: rgba(84, 110, 150, 0.66) !important;
+      color: #e7efff !important;
+      box-shadow: 0 14px 30px rgba(4, 10, 20, 0.4) !important;
+    }
+    body.mode-dark .left-title,
+    body.mode-dark .risk-head,
+    body.mode-dark .snapshot-title,
+    body.mode-dark .feature-card-head label,
+    body.mode-dark .patient-card h3,
+    body.mode-dark strong {
+      color: #f3f7ff !important;
+    }
+    body.mode-dark .left-sub,
+    body.mode-dark .left-welcome,
+    body.mode-dark .patient-card-id,
+    body.mode-dark .snapshot-key,
+    body.mode-dark .triage-meta,
+    body.mode-dark .risk-sub,
+    body.mode-dark label {
+      color: #b8c9e4 !important;
+    }
+    body.mode-dark .mode-select {
+      color: #f0f7ff;
+      border-color: rgba(145, 184, 233, 0.56);
+      background: linear-gradient(180deg, rgba(46, 83, 135, 0.92), rgba(31, 62, 103, 0.96));
+    }
+    body.mode-dark .logout-quick {
+      border-color: rgba(243, 182, 170, 0.7);
+      color: #ffdcd1;
+      background: linear-gradient(180deg, rgba(127, 42, 33, 0.94), rgba(94, 30, 23, 0.98));
+    }
+    body,
+    .dashboard-shell,
+    .patient-card,
+    .risk-dashboard,
+    .risk-item,
+    .snapshot-card,
+    .care-track,
+    .triage-box,
+    .right-panel,
+    .output,
+    .confirm-modal,
+    .mode-select,
+    .logout-quick {
+      transition: background 420ms cubic-bezier(0.22, 1, 0.36, 1), color 380ms ease, border-color 380ms ease, box-shadow 420ms ease;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      background: linear-gradient(112deg, rgba(160, 194, 240, 0) 0%, rgba(160, 194, 240, 0.22) 48%, rgba(160, 194, 240, 0) 100%);
+      transform: translateX(-18%);
+      z-index: 9999;
+    }
+    @keyframes modeSwitchLift {
+      0% { transform: translateY(8px) scale(0.992); opacity: 0.72; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    @keyframes modeSwitchGlow {
+      0% { box-shadow: 0 0 0 0 rgba(103, 156, 233, 0.32); transform: scale(0.985); }
+      100% { box-shadow: 0 0 0 14px rgba(103, 156, 233, 0); transform: scale(1); }
+    }
+    @keyframes modeSwitchSweep {
+      0% { opacity: 0; transform: translateX(-18%); }
+      20% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(18%); }
+    }
+    body.mode-transition::after {
+      animation: modeSwitchSweep 560ms ease-out both;
+    }
+    body.mode-transition .dashboard-shell,
+    body.mode-transition .patient-card,
+    body.mode-transition .risk-dashboard,
+    body.mode-transition .risk-item {
+      animation: modeSwitchLift 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+    body.mode-transition .mode-select,
+    body.mode-transition .logout-quick {
+      animation: modeSwitchGlow 520ms ease both;
+    }
     .modal-backdrop { position: fixed; inset: 0; background: rgba(10, 20, 40, 0.5); display: none; align-items: center; justify-content: center; padding: 18px; z-index: 1000; }
     .modal-backdrop.active { display: flex; }
     .confirm-modal { width: min(420px, 100%); border-radius: 16px; border: 1px solid #8fd8ef; background: #fff; box-shadow: 0 24px 44px rgba(5, 30, 68, 0.3); overflow: hidden; }
@@ -921,6 +1050,20 @@
       }
     }
     @media (max-width: 760px) {
+      .quick-controls {
+        top: 8px;
+        right: 8px;
+        gap: 8px;
+      }
+      .mode-select {
+        min-width: 120px;
+        font-size: 0.86rem;
+        padding: 8px 10px;
+      }
+      .logout-quick {
+        font-size: 0.86rem;
+        padding: 8px 12px;
+      }
       .grid { grid-template-columns: 1fr; }
       .feature-fields { grid-template-columns: 1fr; }
       .app-sidebar {
@@ -990,6 +1133,13 @@
     }</style>
 </head>
 <body data-nav-active="Book Appointment">
+  <div class="quick-controls" aria-label="Theme and session controls">
+    <select id="modeSelect" class="mode-select" aria-label="Theme mode">
+      <option value="light">Light Mode</option>
+      <option value="dark">Dark Mode</option>
+    </select>
+    <a href="{{ url_for('patient_logout') }}" class="logout-quick">Logout</a>
+  </div>
   <aside class="app-sidebar patient-theme" id="appSidebar" aria-label="Main navigation">
     <div class="sidebar-top">
       <div class="sidebar-headline">
@@ -1367,6 +1517,48 @@
     }
 
     initSidebar();
+    const modeSelect = document.getElementById("modeSelect");
+    const modeStorageKey = "patient_book_mode";
+    let modeAnimationTimer = null;
+
+    function applyPageMode(mode) {
+      const useDark = mode === "dark";
+      document.body.classList.toggle("mode-dark", useDark);
+      document.body.classList.toggle("mode-light", !useDark);
+      if (modeSelect) {
+        modeSelect.value = useDark ? "dark" : "light";
+      }
+      document.body.classList.remove("mode-transition");
+      void document.body.offsetWidth;
+      document.body.classList.add("mode-transition");
+      if (modeAnimationTimer) clearTimeout(modeAnimationTimer);
+      modeAnimationTimer = setTimeout(() => {
+        document.body.classList.remove("mode-transition");
+      }, 580);
+    }
+
+    if (modeSelect) {
+      let savedMode = "light";
+      try {
+        savedMode = localStorage.getItem(modeStorageKey) || "light";
+      } catch (_) {
+        savedMode = "light";
+      }
+      const urlMode = new URLSearchParams(window.location.search).get("mode");
+      if (urlMode === "light" || urlMode === "dark") {
+        savedMode = urlMode;
+      }
+      applyPageMode(savedMode);
+      modeSelect.addEventListener("change", () => {
+        const selectedMode = modeSelect.value === "dark" ? "dark" : "light";
+        applyPageMode(selectedMode);
+        try {
+          localStorage.setItem(modeStorageKey, selectedMode);
+        } catch (_) {
+          // localStorage may be unavailable in strict browser contexts.
+        }
+      });
+    }
 
     let bookingRedirectTimer = null;
     let loadedPatientFeatures = null;
