@@ -1,5 +1,5 @@
 Patient_ID,Age,Gender,Symptoms,Symptom_Count,Glucose,BloodPressure,BMI,Height_cm,Weight_kg,Smoking_Habit,Alcohol_Habit,Medical_History,Family_History,BMI_Category
-1,21.0,female,Low BP,1.0,200.0,120.0,17.0,175.0,52.0,no,no,nan,no,Underweight
+1,21.0,female,Low BP,1.0,200.0,120.0,17.0,175.0,52.0,no,no,,no,Underweight
 4,22.0,female,chest pain,1.0,86.0,120.0,17.9,180.0,58.0,no,no,,no,
 5,21.0,female,"chest pain, breathing issuse , Low Bp",1.0,86.0,120.0,18.6,175.0,57.0,no,no,,no,
 2,21.0,female,fever,1.0,86.0,120.0,19.6,175.0,60.0,no,no,,no,Normal
@@ -9,3 +9,4 @@ Patient_ID,Age,Gender,Symptoms,Symptom_Count,Glucose,BloodPressure,BMI,Height_cm
 9,21.0,female,1234,2.0,86.0,120.0,17.0,180.0,55.0,no,no,,no,Underweight
 10,21.0,female,12345,1.0,89.0,120.0,16.52892561983471,220.0,80.0,no,no,,no,
 11,21.0,female,chest pain,1.0,86.0,120.0,17.3,180.0,56.0,no,no,,no,Underweight
+12,21.0,female,swelling,1.0,86.0,120.0,19.591836734693878,175.0,60.0,no,no,,no,
