@@ -927,6 +927,54 @@
       justify-content: center;
       flex-wrap: wrap;
     }
+    .app-dialog-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(12, 23, 45, 0.45);
+      z-index: 2200;
+      padding: 16px;
+    }
+    .app-dialog-overlay.show {
+      display: flex;
+    }
+    .app-dialog {
+      width: min(560px, 100%);
+      border-radius: 16px;
+      border: 1px solid #cfddf2;
+      background: #ffffff;
+      box-shadow: 0 20px 36px rgba(13, 42, 78, 0.24);
+      padding: 20px;
+      text-align: left;
+    }
+    .app-dialog h3 {
+      margin: 0 0 8px;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      font-size: 1.45rem;
+      color: #10284d;
+    }
+    .app-dialog p {
+      margin: 0;
+      color: #38557d;
+      font-size: 1rem;
+    }
+    .app-dialog-actions {
+      margin-top: 18px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .app-dialog-ok {
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 16px;
+      min-width: 96px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #2f6fd6;
+      color: #fff;
+    }
     .logout-confirm-btn,
     .logout-cancel-btn {
       border: 0;
@@ -1895,12 +1943,10 @@
     </div>
     <ul class="sidebar-menu">
       <li><a class="sidebar-link" data-nav="About" href="/about"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7h.01"/></svg></span><span class="sidebar-label">About</span></a></li>
-      <li><a class="sidebar-link" data-nav="Doctor Login" href="/doctor/login"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></span><span class="sidebar-label">Doctor Login</span></a></li>
-      <li><a class="sidebar-link" data-nav="Patient Login" href="/patient/login"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></span><span class="sidebar-label">Patient Login</span></a></li>
-      <li><a class="sidebar-link" data-nav="Portal Login" href="/login"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></span><span class="sidebar-label">Portal Login</span></a></li>
       {% if session.get('doctor_authenticated') %}
       <li><a class="sidebar-link" data-nav="Dashboard" href="/doctor/dashboard"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8v8H3zM13 3h8v8h-8zM13 13h8v8h-8zM3 3h8v8H3z"/></svg></span><span class="sidebar-label">Dashboard</span></a></li>
-      <li><a class="sidebar-link" data-nav="AI Risk Prediction" href="/doctor/dashboard#ai-risk-analytics"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg></span><span class="sidebar-label">AI Risk Prediction</span></a></li>
+      <li><a class="sidebar-link" data-nav="AI Risk Analytics" href="/doctor/dashboard#ai-risk-analytics"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg></span><span class="sidebar-label">AI Risk Analytics</span></a></li>
+      <li><a class="sidebar-link" data-nav="Patient Database" href="/doctor/dashboard#past-appointments"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="6" cy="6" r="1"/><circle cx="6" cy="12" r="1"/><circle cx="6" cy="18" r="1"/></svg></span><span class="sidebar-label">Patient Database</span></a></li>
       <li><a class="sidebar-link" data-nav="Logout" href="{{ url_for('doctor_logout') }}"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><span class="sidebar-label">Logout</span></a></li>
       {% elif session.get('patient_authenticated') %}
       <li><a class="sidebar-link" data-nav="Book Appointment" href="/patient/book-appointment"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 9h18M5 5h14v16H5z"/></svg></span><span class="sidebar-label">Book Appointment</span></a></li>
@@ -1916,7 +1962,7 @@
       <header class="topbar">
         <div class="title">
           <h1>Doctor Decision Support Dashboard</h1>
-          <p>Live appointments and risk analytics for <strong>{{ doctor_display_name }}</strong></p>
+          <p>Hi <strong>{{ doctor_display_name }}</strong>, welcome</p>
         </div>
         <div class="account-strip" aria-label="Account controls">
           <select id="modeSelect" class="mode-select" aria-label="Theme mode">
@@ -2052,37 +2098,6 @@
         </section>
       </section>
 
-      <section class="panel" id="past-appointments" style="margin-top:12px;">
-        <h2>Patient Database</h2>
-        <div class="db-toolbar">
-          <input id="dbSearch" class="db-search" type="search" placeholder="Search by Patient ID, Name, Symptoms, Gender..." />
-          <span id="dbCount" class="db-meta">0 records</span>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Patient ID</th>
-                <th>Patient Name</th>
-                <th>Age</th>
-                <th>Gender</th>
-                <th>Symptoms</th>
-                <th>Glucose</th>
-                <th>BP (Sys/Dia)</th>
-                <th>BMI</th>
-                <th>Smoking</th>
-                <th>Alcohol</th>
-                <th>Family History</th>
-                <th>Updated</th>
-              </tr>
-            </thead>
-            <tbody id="patientDbRows">
-              <tr><td colspan="12">No patient data found.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
       <section class="panel" id="ai-risk-analytics" style="margin-top:12px;">
         <h2>AI Risk Analytics</h2>
         <div class="risk-layout">
@@ -2125,6 +2140,37 @@
           </div>
         </div>
       </section>
+
+      <section class="panel" id="past-appointments" style="margin-top:12px;">
+        <h2>Patient Database</h2>
+        <div class="db-toolbar">
+          <input id="dbSearch" class="db-search" type="search" placeholder="Search by Patient ID, Name, Symptoms, Gender..." />
+          <span id="dbCount" class="db-meta">0 records</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Patient ID</th>
+                <th>Patient Name</th>
+                <th>Age</th>
+                <th>Gender</th>
+                <th>Symptoms</th>
+                <th>Glucose</th>
+                <th>BP (Sys/Dia)</th>
+                <th>BMI</th>
+                <th>Smoking</th>
+                <th>Alcohol</th>
+                <th>Family History</th>
+                <th>Updated</th>
+              </tr>
+            </thead>
+            <tbody id="patientDbRows">
+              <tr><td colspan="12">No patient data found.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </section>
   </main>
   <aside id="cookieBanner" class="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie consent">
@@ -2144,10 +2190,113 @@
       </div>
     </div>
   </div>
+  <div class="app-dialog-overlay" id="appDialog" aria-hidden="true">
+    <div class="app-dialog" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle">
+      <h3 id="appDialogTitle">Notice</h3>
+      <p id="appDialogMessage">Message</p>
+      <div class="app-dialog-actions">
+        <button type="button" class="app-dialog-ok" id="appDialogOkBtn">OK</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     const sidebarToggle = document.getElementById("sidebarToggle");
     const sidebarLinks = document.querySelectorAll(".sidebar-link");
+    const doctorAppointmentsApi = {{ url_for("doctor_appointments")|tojson }};
+    const doctorPatientDatabaseApi = {{ url_for("doctor_patient_database")|tojson }};
+    const doctorLoginUrl = {{ url_for("doctor_login")|tojson }};
+    const appDialog = document.getElementById("appDialog");
+    const appDialogTitle = document.getElementById("appDialogTitle");
+    const appDialogMessage = document.getElementById("appDialogMessage");
+    const appDialogOkBtn = document.getElementById("appDialogOkBtn");
+    let appDialogConfirm = null;
+
+    function closeAppDialog() {
+      if (!appDialog) return;
+      appDialog.classList.remove("show");
+      appDialog.setAttribute("aria-hidden", "true");
+    }
+
+    function openAppDialog(message, options = {}) {
+      if (!appDialog || !appDialogTitle || !appDialogMessage || !appDialogOkBtn) return;
+      appDialogTitle.textContent = options.title || "Notice";
+      appDialogMessage.textContent = message;
+      appDialogOkBtn.textContent = options.okLabel || "OK";
+      appDialogConfirm = typeof options.onConfirm === "function" ? options.onConfirm : null;
+      appDialog.classList.add("show");
+      appDialog.setAttribute("aria-hidden", "false");
+      appDialogOkBtn.focus();
+    }
+
+    function showLoginSuccessDialogIfNeeded() {
+      const params = new URLSearchParams(window.location.search);
+      const loginSuccess = params.get("login_success");
+      if (!loginSuccess || (loginSuccess !== "1" && loginSuccess.toLowerCase() !== "true")) return;
+
+      params.delete("login_success");
+      const query = params.toString();
+      const cleanUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash || ""}`;
+      window.history.replaceState({}, document.title, cleanUrl);
+      openAppDialog("Login successful.", { title: "Login Successful", okLabel: "Continue" });
+    }
+
+    if (appDialog && appDialogOkBtn) {
+      appDialogOkBtn.addEventListener("click", () => {
+        const fn = appDialogConfirm;
+        closeAppDialog();
+        if (fn) fn();
+      });
+      appDialog.addEventListener("click", (event) => {
+        if (event.target === appDialog) closeAppDialog();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && appDialog.classList.contains("show")) {
+          closeAppDialog();
+        }
+      });
+    }
+
+    showLoginSuccessDialogIfNeeded();
+
+    function resolveActiveNav() {
+      const path = window.location.pathname || "";
+      const hash = window.location.hash || "";
+
+      if (path === "/doctor/dashboard") {
+        if (hash === "#past-appointments") return "Patient Database";
+        if (hash === "#ai-risk-analytics") return "AI Risk Analytics";
+        return "Dashboard";
+      }
+
+      return document.body.dataset.navActive || "";
+    }
+
+    function setActiveSidebarLink(activeName) {
+      sidebarLinks.forEach((link) => {
+        link.classList.toggle("active", link.dataset.nav === activeName);
+      });
+    }
+
+    function syncActiveSidebarFromLocation() {
+      setActiveSidebarLink(resolveActiveNav());
+    }
+
+    async function fetchJsonWithAuth(url) {
+      const res = await fetch(url, {
+        method: "GET",
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" },
+      });
+      if (res.status === 401 || res.status === 403) {
+        window.location.href = doctorLoginUrl;
+        throw new Error("Unauthorized");
+      }
+      if (!res.ok) {
+        throw new Error(`Request failed: ${res.status}`);
+      }
+      return res.json();
+    }
 
     function applySidebarState(collapsed) {
       document.body.classList.toggle("sidebar-collapsed", collapsed);
@@ -2175,15 +2324,24 @@
         });
       }
 
-      const activeName = document.body.dataset.navActive || "";
-      sidebarLinks.forEach((link) => {
-        if (link.dataset.nav === activeName) {
-          link.classList.add("active");
-        }
-      });
+      syncActiveSidebarFromLocation();
     }
 
     initSidebar();
+    window.addEventListener("hashchange", syncActiveSidebarFromLocation);
+    window.addEventListener("popstate", syncActiveSidebarFromLocation);
+    sidebarLinks.forEach((link) => {
+      link.addEventListener("click", () => {
+        const href = link.getAttribute("href") || "";
+        if (href.endsWith("#past-appointments")) {
+          setActiveSidebarLink("Patient Database");
+        } else if (href.endsWith("#ai-risk-analytics")) {
+          setActiveSidebarLink("AI Risk Analytics");
+        } else if (href === "/doctor/dashboard") {
+          setActiveSidebarLink("Dashboard");
+        }
+      });
+    });
 
     let cachedAllAppointments = [];
     let cachedAppointments = [];
@@ -2808,16 +2966,14 @@
     }
 
     async function refreshPatientDatabase() {
-      const res = await fetch("/doctor/patient-database");
-      const data = await res.json();
+      const data = await fetchJsonWithAuth(doctorPatientDatabaseApi);
       cachedPatientDbRows = Array.isArray(data.patients) ? data.patients : [];
       const q = document.getElementById("dbSearch").value;
       renderPatientDatabaseTable(cachedPatientDbRows, q);
     }
 
     async function refreshDashboard() {
-      const res = await fetch("/doctor/appointments");
-      const data = await res.json();
+      const data = await fetchJsonWithAuth(doctorAppointmentsApi);
       const appointments = Array.isArray(data.appointments) ? data.appointments : [];
       cachedAllAppointments = appointments;
       ensureCurrentMonthDateOptions();
@@ -2871,6 +3027,13 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 

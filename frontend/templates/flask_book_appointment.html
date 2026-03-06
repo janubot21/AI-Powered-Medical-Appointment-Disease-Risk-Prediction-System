@@ -1170,12 +1170,8 @@
     </div>
     <ul class="sidebar-menu">
       <li><a class="sidebar-link" data-nav="About" href="/about"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7h.01"/></svg></span><span class="sidebar-label">About</span></a></li>
-      <li><a class="sidebar-link" data-nav="Doctor Login" href="/doctor/login"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></span><span class="sidebar-label">Doctor Login</span></a></li>
-      <li><a class="sidebar-link" data-nav="Patient Login" href="/patient/login"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></span><span class="sidebar-label">Patient Login</span></a></li>
-      <li><a class="sidebar-link" data-nav="Portal Login" href="/login"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></span><span class="sidebar-label">Portal Login</span></a></li>
       {% if session.get('doctor_authenticated') %}
       <li><a class="sidebar-link" data-nav="Dashboard" href="/doctor/dashboard"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8v8H3zM13 3h8v8h-8zM13 13h8v8h-8zM3 3h8v8H3z"/></svg></span><span class="sidebar-label">Dashboard</span></a></li>
-      <li><a class="sidebar-link" data-nav="AI Risk Prediction" href="/doctor/dashboard#ai-risk-analytics"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg></span><span class="sidebar-label">AI Risk Prediction</span></a></li>
       <li><a class="sidebar-link" data-nav="Logout" href="{{ url_for('doctor_logout') }}"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><span class="sidebar-label">Logout</span></a></li>
       {% elif session.get('patient_authenticated') %}
       <li><a class="sidebar-link" data-nav="Book Appointment" href="/patient/book-appointment"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 9h18M5 5h14v16H5z"/></svg></span><span class="sidebar-label">Book Appointment</span></a></li>
@@ -1191,7 +1187,7 @@
       <aside class="left-panel">
         <a class="toplink" href="/patient/booking-confirmation">Back to Appointments</a>
         <h2 class="left-title"><span style="color:#2f6fdb;">AI</span><span style="color:#d94343;">Health</span> <span style="color:#111111;">Hub</span></h2>
-        <p class="left-sub">hi: {{ patient_name or "Patient" }} welcome</p>
+        <p class="left-sub">Hi {{ patient_name or "Patient" }}, welcome</p>
         <div class="left-extra-wrap patient-card">
           <h3>Patient Details Card</h3>
           <p class="patient-card-id">Patient ID: <strong>{{ patient_id }}</strong></p>
@@ -1478,6 +1474,17 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="loginSuccessModal" aria-hidden="true">
+    <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="loginSuccessTitle">
+      <div class="confirm-top">Login</div>
+      <div class="confirm-body">
+        <h2 class="confirm-title" id="loginSuccessTitle">Login Successful</h2>
+        <p class="confirm-text">Login successful.</p>
+        <button type="button" class="confirm-close" id="loginSuccessContinueBtn">Continue</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const sidebarToggle = document.getElementById("sidebarToggle");
     const sidebarLinks = document.querySelectorAll(".sidebar-link");
@@ -1518,6 +1525,31 @@
 
     initSidebar();
     const modeSelect = document.getElementById("modeSelect");
+    const loginSuccessModal = document.getElementById("loginSuccessModal");
+    const loginSuccessContinueBtn = document.getElementById("loginSuccessContinueBtn");
+
+    function closeLoginSuccessPopup() {
+      if (!loginSuccessModal) return;
+      loginSuccessModal.classList.remove("active");
+      loginSuccessModal.setAttribute("aria-hidden", "true");
+    }
+
+    if (sessionStorage.getItem("patient_login_success_popup") === "1" && loginSuccessModal) {
+      sessionStorage.removeItem("patient_login_success_popup");
+      loginSuccessModal.classList.add("active");
+      loginSuccessModal.setAttribute("aria-hidden", "false");
+      if (loginSuccessContinueBtn) loginSuccessContinueBtn.focus();
+    }
+
+    if (loginSuccessContinueBtn) {
+      loginSuccessContinueBtn.addEventListener("click", closeLoginSuccessPopup);
+    }
+
+    if (loginSuccessModal) {
+      loginSuccessModal.addEventListener("click", (event) => {
+        if (event.target === loginSuccessModal) closeLoginSuccessPopup();
+      });
+    }
     const modeStorageKey = "patient_book_mode";
     let modeAnimationTimer = null;
 
@@ -2395,6 +2427,11 @@
   </script>
 </body>
 </html>
+
+
+
+
+
 
 
 

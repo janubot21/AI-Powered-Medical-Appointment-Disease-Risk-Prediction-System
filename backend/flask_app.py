@@ -44,7 +44,7 @@ patient_db = PatientDatabase(PATIENT_DB_PATH)
 APPOINTMENTS: list[Dict[str, Any]] = []
 PASSWORD_POLICY_PATTERN = re.compile(r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$")
 PASSWORD_POLICY_MESSAGE = (
-    "Password must contain minimum 8 characters, including uppercase, lowercase, number, and special character."
+    "Password must contain minimum 8 characters, including uppercase (A-Z), lowercase (a-z), number (0-9), and special character (@,!,#,$,%,&,*)."
 )
 
 
