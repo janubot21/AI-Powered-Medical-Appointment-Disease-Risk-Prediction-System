@@ -1034,6 +1034,50 @@
     .confirm-title { margin: 0 0 8px; font-family: "Palatino Linotype", "Book Antiqua", serif; font-size: 1.5rem; color: #0f766e; }
     .confirm-text { margin: 0; color: #41516f; }
     .confirm-close { margin-top: 12px; border: 0; border-radius: 10px; padding: 10px 12px; min-width: 130px; color: #fff; font-weight: 700; background: linear-gradient(120deg, #148a82, #2477d0); cursor: pointer; }
+    .alt-suggest-title { margin: 0 0 8px; color: #123c72; font-weight: 800; font-size: 1.1rem; text-align: left; }
+    .alt-suggest-text { margin: 0 0 10px; color: #41516f; text-align: left; }
+    .alt-card {
+      border: 1px solid #c8dcf7;
+      border-radius: 10px;
+      padding: 10px;
+      background: #f4f9ff;
+      text-align: left;
+      color: #28496f;
+      font-size: 0.92rem;
+      display: grid;
+      gap: 4px;
+    }
+    .alt-list {
+      margin-top: 10px;
+      text-align: left;
+      border: 1px solid #d1dff4;
+      border-radius: 10px;
+      background: #fbfdff;
+      padding: 8px 10px;
+      max-height: 140px;
+      overflow: auto;
+    }
+    .alt-list strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #1f4a7f;
+    }
+    .alt-list ul {
+      margin: 0;
+      padding-left: 16px;
+      color: #35557b;
+      font-size: 0.88rem;
+    }
+    .alt-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .confirm-close.alt-secondary {
+      background: linear-gradient(120deg, #6f86a8, #4a6386);
+    }
     @media (max-width: 980px) {
       .dashboard-shell {
         grid-template-columns: 1fr;
@@ -1458,6 +1502,11 @@
         </div>
       </div>
 
+      <div id="emergencyDoctorInlineCard" class="alt-list" style="display:none; margin-top:10px;">
+        <strong>Available Emergency Doctors (19:00 to 24:00)</strong>
+        <ul id="emergencyDoctorInlineList"></ul>
+      </div>
+
         <button id="bookBtn" type="button">Book Appointment</button>
       </section>
     </div>
@@ -1481,6 +1530,29 @@
         <h2 class="confirm-title" id="loginSuccessTitle">Login Successful</h2>
         <p class="confirm-text">Login successful.</p>
         <button type="button" class="confirm-close" id="loginSuccessContinueBtn">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="doctorUnavailableModal" aria-hidden="true">
+    <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="doctorUnavailableTitle">
+      <div class="confirm-top">Doctor Availability</div>
+      <div class="confirm-body">
+        <h2 class="confirm-title" id="doctorUnavailableTitle">Doctor Not Available</h2>
+        <p class="alt-suggest-text" id="doctorUnavailableText"></p>
+        <div class="alt-card" id="alternativeDoctorCard" style="display:none;">
+          <div><strong>Doctor:</strong> <span id="altDoctorName">-</span></div>
+          <div><strong>Specialization:</strong> <span id="altDoctorSpec">-</span></div>
+          <div><strong>Available Time:</strong> <span id="altDoctorTime">-</span></div>
+        </div>
+        <div class="alt-list" id="emergencyDoctorListWrap" style="display:none;">
+          <strong>Available Emergency Doctors</strong>
+          <ul id="emergencyDoctorList"></ul>
+        </div>
+        <div class="alt-actions">
+          <button type="button" class="confirm-close" id="bookAlternativeBtn" style="display:none;">Book Alternative Doctor</button>
+          <button type="button" class="confirm-close alt-secondary" id="closeDoctorUnavailableBtn">Close</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1597,6 +1669,21 @@
     let riskPanelTimer = null;
     let riskPanelRequestId = 0;
     let appointmentTimeTouched = false;
+    const emergencyDoctorsApi = {{ url_for("patient_emergency_doctors")|tojson }};
+    let pendingBookingPayload = null;
+
+    const doctorUnavailableModal = document.getElementById("doctorUnavailableModal");
+    const doctorUnavailableText = document.getElementById("doctorUnavailableText");
+    const alternativeDoctorCard = document.getElementById("alternativeDoctorCard");
+    const altDoctorName = document.getElementById("altDoctorName");
+    const altDoctorSpec = document.getElementById("altDoctorSpec");
+    const altDoctorTime = document.getElementById("altDoctorTime");
+    const emergencyDoctorListWrap = document.getElementById("emergencyDoctorListWrap");
+    const emergencyDoctorList = document.getElementById("emergencyDoctorList");
+    const emergencyDoctorInlineCard = document.getElementById("emergencyDoctorInlineCard");
+    const emergencyDoctorInlineList = document.getElementById("emergencyDoctorInlineList");
+    const bookAlternativeBtn = document.getElementById("bookAlternativeBtn");
+    const closeDoctorUnavailableBtn = document.getElementById("closeDoctorUnavailableBtn");
 
     async function postJson(url, payload) {
       const res = await fetch(url, {
@@ -1623,6 +1710,64 @@
         el.textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
       }
       el.className = isError ? "output error" : "output";
+    }
+
+    function closeDoctorUnavailablePopup() {
+      if (!doctorUnavailableModal) return;
+      doctorUnavailableModal.classList.remove("active");
+      doctorUnavailableModal.setAttribute("aria-hidden", "true");
+      pendingBookingPayload = null;
+    }
+
+    function openDoctorUnavailablePopup(data, basePayload) {
+      if (!doctorUnavailableModal || !doctorUnavailableText) return;
+      const message = String(
+        (data && data.message) ||
+        "Selected doctor is on leave. Please choose another date or another doctor."
+      );
+      doctorUnavailableText.textContent = message;
+
+      const alt = data && data.alternative_doctor ? data.alternative_doctor : null;
+      const emergencyList = Array.isArray(data && data.emergency_doctors_available)
+        ? data.emergency_doctors_available
+        : [];
+      if (emergencyDoctorListWrap && emergencyDoctorList) {
+        if (emergencyList.length > 0) {
+          emergencyDoctorListWrap.style.display = "block";
+          emergencyDoctorList.innerHTML = emergencyList
+            .map((doc) => {
+              const name = escapeHtml(doc.doctor_name || doc.doctor_id || "-");
+              const spec = escapeHtml(doc.specialization || "-");
+              const time = escapeHtml(doc.available_time || "-");
+              return `<li>${name} (${spec}) - ${time}</li>`;
+            })
+            .join("");
+        } else {
+          emergencyDoctorListWrap.style.display = "none";
+          emergencyDoctorList.innerHTML = "";
+        }
+      }
+
+      if (alt && data && data.can_book_alternative) {
+        alternativeDoctorCard.style.display = "grid";
+        bookAlternativeBtn.style.display = "inline-block";
+        altDoctorName.textContent = String(alt.doctor_name || alt.doctor_id || "-");
+        altDoctorSpec.textContent = String(alt.specialization || "-");
+        altDoctorTime.textContent = String(alt.available_time || "-");
+        pendingBookingPayload = { ...(basePayload || {}), doctor_id: String(alt.doctor_id || "") };
+      } else {
+        alternativeDoctorCard.style.display = "none";
+        bookAlternativeBtn.style.display = "none";
+        pendingBookingPayload = null;
+      }
+
+      doctorUnavailableModal.classList.add("active");
+      doctorUnavailableModal.setAttribute("aria-hidden", "false");
+      if (pendingBookingPayload) {
+        bookAlternativeBtn.focus();
+      } else {
+        closeDoctorUnavailableBtn.focus();
+      }
     }
 
     function escapeHtml(value) {
@@ -1657,6 +1802,62 @@
       const hh = String(date.getHours()).padStart(2, "0");
       const mm = String(date.getMinutes()).padStart(2, "0");
       return `${hh}:${mm}`;
+    }
+
+    function parseTimeMinutes(value) {
+      const text = String(value || "").trim();
+      if (!text || !text.includes(":")) return null;
+      const [h, m] = text.split(":");
+      const hh = Number(h);
+      const mm = Number(m);
+      if (!Number.isFinite(hh) || !Number.isFinite(mm)) return null;
+      return hh * 60 + mm;
+    }
+
+    async function updateEmergencyDoctorInlineList() {
+      if (!emergencyDoctorInlineCard || !emergencyDoctorInlineList) return;
+      const dateValue = document.getElementById("appointmentDate").value;
+      const timeValue = document.getElementById("appointmentTimeOnly").value;
+      const timeMinutes = parseTimeMinutes(timeValue);
+
+      if (!dateValue || timeMinutes == null || timeMinutes < 19 * 60) {
+        emergencyDoctorInlineCard.style.display = "none";
+        emergencyDoctorInlineList.innerHTML = "";
+        return;
+      }
+
+      try {
+        const query = `?date=${encodeURIComponent(dateValue)}&time=${encodeURIComponent(timeValue)}`;
+        const res = await fetch(`${emergencyDoctorsApi}${query}`, {
+          method: "GET",
+          credentials: "same-origin",
+          headers: { "Accept": "application/json" },
+        });
+        if (!res.ok) {
+          emergencyDoctorInlineCard.style.display = "none";
+          emergencyDoctorInlineList.innerHTML = "";
+          return;
+        }
+        const data = await res.json();
+        const list = Array.isArray(data && data.emergency_doctors) ? data.emergency_doctors : [];
+        if (!list.length) {
+          emergencyDoctorInlineCard.style.display = "block";
+          emergencyDoctorInlineList.innerHTML = "<li>No emergency doctors currently available for this date/time.</li>";
+          return;
+        }
+        emergencyDoctorInlineCard.style.display = "block";
+        emergencyDoctorInlineList.innerHTML = list
+          .map((doc) => {
+            const name = escapeHtml(doc.doctor_name || doc.doctor_id || "-");
+            const spec = escapeHtml(doc.specialization || "-");
+            const time = escapeHtml(doc.available_time || "-");
+            return `<li>${name} (${spec}) - ${time}</li>`;
+          })
+          .join("");
+      } catch (_) {
+        emergencyDoctorInlineCard.style.display = "none";
+        emergencyDoctorInlineList.innerHTML = "";
+      }
     }
 
     function roundUpToNextMinutes(date, minutesStep) {
@@ -2332,6 +2533,27 @@
       renderOutput(formatPatientSummaryHtml(data.patient_id, loadedPatientFeatures || {}), false, true);
     }
 
+    async function submitAppointmentPayload(payload, sourcePayloadForSuggestion) {
+      renderOutput("Submitting...", false);
+      const data = await postJson("/patient/book-appointment-submit", payload);
+      const bookingStatus = String(data && data.booking_status ? data.booking_status : "").toLowerCase();
+
+      if (bookingStatus === "confirmed") {
+        renderOutput(data, false);
+        const redirectUrl = String(data && data.redirect_url ? data.redirect_url : "/patient/booking-confirmation");
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      if (bookingStatus === "doctor_unavailable") {
+        renderOutput(String(data && data.message ? data.message : "Selected doctor is not available."), true);
+        openDoctorUnavailablePopup(data, sourcePayloadForSuggestion || payload);
+        return;
+      }
+
+      renderOutput(data, false);
+    }
+
     document.getElementById("bookBtn").addEventListener("click", async () => {
       try {
         const patient_id = document.getElementById("patientId").value.trim();
@@ -2349,9 +2571,7 @@
         const appointment_time = `${appointmentDate}T${appointmentTimeOnly}`;
 
         const patient_features = normalizeFeaturePayload(parseEditableFeatures());
-
-        renderOutput("Submitting...", false);
-        const data = await postJson("/patient/book-appointment-submit", {
+        const payload = {
           patient_id,
           patient_name,
           contact_info,
@@ -2359,10 +2579,8 @@
           appointment_type,
           appointment_time,
           patient_features
-        });
-        renderOutput(data, false);
-        const redirectUrl = String(data && data.redirect_url ? data.redirect_url : "/patient/booking-confirmation");
-        window.location.href = redirectUrl;
+        };
+        await submitAppointmentPayload(payload, payload);
       } catch (err) {
         renderOutput(err.message, true);
       }
@@ -2372,6 +2590,29 @@
     document.getElementById("bookingConfirmModal").addEventListener("click", (event) => {
       if (event.target.id === "bookingConfirmModal") closeBookingPopup();
     });
+    if (closeDoctorUnavailableBtn) {
+      closeDoctorUnavailableBtn.addEventListener("click", closeDoctorUnavailablePopup);
+    }
+    if (doctorUnavailableModal) {
+      doctorUnavailableModal.addEventListener("click", (event) => {
+        if (event.target === doctorUnavailableModal) closeDoctorUnavailablePopup();
+      });
+    }
+    if (bookAlternativeBtn) {
+      bookAlternativeBtn.addEventListener("click", async () => {
+        if (!pendingBookingPayload || !pendingBookingPayload.doctor_id) {
+          closeDoctorUnavailablePopup();
+          return;
+        }
+        try {
+          const altPayload = { ...pendingBookingPayload };
+          closeDoctorUnavailablePopup();
+          await submitAppointmentPayload(altPayload, altPayload);
+        } catch (err) {
+          renderOutput(err.message || "Failed to book alternative doctor.", true);
+        }
+      });
+    }
 
     document.getElementById("editPatientNameBtn").addEventListener("click", () => {
       const nameInput = document.getElementById("patientName");
@@ -2394,11 +2635,13 @@
       appointmentDateInput.min = today;
       appointmentDateInput.addEventListener("input", () => {
         appointmentTimeTouched = true;
+        updateEmergencyDoctorInlineList();
       });
     }
     if (appointmentTimeInput) {
       appointmentTimeInput.addEventListener("input", () => {
         appointmentTimeTouched = true;
+        updateEmergencyDoctorInlineList();
       });
     }
 
@@ -2424,6 +2667,7 @@
     loadPatientFeatures().catch((err) => {
       renderOutput(err.message, true);
     });
+    updateEmergencyDoctorInlineList();
   </script>
 </body>
 </html>

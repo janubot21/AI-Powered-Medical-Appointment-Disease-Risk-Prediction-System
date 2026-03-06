@@ -21,6 +21,8 @@ def _path_from_env(env_key: str, default_path: Path) -> Path:
 NEW_PATIENT_CSV = _path_from_env("NEW_PATIENT_CSV_PATH", DATASETS_DIR / "new_patient_data.csv")
 PATIENTS_CSV = _path_from_env("PATIENTS_CSV_PATH", DATASETS_DIR / "patients.csv")
 DOCTOR_ACCOUNTS_CSV = _path_from_env("DOCTOR_ACCOUNTS_CSV_PATH", DATASETS_DIR / "doctor_accounts.csv")
+DOCTOR_LEAVE_CSV = _path_from_env("DOCTOR_LEAVE_CSV_PATH", DATASETS_DIR / "doctor_leave.csv")
+DOCTOR_PROFILE_CSV = _path_from_env("DOCTOR_PROFILE_CSV_PATH", DATASETS_DIR / "doctor_profiles.csv")
 PATIENT_ACCOUNTS_CSV = _path_from_env("PATIENT_ACCOUNTS_CSV_PATH", DATASETS_DIR / "patient_accounts.csv")
 PATIENT_DB_PATH = _path_from_env("PATIENT_DB_PATH", DATASETS_DIR / "patient_records.db")
 

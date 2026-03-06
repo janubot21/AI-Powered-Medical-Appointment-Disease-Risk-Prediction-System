@@ -12,7 +12,15 @@ import pandas as pd
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 
 from doctor_auth import DoctorAuthManager
-from paths import DOCTOR_ACCOUNTS_CSV, NEW_PATIENT_CSV, PATIENTS_CSV, PATIENT_DB_PATH, ensure_csv_exists
+from paths import (
+    DOCTOR_ACCOUNTS_CSV,
+    DOCTOR_LEAVE_CSV,
+    DOCTOR_PROFILE_CSV,
+    NEW_PATIENT_CSV,
+    PATIENTS_CSV,
+    PATIENT_DB_PATH,
+    ensure_csv_exists,
+)
 from patient_db import PatientDatabase
 from predict import LABEL_ENCODER_PATH, MODEL_PATH, RiskEngine, to_jsonable
 from triage import determine_priority
@@ -518,6 +526,235 @@ def _load_doctor_ids() -> list[str]:
         return []
     doctor_ids = [str(v).strip() for v in df["doctor_id"].tolist() if str(v).strip()]
     return sorted(set(doctor_ids))
+
+
+DOCTOR_PROFILE_COLUMNS = ["doctor_id", "doctor_name", "specialization", "available_time", "emergency_doctor"]
+DOCTOR_LEAVE_COLUMNS = ["doctor_id", "leave_date"]
+
+
+def _ensure_aux_csv(path: Path, columns: list[str]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        pd.DataFrame(columns=columns).to_csv(path, index=False)
+        return
+    try:
+        df = pd.read_csv(path)
+    except Exception:
+        pd.DataFrame(columns=columns).to_csv(path, index=False)
+        return
+    changed = False
+    for col in columns:
+        if col not in df.columns:
+            df[col] = ""
+            changed = True
+    if changed:
+        df[columns].to_csv(path, index=False)
+
+
+def _load_doctor_profiles_df() -> pd.DataFrame:
+    _ensure_aux_csv(DOCTOR_PROFILE_CSV, DOCTOR_PROFILE_COLUMNS)
+    try:
+        profile_df = pd.read_csv(DOCTOR_PROFILE_CSV)
+    except Exception:
+        return pd.DataFrame(columns=DOCTOR_PROFILE_COLUMNS)
+
+    for col in DOCTOR_PROFILE_COLUMNS:
+        if col not in profile_df.columns:
+            profile_df[col] = ""
+
+    doctor_ids = _load_doctor_ids()
+    if doctor_ids:
+        existing = {str(v).strip() for v in profile_df["doctor_id"].tolist() if str(v).strip()}
+        missing = [did for did in doctor_ids if did not in existing]
+        if missing:
+            additions = pd.DataFrame(
+                [
+                    {
+                        "doctor_id": did,
+                        "doctor_name": did,
+                        "specialization": "General Medicine",
+                        "available_time": "10:00 AM to 9:00 PM",
+                        "emergency_doctor": "yes",
+                    }
+                    for did in missing
+                ]
+            )
+            profile_df = pd.concat([profile_df[DOCTOR_PROFILE_COLUMNS], additions], ignore_index=True)
+            profile_df = profile_df[DOCTOR_PROFILE_COLUMNS]
+            profile_df.to_csv(DOCTOR_PROFILE_CSV, index=False)
+
+    return profile_df[DOCTOR_PROFILE_COLUMNS]
+
+
+def _load_doctor_leave_df() -> pd.DataFrame:
+    _ensure_aux_csv(DOCTOR_LEAVE_CSV, DOCTOR_LEAVE_COLUMNS)
+    try:
+        leave_df = pd.read_csv(DOCTOR_LEAVE_CSV)
+    except Exception:
+        return pd.DataFrame(columns=DOCTOR_LEAVE_COLUMNS)
+
+    for col in DOCTOR_LEAVE_COLUMNS:
+        if col not in leave_df.columns:
+            leave_df[col] = ""
+
+    leave_df["doctor_id"] = leave_df["doctor_id"].astype(str).str.strip()
+    leave_df["leave_date"] = leave_df["leave_date"].astype(str).str.strip().str.slice(0, 10)
+    return leave_df[DOCTOR_LEAVE_COLUMNS]
+
+
+def _doctor_profile_by_id(doctor_id: str) -> Dict[str, str]:
+    did = str(doctor_id or "").strip()
+    if not did:
+        return {}
+    profiles = _load_doctor_profiles_df()
+    matches = profiles[profiles["doctor_id"].astype(str).str.strip() == did]
+    if matches.empty:
+        return {
+            "doctor_id": did,
+            "doctor_name": did,
+            "specialization": "General Medicine",
+            "available_time": "10:00 AM to 9:00 PM",
+            "emergency_doctor": "yes",
+        }
+    row = matches.iloc[0].to_dict()
+    return {
+        "doctor_id": str(row.get("doctor_id", did)).strip(),
+        "doctor_name": str(row.get("doctor_name", did)).strip() or did,
+        "specialization": str(row.get("specialization", "General Medicine")).strip() or "General Medicine",
+        "available_time": str(row.get("available_time", "10:00 AM to 9:00 PM")).strip() or "10:00 AM to 9:00 PM",
+        "emergency_doctor": str(row.get("emergency_doctor", "yes")).strip() or "yes",
+    }
+
+
+def _is_doctor_on_leave(doctor_id: str, appointment_date: datetime) -> bool:
+    did = str(doctor_id or "").strip()
+    if not did:
+        return False
+    date_key = appointment_date.date().isoformat()
+    leaves = _load_doctor_leave_df()
+    if leaves.empty:
+        return False
+    mask = (leaves["doctor_id"].astype(str).str.strip() == did) & (
+        leaves["leave_date"].astype(str).str.strip() == date_key
+    )
+    return bool(mask.any())
+
+
+def _find_alternative_doctor(selected_doctor_id: str, appointment_date: datetime) -> Optional[Dict[str, str]]:
+    selected = _doctor_profile_by_id(selected_doctor_id)
+    selected_spec = str(selected.get("specialization", "General Medicine")).strip().lower()
+    profiles = _load_doctor_profiles_df()
+    if profiles.empty:
+        return None
+
+    profiles = profiles.copy()
+    profiles["doctor_id"] = profiles["doctor_id"].astype(str).str.strip()
+    profiles = profiles[profiles["doctor_id"] != str(selected_doctor_id or "").strip()]
+    if selected_spec:
+        profiles = profiles[
+            profiles["specialization"].astype(str).str.strip().str.lower() == selected_spec
+        ]
+
+    if profiles.empty:
+        return None
+
+    profiles = profiles.sort_values(by=["doctor_name", "doctor_id"], kind="stable")
+    for _, row in profiles.iterrows():
+        candidate_id = str(row.get("doctor_id", "")).strip()
+        if not candidate_id:
+            continue
+        if _is_doctor_on_leave(candidate_id, appointment_date):
+            continue
+        return {
+            "doctor_id": candidate_id,
+            "doctor_name": str(row.get("doctor_name", candidate_id)).strip() or candidate_id,
+            "specialization": str(row.get("specialization", "General Medicine")).strip() or "General Medicine",
+            "available_time": str(row.get("available_time", "10:00 AM to 9:00 PM")).strip() or "10:00 AM to 9:00 PM",
+            "emergency_doctor": str(row.get("emergency_doctor", "yes")).strip() or "yes",
+        }
+    return None
+
+
+def _is_truthy_text(value: Any) -> bool:
+    return str(value or "").strip().lower() in {"1", "true", "yes", "y"}
+
+
+def _available_emergency_doctors(appointment_date: datetime, exclude_doctor_id: str = "") -> list[Dict[str, str]]:
+    profiles = _load_doctor_profiles_df()
+    if profiles.empty:
+        return []
+    exclude = str(exclude_doctor_id or "").strip()
+    profiles = profiles.copy()
+    profiles["doctor_id"] = profiles["doctor_id"].astype(str).str.strip()
+    if exclude:
+        profiles = profiles[profiles["doctor_id"] != exclude]
+    profiles = profiles[profiles["emergency_doctor"].map(_is_truthy_text)]
+    if profiles.empty:
+        return []
+
+    rows: list[Dict[str, str]] = []
+    profiles = profiles.sort_values(by=["doctor_name", "doctor_id"], kind="stable")
+    for _, row in profiles.iterrows():
+        did = str(row.get("doctor_id", "")).strip()
+        if not did or _is_doctor_on_leave(did, appointment_date):
+            continue
+        rows.append(
+            {
+                "doctor_id": did,
+                "doctor_name": str(row.get("doctor_name", did)).strip() or did,
+                "specialization": str(row.get("specialization", "General Medicine")).strip() or "General Medicine",
+                "available_time": str(row.get("available_time", "10:00 AM to 9:00 PM")).strip() or "10:00 AM to 9:00 PM",
+                "emergency_doctor": str(row.get("emergency_doctor", "yes")).strip() or "yes",
+            }
+        )
+    return rows
+
+
+def _add_doctor_leave(doctor_id: str, leave_date: str) -> None:
+    did = str(doctor_id or "").strip()
+    date_text = str(leave_date or "").strip()[:10]
+    if not did or not date_text:
+        raise ValueError("doctor_id and leave_date are required")
+
+    try:
+        parsed = datetime.fromisoformat(date_text)
+    except ValueError as exc:
+        raise ValueError("leave_date must be in YYYY-MM-DD format") from exc
+    date_key = parsed.date().isoformat()
+
+    leaves = _load_doctor_leave_df()
+    already = (
+        (leaves["doctor_id"].astype(str).str.strip() == did)
+        & (leaves["leave_date"].astype(str).str.strip() == date_key)
+    )
+    if bool(already.any()):
+        return
+
+    updated = pd.concat([leaves, pd.DataFrame([{"doctor_id": did, "leave_date": date_key}])], ignore_index=True)
+    updated = updated[DOCTOR_LEAVE_COLUMNS]
+    updated.to_csv(DOCTOR_LEAVE_CSV, index=False)
+
+
+def _remove_doctor_leave(doctor_id: str, leave_date: str) -> None:
+    did = str(doctor_id or "").strip()
+    date_text = str(leave_date or "").strip()[:10]
+    if not did or not date_text:
+        raise ValueError("doctor_id and leave_date are required")
+    try:
+        parsed = datetime.fromisoformat(date_text)
+    except ValueError as exc:
+        raise ValueError("leave_date must be in YYYY-MM-DD format") from exc
+    date_key = parsed.date().isoformat()
+
+    leaves = _load_doctor_leave_df()
+    filtered = leaves[
+        ~(
+            (leaves["doctor_id"].astype(str).str.strip() == did)
+            & (leaves["leave_date"].astype(str).str.strip() == date_key)
+        )
+    ]
+    filtered = filtered[DOCTOR_LEAVE_COLUMNS]
+    filtered.to_csv(DOCTOR_LEAVE_CSV, index=False)
 
 
 def _normalize_patient_id(value: Any) -> str:
@@ -1139,6 +1376,51 @@ def submit_appointment() -> Any:
     except Exception as exc:  # pragma: no cover - guard
         return jsonify({"detail": f"Risk assessment failed: {exc}"}), 500
 
+    risk_level_text = str(risk_assessment.risk_level or "").strip().lower()
+    selected_doctor_profile = _doctor_profile_by_id(doctor_id)
+    if _is_doctor_on_leave(doctor_id, parsed_time):
+        if risk_level_text == "high":
+            emergency_doctors = _available_emergency_doctors(parsed_time, exclude_doctor_id=doctor_id)
+            alternative = emergency_doctors[0] if emergency_doctors else _find_alternative_doctor(doctor_id, parsed_time)
+            if alternative:
+                return jsonify(
+                    {
+                        "booking_status": "doctor_unavailable",
+                        "reason": "doctor_on_leave",
+                        "risk_level": "High",
+                        "message": "Selected doctor is on leave. Because your condition is high risk, we recommend consulting an available emergency doctor.",
+                        "selected_doctor": selected_doctor_profile,
+                        "alternative_doctor": alternative,
+                        "emergency_doctors_available": emergency_doctors,
+                        "can_book_alternative": True,
+                    }
+                )
+            return jsonify(
+                {
+                    "booking_status": "doctor_unavailable",
+                    "reason": "doctor_on_leave",
+                    "risk_level": "High",
+                    "message": "Selected doctor is on leave. Because your condition is high risk, no emergency doctor is currently available on this date.",
+                    "selected_doctor": selected_doctor_profile,
+                    "alternative_doctor": None,
+                    "emergency_doctors_available": [],
+                    "can_book_alternative": False,
+                }
+            )
+
+        return jsonify(
+            {
+                "booking_status": "doctor_unavailable",
+                "reason": "doctor_on_leave",
+                "risk_level": risk_level_text.title() or "Low",
+                "message": "Selected doctor is on leave. Please choose another date or another doctor.",
+                "selected_doctor": selected_doctor_profile,
+                "alternative_doctor": None,
+                "emergency_doctors_available": [],
+                "can_book_alternative": False,
+            }
+        )
+
     priority = determine_priority(risk_assessment.risk_level)
     appointment_id = uuid4().hex
     result = {
@@ -1333,6 +1615,77 @@ def doctor_patient_database() -> Any:
     return jsonify({"patients": patient_db.list_profiles()})
 
 
+@app.get("/doctor/leaves")
+@doctor_required(api=True)
+def doctor_leaves() -> Any:
+    doctor_id = str(request.args.get("doctor_id", "")).strip()
+    rows = _load_doctor_leave_df().to_dict(orient="records")
+    if doctor_id:
+        rows = [r for r in rows if str(r.get("doctor_id", "")).strip() == doctor_id]
+    return jsonify({"leaves": rows})
+
+
+@app.post("/doctor/leaves")
+@doctor_required(api=True)
+def upsert_doctor_leave() -> Any:
+    payload = request.get_json(silent=True) or {}
+    leave_date = str(payload.get("leave_date", "")).strip()
+    doctor_id = str(payload.get("doctor_id", "")).strip() or str(session.get("doctor_id", "")).strip()
+    if not doctor_id:
+        return jsonify({"detail": "doctor_id is required"}), 400
+    if not leave_date:
+        return jsonify({"detail": "leave_date is required"}), 400
+    try:
+        _add_doctor_leave(doctor_id, leave_date)
+    except ValueError as exc:
+        return jsonify({"detail": str(exc)}), 400
+    return jsonify({"status": "ok", "doctor_id": doctor_id, "leave_date": leave_date[:10]})
+
+
+@app.get("/doctor/availability-status")
+@doctor_required(api=True)
+def doctor_availability_status() -> Any:
+    doctor_id = str(request.args.get("doctor_id", "")).strip() or str(session.get("doctor_id", "")).strip()
+    if not doctor_id:
+        return jsonify({"detail": "doctor_id is required"}), 400
+    date_text = str(request.args.get("date", "")).strip()
+    date_key = date_text[:10] if date_text else datetime.now().date().isoformat()
+    try:
+        parsed = datetime.fromisoformat(date_key)
+    except ValueError:
+        return jsonify({"detail": "date must be YYYY-MM-DD"}), 400
+    day = parsed.date().isoformat()
+    status = "leave" if _is_doctor_on_leave(doctor_id, parsed) else "available"
+    return jsonify({"doctor_id": doctor_id, "date": day, "status": status})
+
+
+@app.post("/doctor/availability-status")
+@doctor_required(api=True)
+def set_doctor_availability_status() -> Any:
+    payload = request.get_json(silent=True) or {}
+    doctor_id = str(payload.get("doctor_id", "")).strip() or str(session.get("doctor_id", "")).strip()
+    if not doctor_id:
+        return jsonify({"detail": "doctor_id is required"}), 400
+    status = str(payload.get("status", "")).strip().lower()
+    if status not in {"available", "leave"}:
+        return jsonify({"detail": "status must be 'available' or 'leave'"}), 400
+    date_text = str(payload.get("date", "")).strip()
+    date_key = date_text[:10] if date_text else datetime.now().date().isoformat()
+    try:
+        parsed = datetime.fromisoformat(date_key)
+    except ValueError:
+        return jsonify({"detail": "date must be YYYY-MM-DD"}), 400
+    day = parsed.date().isoformat()
+    try:
+        if status == "leave":
+            _add_doctor_leave(doctor_id, day)
+        else:
+            _remove_doctor_leave(doctor_id, day)
+    except ValueError as exc:
+        return jsonify({"detail": str(exc)}), 400
+    return jsonify({"doctor_id": doctor_id, "date": day, "status": status})
+
+
 @app.post("/patient/predict-risk")
 @patient_required(api=True)
 def patient_predict_risk() -> Any:
@@ -1358,6 +1711,33 @@ def patient_predict_risk() -> Any:
         return jsonify({"detail": str(exc)}), 400
     except Exception as exc:  # pragma: no cover - guard
         return jsonify({"detail": f"Prediction failed: {exc}"}), 500
+
+
+@app.get("/patient/emergency-doctors")
+@patient_required(api=True)
+def patient_emergency_doctors() -> Any:
+    date_text = str(request.args.get("date", "")).strip()
+    time_text = str(request.args.get("time", "")).strip()
+    if not date_text:
+        return jsonify({"detail": "date is required (YYYY-MM-DD)"}), 400
+    if not time_text:
+        return jsonify({"detail": "time is required (HH:MM)"}), 400
+    try:
+        parsed = datetime.fromisoformat(f"{date_text}T{time_text}")
+    except ValueError:
+        return jsonify({"detail": "Invalid date/time format"}), 400
+
+    minutes = parsed.hour * 60 + parsed.minute
+    is_evening_window = minutes >= 19 * 60
+    doctors = _available_emergency_doctors(parsed) if is_evening_window else []
+    return jsonify(
+        {
+            "date": parsed.date().isoformat(),
+            "time": f"{parsed.hour:02d}:{parsed.minute:02d}",
+            "window_active": is_evening_window,
+            "emergency_doctors": doctors,
+        }
+    )
 
 
 @app.post("/doctor/predict-risk")

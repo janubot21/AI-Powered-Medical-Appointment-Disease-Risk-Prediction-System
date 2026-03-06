@@ -307,6 +307,34 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .profile-status-row {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .profile-status-label {
+      font-size: 0.68rem;
+      color: #c9ddfb;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .profile-status-select {
+      min-width: 120px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(169, 199, 238, 0.45);
+      background: rgba(23, 43, 78, 0.9);
+      color: #ebf4ff;
+      font-size: 0.78rem;
+      font-family: inherit;
+      outline: none;
+    }
+    .profile-status-select:focus {
+      border-color: #8bb9f0;
+      box-shadow: 0 0 0 2px rgba(139, 185, 240, 0.2);
+    }
     .sidebar-chips { display: flex; gap: 6px; margin: 1px 0 6px; padding: 0 2px; }
     .chip {
       width: 26px;
@@ -1934,6 +1962,13 @@
         <div class="profile-meta-mini">
           <div class="profile-name-mini">{{ doctor_display_name }}</div>
           <div class="profile-role-mini">Doctor Portal</div>
+          <div class="profile-status-row">
+            <label class="profile-status-label" for="doctorStatusSelect">Status</label>
+            <select id="doctorStatusSelect" class="profile-status-select">
+              <option value="available">Available</option>
+              <option value="leave">Leave</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="sidebar-chips" aria-hidden="true">
@@ -2176,10 +2211,12 @@
     const sidebarLinks = document.querySelectorAll(".sidebar-link");
     const doctorAppointmentsApi = {{ url_for("doctor_appointments")|tojson }};
     const roleLoginUrl = {{ url_for("role_login")|tojson }};
+    const doctorAvailabilityStatusApi = {{ url_for("doctor_availability_status")|tojson }};
     const appDialog = document.getElementById("appDialog");
     const appDialogTitle = document.getElementById("appDialogTitle");
     const appDialogMessage = document.getElementById("appDialogMessage");
     const appDialogOkBtn = document.getElementById("appDialogOkBtn");
+    const doctorStatusSelect = document.getElementById("doctorStatusSelect");
     let appDialogConfirm = null;
 
     function closeAppDialog() {
@@ -2228,6 +2265,77 @@
     }
 
     showLoginSuccessDialogIfNeeded();
+
+    function todayIsoDate() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    async function fetchDoctorStatusForToday() {
+      if (!doctorStatusSelect) return;
+      try {
+        const url = `${doctorAvailabilityStatusApi}?date=${encodeURIComponent(todayIsoDate())}`;
+        const res = await fetch(url, {
+          method: "GET",
+          credentials: "same-origin",
+          headers: { "Accept": "application/json" },
+        });
+        if (res.status === 401 || res.status === 403) {
+          window.location.href = roleLoginUrl;
+          return;
+        }
+        if (!res.ok) return;
+        const data = await res.json();
+        const status = String((data && data.status) || "available").toLowerCase();
+        doctorStatusSelect.value = status === "leave" ? "leave" : "available";
+      } catch (_) {
+        doctorStatusSelect.value = "available";
+      }
+    }
+
+    async function saveDoctorStatusForToday(status) {
+      if (!doctorStatusSelect) return;
+      const selected = status === "leave" ? "leave" : "available";
+      const prev = doctorStatusSelect.dataset.prevStatus || "available";
+      doctorStatusSelect.disabled = true;
+      try {
+        const res = await fetch(doctorAvailabilityStatusApi, {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({ status: selected, date: todayIsoDate() }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 401 || res.status === 403) {
+          window.location.href = roleLoginUrl;
+          return;
+        }
+        if (!res.ok) {
+          doctorStatusSelect.value = prev;
+          const detail = data && data.detail ? data.detail : "Could not update availability.";
+          openAppDialog(String(detail), { title: "Update Failed" });
+          return;
+        }
+        doctorStatusSelect.dataset.prevStatus = selected;
+        openAppDialog(selected === "leave" ? "Leave status set for today." : "Availability set for today.", {
+          title: "Status Updated",
+          okLabel: "OK",
+        });
+      } catch (_) {
+        doctorStatusSelect.value = prev;
+        openAppDialog("Could not update availability.", { title: "Update Failed" });
+      } finally {
+        doctorStatusSelect.disabled = false;
+      }
+    }
+
+    if (doctorStatusSelect) {
+      doctorStatusSelect.addEventListener("change", () => {
+        saveDoctorStatusForToday(doctorStatusSelect.value);
+      });
+      fetchDoctorStatusForToday().then(() => {
+        doctorStatusSelect.dataset.prevStatus = doctorStatusSelect.value || "available";
+      });
+    }
 
     function getPathWithoutTrailingSlash(path) {
       return (path || "").replace(/\/+$/, "");

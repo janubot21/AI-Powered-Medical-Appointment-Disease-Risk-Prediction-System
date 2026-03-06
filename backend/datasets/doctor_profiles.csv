@@ -1,0 +1,8 @@
+doctor_id,doctor_name,specialization,available_time,emergency_doctor
+vishnu@123,vishnu@123,General Medicine,10:00 AM to 9:00 PM,yes
+sai@20012,sai@20012,General Medicine,10:00 AM to 9:00 PM,yes
+jash@123,jash@123,General Medicine,10:00 AM to 9:00 PM,yes
+Sai@180021,Sai@180021,General Medicine,10:00 AM to 9:00 PM,no
+venky@123,venky@123,General Medicine,10:00 AM to 9:00 PM,no
+janu@123,janu@123,General Medicine,10:00 AM to 9:00 PM,no
+
