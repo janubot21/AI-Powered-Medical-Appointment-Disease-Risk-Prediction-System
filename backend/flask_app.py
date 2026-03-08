@@ -54,6 +54,7 @@ PASSWORD_POLICY_PATTERN = re.compile(r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Z
 PASSWORD_POLICY_MESSAGE = (
     "Password must contain minimum 8 characters, including uppercase (A-Z), lowercase (a-z), number (0-9), and special character (@,!,#,$,%,&,*)."
 )
+SYMPTOMS_SANITIZE_PATTERN = re.compile(r"[^A-Za-z,\s]+")
 
 
 def _is_patient_authenticated() -> bool:
@@ -769,6 +770,16 @@ def _normalize_doctor_id(value: Any) -> str:
     return str(value or "").strip().lower()
 
 
+def _sanitize_symptoms_text(value: Any) -> str:
+    text = str(value or "")
+    text = SYMPTOMS_SANITIZE_PATTERN.sub("", text)
+    text = re.sub(r"\s*,\s*", ", ", text)
+    text = re.sub(r",\s*,+", ", ", text)
+    text = re.sub(r"\s{2,}", " ", text)
+    text = re.sub(r"^,\s*|\s*,\s*$", "", text)
+    return text.strip()
+
+
 def _bootstrap_patient_db_from_csv() -> None:
     try:
         ensure_csv_exists(NEW_PATIENT_CSV)
@@ -1039,7 +1050,7 @@ def health_details() -> Any:
             {
                 "age": request.form.get("age", "").strip(),
                 "gender": request.form.get("gender", "").strip().lower(),
-                "symptoms": request.form.get("symptoms", "").strip(),
+                "symptoms": _sanitize_symptoms_text(request.form.get("symptoms", "")),
                 "symptom_count": request.form.get("symptom_count", "").strip(),
                 "glucose": request.form.get("glucose", "").strip(),
                 "blood_pressure": request.form.get("blood_pressure", "").strip(),

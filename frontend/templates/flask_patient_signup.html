@@ -664,25 +664,25 @@
           </div>
         {% endif %}
 
-        <form method="post">
+        <form method="post" autocomplete="off">
           <label for="name">Patient Name</label>
-          <input id="name" name="name" value="{{ form_data.name }}" required />
+          <input id="name" name="name" value="{{ form_data.name }}" autocomplete="off" required />
 
           <label for="id_type">ID Type</label>
-          <select id="id_type" name="id_type" required>
+          <select id="id_type" name="id_type" autocomplete="off" required>
             <option value="">Select ID Type</option>
             <option value="aadhaar" {% if form_data.id_type == "aadhaar" %}selected{% endif %}>Aadhaar Card</option>
             <option value="pan" {% if form_data.id_type == "pan" %}selected{% endif %}>PAN Card</option>
           </select>
 
           <label for="id_number">ID Number</label>
-          <input id="id_number" name="id_number" value="{{ form_data.id_number }}" required />
+          <input id="id_number" name="id_number" value="{{ form_data.id_number }}" autocomplete="off" required />
 
           <label for="password">Password</label>
-          <input id="password" name="password" type="password" required />
+          <input id="password" name="password" type="password" autocomplete="new-password" required />
 
           <label for="confirm_password">Confirm Password</label>
-          <input id="confirm_password" name="confirm_password" type="password" required />
+          <input id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" required />
 
           <button type="submit">Create Account</button>
         </form>
@@ -692,43 +692,11 @@
 </main>
 
   <script>
-    const SIGNUP_COOKIE_DAYS = 30;
-
-    function setCookie(name, value, days) {
-      const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
-      document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
-    }
-
-    function getCookie(name) {
-      const key = `${name}=`;
-      const items = document.cookie.split(";");
-      for (let i = 0; i < items.length; i += 1) {
-        const part = items[i].trim();
-        if (part.startsWith(key)) {
-          return decodeURIComponent(part.slice(key.length));
-        }
-      }
-      return "";
-    }
-
-    function initSignupCookies() {
-      const nameEl = document.getElementById("name");
-      const typeEl = document.getElementById("id_type");
-      const numberEl = document.getElementById("id_number");
-
-      const savedName = getCookie("patient_signup_name");
-      const savedType = getCookie("patient_signup_id_type");
-      const savedNumber = getCookie("patient_signup_id_number");
-
-      if (!nameEl.value && savedName) {
-        nameEl.value = savedName;
-      }
-      if (savedType && ["aadhaar", "pan"].includes(savedType)) {
-        typeEl.value = savedType;
-      }
-      if (!numberEl.value && savedNumber) {
-        numberEl.value = savedNumber;
-      }
+    function clearSignupCookies() {
+      const expired = "Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie = `patient_signup_name=; expires=${expired}; path=/; SameSite=Lax`;
+      document.cookie = `patient_signup_id_type=; expires=${expired}; path=/; SameSite=Lax`;
+      document.cookie = `patient_signup_id_number=; expires=${expired}; path=/; SameSite=Lax`;
     }
 
     function syncIdRules() {
@@ -755,17 +723,8 @@
     }
 
     document.getElementById("id_type").addEventListener("change", syncIdRules);
-    initSignupCookies();
+    clearSignupCookies();
     syncIdRules();
-
-    document.querySelector("form").addEventListener("submit", () => {
-      const name = document.getElementById("name").value.trim();
-      const idType = document.getElementById("id_type").value.trim();
-      const idNumber = document.getElementById("id_number").value.trim();
-      setCookie("patient_signup_name", name, SIGNUP_COOKIE_DAYS);
-      setCookie("patient_signup_id_type", idType, SIGNUP_COOKIE_DAYS);
-      setCookie("patient_signup_id_number", idNumber, SIGNUP_COOKIE_DAYS);
-    });
   </script>
   <footer class="global-page-footer">
     <div class="global-page-footer-line">

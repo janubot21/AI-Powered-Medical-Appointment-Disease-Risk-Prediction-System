@@ -560,7 +560,7 @@
 
         <div class="full">
           <label for="symptoms">Symptoms</label>
-          <textarea id="symptoms" name="symptoms" required>{{ form_data.symptoms }}</textarea>
+          <textarea id="symptoms" name="symptoms" placeholder="e.g. chest pain, fever" required>{{ form_data.symptoms }}</textarea>
         </div>
 
         <div>
@@ -651,8 +651,11 @@
 
     function sanitizeSymptomsText(value) {
       return String(value ?? "")
-        .replace(/[^A-Za-z\s]/g, "")
-        .replace(/\s{2,}/g, " ");
+        .replace(/[^A-Za-z,\s]/g, "")
+        .replace(/\s*,\s*/g, ", ")
+        .replace(/,\s*,+/g, ", ")
+        .replace(/\s{2,}/g, " ")
+        .replace(/^,\s*|\s*,\s*$/g, "");
     }
 
     function validateSymptoms() {
@@ -663,7 +666,7 @@
       }
       const finalText = symptomsEl.value.trim();
       if (!finalText) {
-        symptomsEl.setCustomValidity("Symptoms must contain letters only.");
+        symptomsEl.setCustomValidity("Symptoms must contain letters, spaces, and commas.");
         return false;
       }
       symptomsEl.setCustomValidity("");

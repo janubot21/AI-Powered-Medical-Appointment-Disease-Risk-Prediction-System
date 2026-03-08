@@ -74,7 +74,7 @@ class RiskEngine:
         "diarrhoea",
         "insomnia",
         "dizziness",
-        "Low BP", 
+        "low_bp",
     }
     MEDIUM_RISK_SYMPTOMS = {
         "blurred_vision",
@@ -94,7 +94,7 @@ class RiskEngine:
         "shortness_of_breath",
         "dizziness",
         "blurred_vision",
-        "Low BP",
+        "low_bp",
     }
 
     def __init__(self, model_path: Path, label_encoder_path: Optional[Path] = None) -> None:
@@ -267,13 +267,42 @@ class RiskEngine:
         token = re.sub(r"[^a-z0-9_]+", "", token)
         return token
 
+    def _extract_symptoms_from_text(self, symptoms_text: str) -> set[str]:
+        found: set[str] = set()
+        if not symptoms_text.strip():
+            return found
+
+        # Keep both delimiter-based tokens and phrase detection for free text inputs.
+        raw_parts = [p.strip() for p in re.split(r"[,;|\n]+", symptoms_text) if p.strip()]
+        found.update(self._normalize_symptom_name(part) for part in raw_parts)
+
+        cleaned_text = symptoms_text.strip().lower()
+        cleaned_text = cleaned_text.replace("-", " ").replace("_", " ")
+        cleaned_text = re.sub(r"[^a-z0-9,\s;|]+", " ", cleaned_text)
+        cleaned_text = re.sub(r"\s+", " ", cleaned_text).strip()
+
+        known_symptoms = (
+            self.SYMPTOMS
+            | self.HIGH_RISK_KEYWORDS
+            | self.MEDIUM_RISK_SYMPTOMS
+            | self.LOW_RISK_SYMPTOMS
+        )
+        for symptom in known_symptoms:
+            normalized = self._normalize_symptom_name(symptom)
+            phrase = normalized.replace("_", " ")
+            if not phrase:
+                continue
+            if re.search(rf"\b{re.escape(phrase)}\b", cleaned_text):
+                found.add(normalized)
+
+        return found
+
     def _extract_reported_symptoms(self, features: Dict[str, Any]) -> set[str]:
         found: set[str] = set()
 
         raw_symptoms = features.get("Symptoms")
         if isinstance(raw_symptoms, str):
-            parts = [p.strip() for p in re.split(r"[,;|]+", raw_symptoms) if p.strip()]
-            found.update(self._normalize_symptom_name(p) for p in parts)
+            found.update(self._extract_symptoms_from_text(raw_symptoms))
 
         for key, value in features.items():
             if not str(key).startswith("SYM_"):

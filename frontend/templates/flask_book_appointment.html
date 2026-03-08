@@ -1258,7 +1258,7 @@
             </div>
             <div class="feature-row full">
               <label for="featureSymptoms">Symptoms</label>
-              <textarea id="featureSymptoms" placeholder="e.g. chest pain"></textarea>
+              <textarea id="featureSymptoms" placeholder="e.g. chest pain, fever"></textarea>
             </div>
             <div class="feature-row">
               <label for="featureSymptomCount">Symptoms Count</label>
@@ -2043,8 +2043,11 @@
 
     function sanitizeSymptomsText(value) {
       return String(value ?? "")
-        .replace(/[^A-Za-z\s]/g, "")
-        .replace(/\s{2,}/g, " ");
+        .replace(/[^A-Za-z,\s]/g, "")
+        .replace(/\s*,\s*/g, ", ")
+        .replace(/,\s*,+/g, ", ")
+        .replace(/\s{2,}/g, " ")
+        .replace(/^,\s*|\s*,\s*$/g, "");
     }
 
     function syncSymptomFlags(features) {
