@@ -1164,7 +1164,7 @@ def health_confirmation() -> Any:
 @app.route("/patient/login", methods=["GET", "POST"])
 def patient_login() -> Any:
     errors: list[str] = []
-    form_data = {"patient_name": "", "id_type": "", "id_number": "", "login_using": "patient_name"}
+    form_data = {"patient_name": ""}
 
     if request.method == "GET":
         # Force explicit patient re-auth when user opens patient login route.
@@ -1175,40 +1175,19 @@ def patient_login() -> Any:
             session.pop("role", None)
 
     if request.method == "POST":
-        login_using = request.form.get("login_using", "patient_name").strip().lower()
-        if login_using not in {"patient_name", "id_number"}:
-            login_using = "patient_name"
         patient_name = request.form.get("patient_name", "").strip()
-        id_type = request.form.get("id_type", "").strip().lower()
-        id_number = request.form.get("id_number", "").strip().upper()
         password = request.form.get("password", "").strip()
         form_data["patient_name"] = patient_name
-        form_data["id_type"] = id_type
-        form_data["id_number"] = id_number
-        form_data["login_using"] = login_using
-
-        has_name = bool(patient_name)
-        has_id = bool(id_number)
-        unique_code = ""
-        if login_using == "patient_name":
-            if not has_name:
-                errors.append("Enter Patient Name.")
-        else:
-            if not has_id:
-                errors.append("Enter ID Number.")
-            else:
-                try:
-                    unique_code = _compose_unique_code(id_type, id_number)
-                except ValueError as exc:
-                    errors.append(str(exc))
+        if not patient_name:
+            errors.append("Enter Patient Name.")
         if not password:
             errors.append("Password is required.")
 
         if not errors:
             try:
-                patient = _authenticate_patient(patient_name, unique_code, password)
+                patient = _authenticate_patient(patient_name, "", password)
                 if not patient:
-                    raise ValueError("Invalid patient name, unique code, or password.")
+                    raise ValueError("Invalid patient name or password.")
                 patient_id = str(patient.get("patient_id", "")).strip()
                 # Patient login should not inherit doctor portal access.
                 session.pop("doctor_id", None)
@@ -1223,7 +1202,7 @@ def patient_login() -> Any:
                 return render_template(
                     "flask_patient_login.html",
                     errors=[],
-                    form_data={"patient_name": "", "id_type": "", "id_number": "", "login_using": "patient_name"},
+                    form_data={"patient_name": ""},
                     login_success=True,
                     redirect_url=url_for("book_appointment"),
                 )
@@ -1562,7 +1541,7 @@ def doctor_signup() -> Any:
 @app.route("/doctor/login", methods=["GET", "POST"])
 def doctor_login() -> Any:
     errors: list[str] = []
-    form_data = {"doctor_id": "", "id_type": "", "id_number": "", "login_using": "doctor_id"}
+    form_data = {"doctor_id": ""}
 
     if request.method == "GET":
         # Force explicit doctor re-auth when user opens doctor login route.
@@ -1573,42 +1552,17 @@ def doctor_login() -> Any:
             session.pop("role", None)
 
     if request.method == "POST":
-        login_using = request.form.get("login_using", "doctor_id").strip().lower()
-        if login_using not in {"doctor_id", "id_number"}:
-            login_using = "doctor_id"
         doctor_id = request.form.get("doctor_id", "").strip()
-        id_type = request.form.get("id_type", "").strip().lower()
-        id_number = request.form.get("id_number", "").strip().upper()
         password = request.form.get("password", "").strip()
         form_data["doctor_id"] = doctor_id
-        form_data["id_type"] = id_type
-        form_data["id_number"] = id_number
-        form_data["login_using"] = login_using
-
-        has_doctor_id = bool(doctor_id)
-        has_id = bool(id_number)
-        if login_using == "doctor_id":
-            # Ignore stale hidden ID fields when doctor-id mode is selected.
-            id_type = ""
-            id_number = ""
-            form_data["id_type"] = ""
-            form_data["id_number"] = ""
-            if not has_doctor_id:
-                errors.append("Enter Doctor ID.")
-        else:
-            if not has_id:
-                errors.append("Enter ID Number.")
-            else:
-                try:
-                    _compose_unique_code(id_type, id_number)
-                except ValueError as exc:
-                    errors.append(str(exc))
+        if not doctor_id:
+            errors.append("Enter Doctor ID.")
         if not password:
             errors.append("Password is required.")
 
         if not errors:
             try:
-                resolved_doctor_id = doctor_auth_manager.login(doctor_id, id_type, id_number, password)
+                resolved_doctor_id = doctor_auth_manager.login(doctor_id, "", "", password)
                 # Doctor login should not inherit patient portal access.
                 session.pop("patient_id", None)
                 session.pop("patient_name", None)
@@ -1620,7 +1574,7 @@ def doctor_login() -> Any:
                 return render_template(
                     "flask_doctor_login.html",
                     errors=[],
-                    form_data={"doctor_id": "", "id_type": "", "id_number": "", "login_using": "doctor_id"},
+                    form_data={"doctor_id": ""},
                     login_success=True,
                     redirect_url=url_for("doctor_dashboard"),
                 )

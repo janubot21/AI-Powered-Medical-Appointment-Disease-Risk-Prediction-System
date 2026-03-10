@@ -734,7 +734,7 @@
     <section class="right">
       <div class="card">
         <h2>Doctor Login</h2>
-        <p class="hint">Login using Doctor ID OR ID Number</p>
+        <p class="hint">Login using Doctor ID</p>
 
         {% if errors %}
           <div class="errors">
@@ -745,28 +745,8 @@
         {% endif %}
 
         <form method="post" autocomplete="off">
-          <label for="login_using">Login Using</label>
-          <select id="login_using" name="login_using">
-            <option value="doctor_id" {% if form_data.login_using == "doctor_id" %}selected{% endif %}>Doctor ID</option>
-            <option value="id_number" {% if form_data.login_using == "id_number" %}selected{% endif %}>ID Number</option>
-          </select>
-
-          <div id="doctorPanel" class="switch-panel">
-            <label for="doctor_id">Enter Doctor ID</label>
-            <input id="doctor_id" name="doctor_id" value="{{ form_data.doctor_id }}" placeholder="Enter doctor ID" autocomplete="off" />
-          </div>
-
-          <div id="idPanel" class="switch-panel">
-            <label for="id_type">ID Type</label>
-            <select id="id_type" name="id_type">
-              <option value="">Select ID Type</option>
-              <option value="aadhaar" {% if form_data.id_type == "aadhaar" %}selected{% endif %}>Aadhaar Card</option>
-              <option value="pan" {% if form_data.id_type == "pan" %}selected{% endif %}>PAN Card</option>
-            </select>
-
-            <label for="id_number">ID Number</label>
-            <input id="id_number" name="id_number" value="{{ form_data.id_number }}" placeholder="Enter ID number" autocomplete="off" />
-          </div>
+          <label for="doctor_id">Enter Doctor ID</label>
+          <input id="doctor_id" name="doctor_id" value="{{ form_data.doctor_id }}" placeholder="Enter doctor ID" autocomplete="off" />
 
           <label for="password">Password</label>
           <input id="password" name="password" type="password" required autocomplete="new-password" />
@@ -885,78 +865,13 @@
       window.location.href = withLoginSuccessFlag(doctorRedirectUrl);
     }
 
-    function syncLoginPanels() {
-      const mode = document.getElementById("login_using").value;
-      const doctorPanel = document.getElementById("doctorPanel");
-      const idPanel = document.getElementById("idPanel");
-      const doctorInput = document.getElementById("doctor_id");
-      const idType = document.getElementById("id_type");
-      const idNumber = document.getElementById("id_number");
-
-      const useDoctor = mode === "doctor_id";
-      doctorPanel.classList.toggle("active", useDoctor);
-      idPanel.classList.toggle("active", !useDoctor);
-
-      doctorInput.required = useDoctor;
-      idType.required = !useDoctor;
-      idNumber.required = !useDoctor;
-      doctorInput.disabled = !useDoctor;
-      idType.disabled = useDoctor;
-      idNumber.disabled = useDoctor;
-    }
-
-    function syncIdRules() {
-      const typeEl = document.getElementById("id_type");
-      const idEl = document.getElementById("id_number");
-      const t = String(typeEl.value || "").toLowerCase();
-
-      if (t === "aadhaar") {
-        idEl.placeholder = "Enter 12-digit Aadhaar number";
-        idEl.maxLength = 12;
-        idEl.pattern = "[0-9]{12}";
-        idEl.title = "Aadhaar must be exactly 12 digits";
-      } else if (t === "pan") {
-        idEl.placeholder = "Enter PAN in format AAAAA9999A";
-        idEl.maxLength = 10;
-        idEl.pattern = "[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}";
-        idEl.title = "PAN must be in format AAAAA9999A";
-      } else {
-        idEl.placeholder = "Select ID Type first";
-        idEl.maxLength = 30;
-        idEl.removeAttribute("pattern");
-        idEl.title = "";
-      }
-    }
-
-    document.getElementById("login_using").addEventListener("change", syncLoginPanels);
-    document.getElementById("id_type").addEventListener("change", syncIdRules);
-    syncLoginPanels();
-    syncIdRules();
-
     document.querySelector("form").addEventListener("submit", (event) => {
-      const mode = document.getElementById("login_using").value;
       const did = document.getElementById("doctor_id").value.trim();
-      const idType = document.getElementById("id_type").value.trim();
-      const idNumber = document.getElementById("id_number").value.trim();
       const password = document.getElementById("password").value.trim();
 
-      if (mode === "doctor_id" && !did) {
+      if (!did) {
         event.preventDefault();
         openAppDialog("Enter Doctor ID.", { title: "Validation" });
-        return;
-      }
-
-      if (mode === "id_number") {
-        if (!idType || !idNumber) {
-          event.preventDefault();
-          openAppDialog("Select ID Type and enter ID Number.", { title: "Validation" });
-          return;
-        }
-      }
-
-      if (!did && !idNumber) {
-        event.preventDefault();
-        openAppDialog("Enter Doctor ID OR ID Number.", { title: "Validation" });
         return;
       }
 

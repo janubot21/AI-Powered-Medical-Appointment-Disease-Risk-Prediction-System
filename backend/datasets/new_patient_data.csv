@@ -13,3 +13,4 @@ Patient_ID,Age,Gender,Symptoms,Symptom_Count,Glucose,BloodPressure,BMI,Height_cm
 13,24.0,female,chest pain fever,2.0,89.0,120.0,20.679012345679013,180.0,67.0,no,no,,no,
 14,22.0,female,chest pain fever,2.0,86.0,120.0,18.9,175.0,58.0,no,no,,no,Normal
 15,22.0,female,chest pain fever,2.0,86.0,120.0,16.1,190.0,58.0,no,no,,no,Underweight
+16,22.0,female,chest pain fever,2.0,89.0,120.0,22.22222222222222,180.0,72.0,no,no,,no,
