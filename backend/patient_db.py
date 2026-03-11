@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -50,6 +51,26 @@ class PatientDatabase:
             }
             if "health_data_submitted_at" not in existing_columns:
                 conn.execute("ALTER TABLE patient_profiles ADD COLUMN health_data_submitted_at TEXT")
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS appointments (
+                    appointment_id TEXT PRIMARY KEY,
+                    booked_at TEXT NOT NULL,
+                    patient_id TEXT NOT NULL,
+                    patient_name TEXT,
+                    contact_info TEXT,
+                    doctor_id TEXT NOT NULL,
+                    appointment_type TEXT,
+                    appointment_time TEXT NOT NULL,
+                    patient_features_json TEXT,
+                    risk_assessment_json TEXT,
+                    appointment_priority TEXT,
+                    recommended_slot TEXT,
+                    priority_badge_text TEXT,
+                    priority_badge_color TEXT
+                )
+                """
+            )
 
     def upsert_profile(self, payload: Dict[str, Any]) -> None:
         patient_id = str(payload.get("patient_id", "")).strip()
@@ -147,6 +168,129 @@ class PatientDatabase:
                 """
             ).fetchall()
         return [dict(row) for row in rows]
+
+    def add_appointment(self, payload: Dict[str, Any]) -> None:
+        appointment_id = str(payload.get("appointment_id", "")).strip()
+        if not appointment_id:
+            return
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO appointments (
+                    appointment_id,
+                    booked_at,
+                    patient_id,
+                    patient_name,
+                    contact_info,
+                    doctor_id,
+                    appointment_type,
+                    appointment_time,
+                    patient_features_json,
+                    risk_assessment_json,
+                    appointment_priority,
+                    recommended_slot,
+                    priority_badge_text,
+                    priority_badge_color
+                ) VALUES (
+                    :appointment_id,
+                    :booked_at,
+                    :patient_id,
+                    :patient_name,
+                    :contact_info,
+                    :doctor_id,
+                    :appointment_type,
+                    :appointment_time,
+                    :patient_features_json,
+                    :risk_assessment_json,
+                    :appointment_priority,
+                    :recommended_slot,
+                    :priority_badge_text,
+                    :priority_badge_color
+                )
+                """,
+                {
+                    "appointment_id": appointment_id,
+                    "booked_at": payload.get("booked_at"),
+                    "patient_id": payload.get("patient_id"),
+                    "patient_name": payload.get("patient_name"),
+                    "contact_info": payload.get("contact_info"),
+                    "doctor_id": payload.get("doctor_id"),
+                    "appointment_type": payload.get("appointment_type"),
+                    "appointment_time": payload.get("appointment_time"),
+                    "patient_features_json": json.dumps(payload.get("patient_features") or {}),
+                    "risk_assessment_json": json.dumps(payload.get("risk_assessment") or {}),
+                    "appointment_priority": payload.get("appointment_priority"),
+                    "recommended_slot": payload.get("recommended_slot"),
+                    "priority_badge_text": payload.get("priority_badge_text"),
+                    "priority_badge_color": payload.get("priority_badge_color"),
+                },
+            )
+
+    def list_appointments(self, *, patient_id: str | None = None, doctor_id: str | None = None) -> List[Dict[str, Any]]:
+        query = """
+            SELECT
+                appointment_id,
+                booked_at,
+                patient_id,
+                patient_name,
+                contact_info,
+                doctor_id,
+                appointment_type,
+                appointment_time,
+                patient_features_json,
+                risk_assessment_json,
+                appointment_priority,
+                recommended_slot,
+                priority_badge_text,
+                priority_badge_color
+            FROM appointments
+        """
+        clauses: list[str] = []
+        params: list[Any] = []
+        if patient_id:
+            clauses.append("patient_id = ?")
+            params.append(str(patient_id).strip())
+        if doctor_id:
+            clauses.append("doctor_id = ?")
+            params.append(str(doctor_id).strip())
+        if clauses:
+            query += " WHERE " + " AND ".join(clauses)
+        query += " ORDER BY appointment_time DESC, booked_at DESC"
+
+        with self._connect() as conn:
+            rows = conn.execute(query, params).fetchall()
+
+        items: List[Dict[str, Any]] = []
+        for row in rows:
+            item = dict(row)
+            item["patient_features"] = self._load_json_text(item.pop("patient_features_json", ""))
+            item["risk_assessment"] = self._load_json_text(item.pop("risk_assessment_json", ""))
+            items.append(item)
+        return items
+
+    def delete_appointment(self, appointment_id: str, patient_id: str | None = None) -> bool:
+        appointment_id = str(appointment_id).strip()
+        if not appointment_id:
+            return False
+        query = "DELETE FROM appointments WHERE appointment_id = ?"
+        params: list[Any] = [appointment_id]
+        if patient_id:
+            query += " AND patient_id = ?"
+            params.append(str(patient_id).strip())
+        with self._connect() as conn:
+            cursor = conn.execute(query, params)
+            return cursor.rowcount > 0
+
+    @staticmethod
+    def _load_json_text(value: Any) -> Dict[str, Any]:
+        text = str(value or "").strip()
+        if not text:
+            return {}
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError:
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
 
     @staticmethod
     def weight_category_from_bmi(bmi: Optional[float]) -> str:

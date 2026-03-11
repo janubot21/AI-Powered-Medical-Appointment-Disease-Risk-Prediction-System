@@ -2115,6 +2115,10 @@
               <h3>High-Risk Priority Queue</h3>
               <ul id="priorityList"><li>No high-risk patients.</li></ul>
             </div>
+            <div class="list-box">
+              <h3>Recently Updated Patient Details</h3>
+              <ul id="updatedPatientsList"><li>No updated patient details yet.</li></ul>
+            </div>
           </div>
 
           <div class="review">
@@ -2210,6 +2214,7 @@
     const sidebarToggle = document.getElementById("sidebarToggle");
     const sidebarLinks = document.querySelectorAll(".sidebar-link");
     const doctorAppointmentsApi = {{ url_for("doctor_appointments")|tojson }};
+    const doctorPatientDatabaseApi = {{ url_for("doctor_patient_database")|tojson }};
     const roleLoginUrl = {{ url_for("role_login")|tojson }};
     const doctorAvailabilityStatusApi = {{ url_for("doctor_availability_status")|tojson }};
     const appDialog = document.getElementById("appDialog");
@@ -2884,7 +2889,7 @@
         : "";
     }
 
-    function updateInsights(appointments) {
+    function updateInsights(appointments, patients) {
       const recent = [...appointments]
         .sort((a, b) => (parseDate(b.booked_at)?.getTime() || 0) - (parseDate(a.booked_at)?.getTime() || 0))
         .slice(0, 6);
@@ -2910,6 +2915,20 @@
       } else {
         priorityList.innerHTML = priority.map((item) => {
           return `<li>Patient ${safeText(item.patient_id)} - ${fmtDateTime(item.appointment_time)}</li>`;
+        }).join("");
+      }
+
+      const updatedPatients = [...(patients || [])]
+        .filter((item) => parseDate(item.health_data_submitted_at))
+        .sort((a, b) => (parseDate(b.health_data_submitted_at)?.getTime() || 0) - (parseDate(a.health_data_submitted_at)?.getTime() || 0))
+        .slice(0, 6);
+
+      const updatedPatientsList = document.getElementById("updatedPatientsList");
+      if (updatedPatients.length === 0) {
+        updatedPatientsList.innerHTML = "<li>No updated patient details yet.</li>";
+      } else {
+        updatedPatientsList.innerHTML = updatedPatients.map((item) => {
+          return `<li>Patient ${safeText(item.patient_id)} - ${fmtDateTime(item.health_data_submitted_at)}</li>`;
         }).join("");
       }
     }
@@ -3032,15 +3051,19 @@
     }
 
     async function refreshDashboard() {
-      const data = await fetchJsonWithAuth(doctorAppointmentsApi);
-      const appointments = Array.isArray(data.appointments) ? data.appointments : [];
+      const [appointmentsData, patientDatabaseData] = await Promise.all([
+        fetchJsonWithAuth(doctorAppointmentsApi),
+        fetchJsonWithAuth(doctorPatientDatabaseApi),
+      ]);
+      const appointments = Array.isArray(appointmentsData.appointments) ? appointmentsData.appointments : [];
+      const patients = Array.isArray(patientDatabaseData.patients) ? patientDatabaseData.patients : [];
       cachedAllAppointments = appointments;
       ensureCurrentMonthDateOptions();
 
       const counts = updateOverview(appointments);
       updateRiskCharts(counts, appointments.length);
       updateTrend(appointments);
-      updateInsights(appointments);
+      updateInsights(appointments, patients);
       updatePriorityAlerts(appointments);
       applyAppointmentFiltersAndRender();
     }

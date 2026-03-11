@@ -49,7 +49,6 @@ app.jinja_env.auto_reload = True
 doctor_auth_manager = DoctorAuthManager()
 risk_engine = RiskEngine(MODEL_PATH, LABEL_ENCODER_PATH)
 patient_db = PatientDatabase(PATIENT_DB_PATH)
-APPOINTMENTS: list[Dict[str, Any]] = []
 PASSWORD_POLICY_PATTERN = re.compile(r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$")
 PASSWORD_POLICY_MESSAGE = (
     "Password must contain minimum 8 characters, including uppercase (A-Z), lowercase (a-z), number (0-9), and special character (@,!,#,$,%,&,*)."
@@ -1290,7 +1289,8 @@ def patient_booking_confirmation() -> Any:
     normalized_pid = _normalize_patient_id(patient_id)
 
     patient_appointments: list[Dict[str, Any]] = []
-    for item in APPOINTMENTS:
+    stored_appointments = patient_db.list_appointments(patient_id=patient_id)
+    for item in stored_appointments:
         if _normalize_patient_id(item.get("patient_id")) != normalized_pid:
             continue
         dt = _parse_appointment_time(item.get("appointment_time"))
@@ -1321,7 +1321,7 @@ def patient_booking_confirmation() -> Any:
         latest_source = next(
             (
                 ap
-                for ap in reversed(APPOINTMENTS)
+                for ap in stored_appointments
                 if _normalize_patient_id(ap.get("patient_id")) == normalized_pid and isinstance(ap.get("patient_features"), dict)
             ),
             None,
@@ -1353,14 +1353,7 @@ def patient_cancel_appointment() -> Any:
     if not appointment_id:
         return redirect(url_for("patient_booking_confirmation"))
 
-    normalized_pid = _normalize_patient_id(patient_id)
-    for idx, item in enumerate(APPOINTMENTS):
-        if str(item.get("appointment_id", "")).strip() != appointment_id:
-            continue
-        if _normalize_patient_id(item.get("patient_id")) != normalized_pid:
-            continue
-        APPOINTMENTS.pop(idx)
-        break
+    patient_db.delete_appointment(appointment_id, patient_id=patient_id)
 
     return redirect(url_for("patient_booking_confirmation"))
 
@@ -1541,7 +1534,7 @@ def submit_appointment() -> Any:
         "priority_badge_color": priority.badge_color,
         "redirect_url": url_for("patient_booking_confirmation"),
     }
-    APPOINTMENTS.append(
+    patient_db.add_appointment(
         {
             "appointment_id": appointment_id,
             "booked_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
@@ -1674,11 +1667,7 @@ def doctor_logout() -> Any:
 @doctor_required(api=True)
 def doctor_appointments() -> Any:
     current_doctor_id = _normalize_doctor_id(session.get("doctor_id"))
-    appointments = [
-        ap
-        for ap in APPOINTMENTS
-        if _normalize_doctor_id(ap.get("doctor_id")) == current_doctor_id
-    ]
+    appointments = patient_db.list_appointments(doctor_id=current_doctor_id)
     appointments = sorted(appointments, key=_doctor_appointment_sort_key)
     return jsonify({"appointments": appointments})
 
@@ -1689,7 +1678,7 @@ def doctor_patient_database() -> Any:
     current_doctor_id = _normalize_doctor_id(session.get("doctor_id"))
     doctor_patient_ids = {
         _normalize_patient_id(ap.get("patient_id"))
-        for ap in APPOINTMENTS
+        for ap in patient_db.list_appointments(doctor_id=current_doctor_id)
         if _normalize_doctor_id(ap.get("doctor_id")) == current_doctor_id
     }
     if not doctor_patient_ids:
