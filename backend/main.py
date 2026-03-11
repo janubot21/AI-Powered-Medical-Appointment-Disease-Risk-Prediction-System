@@ -290,6 +290,11 @@ def patient_features_portal(patient_id: str) -> RedirectResponse:
     return RedirectResponse(url=f"/portal/patient/features/{patient_id}", status_code=302)
 
 
+@app.post("/patient/features/{patient_id}", include_in_schema=False)
+def patient_features_portal_post(patient_id: str) -> RedirectResponse:
+    return RedirectResponse(url=f"/portal/patient/features/{patient_id}", status_code=307)
+
+
 @app.post("/patient/book-appointment-submit", include_in_schema=False)
 def patient_book_appointment_submit_portal() -> RedirectResponse:
     return RedirectResponse(url="/portal/patient/book-appointment-submit", status_code=307)

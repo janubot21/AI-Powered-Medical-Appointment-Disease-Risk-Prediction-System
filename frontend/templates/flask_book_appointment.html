@@ -423,6 +423,24 @@
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       font-weight: 600;
     }
+    .patient-card-meta {
+      margin: 0 0 12px;
+      display: grid;
+      gap: 2px;
+      color: #355780;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .patient-card-meta-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .patient-card-meta-value {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #12305b;
+    }
     .patient-card label {
       margin-top: 0;
     }
@@ -1235,6 +1253,10 @@
         <div class="left-extra-wrap patient-card">
           <h3>Patient Details Card</h3>
           <p class="patient-card-id">Patient ID: <strong>{{ patient_id }}</strong></p>
+          <div class="patient-card-meta">
+            <span class="patient-card-meta-label">Health Data Submitted On</span>
+            <span class="patient-card-meta-value" id="healthDataSubmittedOn">--</span>
+          </div>
           <div class="feature-card-head">
             <label for="featureAge">Patient Features</label>
             <div class="feature-actions">
@@ -1932,6 +1954,7 @@
       const smokingHabit = hasValue(f.Smoking_Habit) ? String(f.Smoking_Habit).toLowerCase() : "";
       const alcoholHabit = hasValue(f.Alcohol_Habit) ? String(f.Alcohol_Habit).toLowerCase() : "";
       const familyHistory = hasValue(f.Family_History) ? String(f.Family_History).toLowerCase() : "";
+      const submissionTimestamp = f.Health_Data_Submitted_At ?? f.health_data_submitted_at ?? "";
       const weightCategory = hasValue(f.Weight_Category)
         ? f.Weight_Category
         : hasValue(f.BMI_Category)
@@ -1953,6 +1976,7 @@
       setInputValue("featureAlcoholHabit", alcoholHabit);
       setInputValue("featureFamilyHistory", familyHistory);
       setInputValue("featureMedicalHistory", f.Medical_History);
+      setHealthDataSubmittedOn(submissionTimestamp);
     }
 
     function setFeatureEditMode(canEdit) {
@@ -1988,9 +2012,13 @@
       const alcoholHabit = features.Alcohol_Habit ?? "";
       const familyHistory = features.Family_History ?? "";
       const medicalHistory = features.Medical_History ?? "";
+      const submittedAt = formatSubmissionTimestamp(
+        features.Health_Data_Submitted_At ?? features.health_data_submitted_at ?? ""
+      );
       return [
         "<strong>Patient Details</strong>",
         `patient id: ${escapeHtml(patientId || "-")}`,
+        `health data submitted on: ${escapeHtml(submittedAt)}`,
         `age: ${escapeHtml(features.Age ?? "")}`,
         `gender: ${escapeHtml(formatGender(features.Gender))}`,
         `symptoms: ${escapeHtml(features.Symptoms ?? "")}`,
@@ -2211,6 +2239,30 @@
       set("snapBp", bp);
       set("snapBmi", bmi);
       set("snapSymCount", symptomCount);
+    }
+
+    function formatSubmissionTimestamp(value) {
+      const raw = String(value ?? "").trim();
+      if (!raw) return "--";
+      const parsed = new Date(raw);
+      if (Number.isNaN(parsed.getTime())) return "--";
+      const dateText = new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+      }).format(parsed);
+      const timeText = new Intl.DateTimeFormat("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true
+      }).format(parsed);
+      return `${dateText} — ${timeText}`;
+    }
+
+    function setHealthDataSubmittedOn(value) {
+      const el = document.getElementById("healthDataSubmittedOn");
+      if (el) el.textContent = formatSubmissionTimestamp(value);
     }
 
     function scoreLevel(percent) {
@@ -2541,6 +2593,19 @@
       renderOutput(formatPatientSummaryHtml(data.patient_id, loadedPatientFeatures || {}), false, true);
     }
 
+    async function savePatientFeatures() {
+      const patientId = document.getElementById("patientId").value.trim();
+      if (!patientId) throw new Error("Enter Patient ID first.");
+      const patientFeatures = normalizeFeaturePayload(parseEditableFeatures());
+      const data = await postJson(`/patient/features/${encodeURIComponent(patientId)}`, {
+        patient_features: patientFeatures
+      });
+      loadedPatientFeatures = data.patient_features || patientFeatures;
+      setFeatureFormValues(loadedPatientFeatures || {});
+      await updateRiskPanel(loadedPatientFeatures || {});
+      renderOutput(formatPatientSummaryHtml(data.patient_id, loadedPatientFeatures || {}), false, true);
+    }
+
     async function submitAppointmentPayload(payload, sourcePayloadForSuggestion) {
       renderOutput("Submitting...", false);
       const data = await postJson("/patient/book-appointment-submit", payload);
@@ -2665,9 +2730,27 @@
       setFeatureEditMode(true);
     });
 
-    document.getElementById("lockFeaturesBtn").addEventListener("click", () => {
-      setFeatureEditMode(false);
-      updateRiskPanel(parseEditableFeatures());
+    document.getElementById("lockFeaturesBtn").addEventListener("click", async () => {
+      const doneBtn = document.getElementById("lockFeaturesBtn");
+      const editBtn = document.getElementById("editFeaturesBtn");
+      try {
+        if (doneBtn) {
+          doneBtn.disabled = true;
+          doneBtn.textContent = "Saving...";
+        }
+        await savePatientFeatures();
+        setFeatureEditMode(false);
+      } catch (err) {
+        renderOutput(err.message || "Could not save patient details.", true);
+      } finally {
+        if (doneBtn) {
+          doneBtn.disabled = false;
+          doneBtn.textContent = "Done";
+        }
+        if (editBtn) {
+          editBtn.textContent = "Edit";
+        }
+      }
     });
 
     setFeatureEditMode(false);

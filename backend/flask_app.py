@@ -55,6 +55,7 @@ PASSWORD_POLICY_MESSAGE = (
     "Password must contain minimum 8 characters, including uppercase (A-Z), lowercase (a-z), number (0-9), and special character (@,!,#,$,%,&,*)."
 )
 SYMPTOMS_SANITIZE_PATTERN = re.compile(r"[^A-Za-z,\s]+")
+HEALTH_DATA_SUBMITTED_AT_COLUMN = "Health_Data_Submitted_At"
 
 
 def _is_patient_authenticated() -> bool:
@@ -200,10 +201,44 @@ def _to_float(value: str, field_name: str, min_value: float, max_value: float) -
     return parsed
 
 
+def _utc_now_iso() -> str:
+    return datetime.utcnow().isoformat(timespec="seconds") + "Z"
+
+
+def _normalize_submission_timestamp(value: Any) -> str:
+    text = str(value or "").strip()
+    if not text or text.lower() in {"nan", "none"}:
+        return _utc_now_iso()
+    try:
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).isoformat(timespec="seconds").replace("+00:00", "Z")
+    except ValueError:
+        return _utc_now_iso()
+
+
+def _rows_match_except_submission_timestamp(left: Dict[str, Any], right: Dict[str, Any], columns: list[str]) -> bool:
+    for col in columns:
+        if col == HEALTH_DATA_SUBMITTED_AT_COLUMN:
+            continue
+        left_val = left.get(col)
+        right_val = right.get(col)
+        left_text = "" if pd.isna(left_val) else str(left_val).strip()
+        right_text = "" if pd.isna(right_val) else str(right_val).strip()
+        if left_text != right_text:
+            return False
+    return True
+
+
 def append_to_new_patient_csv(row: Dict[str, Any], csv_path: Path = NEW_PATIENT_CSV) -> None:
     ensure_csv_exists(csv_path)
+    row = dict(row)
+    row[HEALTH_DATA_SUBMITTED_AT_COLUMN] = _normalize_submission_timestamp(row.get(HEALTH_DATA_SUBMITTED_AT_COLUMN))
     new_row_df = pd.DataFrame([row])
-    existing_df = pd.read_csv(csv_path)
+    try:
+        existing_df = pd.read_csv(csv_path)
+    except Exception:
+        existing_df = pd.DataFrame(columns=list(row.keys()))
+    if HEALTH_DATA_SUBMITTED_AT_COLUMN not in existing_df.columns:
+        existing_df[HEALTH_DATA_SUBMITTED_AT_COLUMN] = pd.NA
     updated_df = pd.concat([existing_df, new_row_df], ignore_index=True)
     updated_df.to_csv(csv_path, index=False)
     patient_name = _get_patient_name_by_id(str(row.get("Patient_ID", "")).strip())
@@ -299,6 +334,7 @@ def _save_patient_profile_to_db(row: Dict[str, Any], patient_name: str = "") -> 
         "alcohol_habit": _safe_db_text(row.get("Alcohol_Habit")),
         "family_history": _safe_db_text(row.get("Family_History")),
         "medical_history": _safe_db_text(row.get("Medical_History")),
+        "health_data_submitted_at": _normalize_submission_timestamp(row.get(HEALTH_DATA_SUBMITTED_AT_COLUMN)),
     }
     patient_db.upsert_profile(payload)
 
@@ -326,6 +362,9 @@ def _build_csv_row_from_features(patient_id: str, patient_features: Dict[str, An
         "Alcohol_Habit": _yes_no_to_csv_value(patient_features.get("Alcohol_Habit")),
         "Medical_History": str(patient_features.get("Medical_History", "")).strip(),
         "Family_History": _yes_no_to_csv_value(patient_features.get("Family_History")),
+        HEALTH_DATA_SUBMITTED_AT_COLUMN: _normalize_submission_timestamp(
+            patient_features.get(HEALTH_DATA_SUBMITTED_AT_COLUMN) or patient_features.get("health_data_submitted_at")
+        ),
     }
     return row
 
@@ -349,6 +388,7 @@ def upsert_new_patient_csv_from_features(
         "Alcohol_Habit",
         "Medical_History",
         "Family_History",
+        HEALTH_DATA_SUBMITTED_AT_COLUMN,
     ]
     row = _build_csv_row_from_features(patient_id, patient_features)
 
@@ -377,6 +417,10 @@ def upsert_new_patient_csv_from_features(
             if new_val is None and col != "Patient_ID":
                 continue
             merged[col] = new_val
+        if _rows_match_except_submission_timestamp(existing, merged, columns):
+            merged[HEALTH_DATA_SUBMITTED_AT_COLUMN] = existing.get(HEALTH_DATA_SUBMITTED_AT_COLUMN)
+        else:
+            merged[HEALTH_DATA_SUBMITTED_AT_COLUMN] = _utc_now_iso()
         for col in columns:
             df.at[target_idx, col] = merged.get(col)
     else:
@@ -922,6 +966,7 @@ def _build_features_from_new_patient_row(row: Dict[str, Any]) -> Dict[str, Any]:
     alcohol_habit = str(row.get("Alcohol_Habit", "")).strip().lower()
     medical_history = str(row.get("Medical_History", "")).strip()
     family_history = str(row.get("Family_History", "")).strip().lower()
+    health_data_submitted_at = _normalize_submission_timestamp(row.get(HEALTH_DATA_SUBMITTED_AT_COLUMN))
 
     features.update(
         {
@@ -938,6 +983,8 @@ def _build_features_from_new_patient_row(row: Dict[str, Any]) -> Dict[str, Any]:
             "Alcohol_Habit": alcohol_habit,
             "Medical_History": medical_history,
             "Family_History": family_history,
+            HEALTH_DATA_SUBMITTED_AT_COLUMN: health_data_submitted_at,
+            "health_data_submitted_at": health_data_submitted_at,
             "Age_Group": _age_group(age),
             "BMI_Category": _bmi_category(bmi),
             "BP_Category": _bp_category(blood_pressure),
@@ -1127,6 +1174,7 @@ def health_details() -> Any:
                 "Alcohol_Habit": form_data["alcohol_habit"],
                 "Medical_History": form_data["medical_history"],
                 "Family_History": form_data["family_history"],
+                HEALTH_DATA_SUBMITTED_AT_COLUMN: _utc_now_iso(),
             }
             try:
                 append_to_new_patient_csv(row)
@@ -1334,6 +1382,29 @@ def patient_features(patient_id: str) -> Any:
         return jsonify({"detail": str(exc)}), 404
     except Exception as exc:  # pragma: no cover - guard
         return jsonify({"detail": f"Patient lookup failed: {exc}"}), 500
+
+
+@app.post("/patient/features/<patient_id>")
+@patient_required(api=True)
+def update_patient_features(patient_id: str) -> Any:
+    session_pid = _normalize_patient_id(session.get("patient_id"))
+    requested_pid = _normalize_patient_id(patient_id)
+    if not session_pid or requested_pid != session_pid:
+        return jsonify({"detail": "Forbidden: you can only update your own patient record."}), 403
+
+    payload = request.get_json(silent=True) or {}
+    patient_features = payload.get("patient_features")
+    if not isinstance(patient_features, dict) or not patient_features:
+        return jsonify({"detail": "patient_features is required"}), 400
+
+    try:
+        upsert_new_patient_csv_from_features(patient_id, patient_features)
+        refreshed_features = get_features_for_patient(patient_id)
+        return jsonify({"patient_id": patient_id, "patient_features": refreshed_features})
+    except ValueError as exc:
+        return jsonify({"detail": str(exc)}), 400
+    except Exception as exc:  # pragma: no cover - guard
+        return jsonify({"detail": f"Could not update patient features: {exc}"}), 500
 
 
 @app.post("/patient/book-appointment-submit")

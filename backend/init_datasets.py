@@ -41,6 +41,7 @@ def main() -> None:
             "Alcohol_Habit",
             "Medical_History",
             "Family_History",
+            "Health_Data_Submitted_At",
         ],
     )
     _ensure_csv(

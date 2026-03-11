@@ -39,10 +39,17 @@ class PatientDatabase:
                     alcohol_habit TEXT,
                     family_history TEXT,
                     medical_history TEXT,
+                    health_data_submitted_at TEXT,
                     updated_at TEXT NOT NULL
                 )
                 """
             )
+            existing_columns = {
+                row["name"]
+                for row in conn.execute("PRAGMA table_info(patient_profiles)").fetchall()
+            }
+            if "health_data_submitted_at" not in existing_columns:
+                conn.execute("ALTER TABLE patient_profiles ADD COLUMN health_data_submitted_at TEXT")
 
     def upsert_profile(self, payload: Dict[str, Any]) -> None:
         patient_id = str(payload.get("patient_id", "")).strip()
@@ -56,12 +63,12 @@ class PatientDatabase:
                     patient_id, patient_name, age, gender, symptoms, symptom_count, glucose,
                     height_cm, weight_kg, weight_category, calculated_bmi,
                     blood_pressure_systolic, blood_pressure_diastolic, smoking_habit,
-                    alcohol_habit, family_history, medical_history, updated_at
+                    alcohol_habit, family_history, medical_history, health_data_submitted_at, updated_at
                 ) VALUES (
                     :patient_id, :patient_name, :age, :gender, :symptoms, :symptom_count, :glucose,
                     :height_cm, :weight_kg, :weight_category, :calculated_bmi,
                     :blood_pressure_systolic, :blood_pressure_diastolic, :smoking_habit,
-                    :alcohol_habit, :family_history, :medical_history, :updated_at
+                    :alcohol_habit, :family_history, :medical_history, :health_data_submitted_at, :updated_at
                 )
                 ON CONFLICT(patient_id) DO UPDATE SET
                     patient_name=excluded.patient_name,
@@ -80,6 +87,7 @@ class PatientDatabase:
                     alcohol_habit=excluded.alcohol_habit,
                     family_history=excluded.family_history,
                     medical_history=excluded.medical_history,
+                    health_data_submitted_at=excluded.health_data_submitted_at,
                     updated_at=excluded.updated_at
                 """,
                 {
@@ -100,6 +108,7 @@ class PatientDatabase:
                     "alcohol_habit": payload.get("alcohol_habit"),
                     "family_history": payload.get("family_history"),
                     "medical_history": payload.get("medical_history"),
+                    "health_data_submitted_at": payload.get("health_data_submitted_at") or now,
                     "updated_at": now,
                 },
             )
@@ -126,6 +135,7 @@ class PatientDatabase:
                     alcohol_habit,
                     family_history,
                     medical_history,
+                    health_data_submitted_at,
                     updated_at
                 FROM patient_profiles
                 ORDER BY
