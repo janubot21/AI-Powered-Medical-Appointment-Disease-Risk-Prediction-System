@@ -26,7 +26,7 @@ from predict import (
     RiskPredictionResponse,
     default_features_json,
     to_jsonable,
-)
+) 
 from triage import determine_priority
 
 
@@ -278,6 +278,16 @@ def patient_book_appointment_portal() -> RedirectResponse:
 @app.get("/patient/booking-confirmation", include_in_schema=False)
 def patient_booking_confirmation_portal() -> RedirectResponse:
     return RedirectResponse(url="/portal/patient/booking-confirmation", status_code=302)
+
+
+@app.get("/patient/ai-chat", include_in_schema=False)
+def patient_ai_chat_portal() -> RedirectResponse:
+    return RedirectResponse(url="/portal/patient/ai-chat", status_code=302)
+
+
+@app.post("/patient/ai-chat/message", include_in_schema=False)
+def patient_ai_chat_message_portal() -> RedirectResponse:
+    return RedirectResponse(url="/portal/patient/ai-chat/message", status_code=307)
 
 
 @app.get("/patient/logout", include_in_schema=False)

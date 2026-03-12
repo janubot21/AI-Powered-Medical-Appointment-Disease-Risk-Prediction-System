@@ -493,6 +493,90 @@
         line-height: 1.35;
       }
     }
+    .chatbot-float {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 2400;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+    .chatbot-popup {
+      width: min(280px, calc(100vw - 28px));
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid #c6d8ef;
+      background: rgba(255, 255, 255, 0.97);
+      color: #21415d;
+      box-shadow: 0 18px 30px rgba(28, 55, 93, 0.18);
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    .chatbot-popup.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .chatbot-popup h4 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+      color: #305f95;
+    }
+    .chatbot-popup p {
+      margin: 0;
+      color: #536882;
+      line-height: 1.5;
+      font-size: 0.9rem;
+    }
+    .chatbot-popup-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .chatbot-open-link,
+    .chatbot-close-btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 9px 12px;
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .chatbot-open-link {
+      background: linear-gradient(135deg, #4f84cf, #2f63aa);
+      color: #fff;
+    }
+    .chatbot-close-btn {
+      background: #edf3fb;
+      color: #2b5388;
+    }
+    .chatbot-launcher {
+      width: 58px;
+      height: 58px;
+      border-radius: 999px;
+      border: 1px solid #c5d8f2;
+      background: linear-gradient(135deg, #f8fbff, #dfecff);
+      color: #3b6fb7;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 16px 28px rgba(47, 81, 132, 0.2);
+      cursor: pointer;
+    }
+    .chatbot-launcher svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
   </style>
 </head>
 <body>
@@ -503,6 +587,7 @@
   {% set bp_sys = f.get('BloodPressure', '--') %}
   {% set bp_dia = f.get('BP_Diastolic', '') %}
   {% set height_cm = f.get('Height_cm', f.get('Height', '--')) %}
+  {% set sleep_hours = f.get('Average_Sleep_Hours', '--') %}
   <main class="shell">
     <div class="topbar">
       <div class="title-wrap">
@@ -514,6 +599,7 @@
           <option value="light">Light Mode</option>
           <option value="dark">Dark Mode</option>
         </select>
+        <a class="strip-btn" href="/patient/ai-chat">AI Chat</a>
         <a class="strip-btn logout-btn confirm-logout-trigger" href="{{ url_for('patient_logout') }}">Logout</a>
       </div>
     </div>
@@ -536,6 +622,7 @@
           <li><span class="label">Blood Pressure:</span> {{ bp_sys }}{% if bp_dia and bp_dia != '--' %}/{{ bp_dia }}{% endif %} mmHg</li>
           <li><span class="label">Glucose:</span> {{ f.get('Glucose', '--') }} mg/dL</li>
           <li><span class="label">Height:</span> {{ height_cm }} cm</li>
+          <li><span class="label">Average Sleep:</span> {{ sleep_hours }} hours</li>
         </ul>
       </article>
     </section>
@@ -609,6 +696,19 @@
       </div>
     </div>
   </div>
+  <div class="chatbot-float" aria-label="AI chat shortcut">
+    <div class="chatbot-popup" id="chatbotPopup">
+      <h4>AI Chat Assistant</h4>
+      <p>Open the patient chatbot for profile details, doctor precautions, and appointment help.</p>
+      <div class="chatbot-popup-actions">
+        <a class="chatbot-open-link" href="/patient/ai-chat">Open Chat</a>
+        <button class="chatbot-close-btn" id="chatbotCloseBtn" type="button">Close</button>
+      </div>
+    </div>
+    <button class="chatbot-launcher" id="chatbotLauncher" type="button" aria-label="Open AI chat popup">
+      <svg viewBox="0 0 24 24"><path d="M8 10h8"/><path d="M8 14h5"/><path d="M5 19l1.2-3.2A8 8 0 1 1 20 12a8 8 0 0 1-8 8H5z"/></svg>
+    </button>
+  </div>
   <script>
     (() => {
       const modeSelect = document.getElementById("modeSelect");
@@ -656,6 +756,23 @@
       const modal = document.getElementById("logoutModal");
       const confirmBtn = document.getElementById("logoutConfirmBtn");
       const cancelBtn = document.getElementById("logoutCancelBtn");
+      const chatbotPopup = document.getElementById("chatbotPopup");
+      const chatbotLauncher = document.getElementById("chatbotLauncher");
+      const chatbotCloseBtn = document.getElementById("chatbotCloseBtn");
+
+      if (chatbotPopup && chatbotLauncher && chatbotCloseBtn) {
+        const hideChatPopup = () => chatbotPopup.classList.remove("show");
+        chatbotLauncher.addEventListener("click", () => {
+          chatbotPopup.classList.toggle("show");
+        });
+        chatbotCloseBtn.addEventListener("click", hideChatPopup);
+        document.addEventListener("click", (event) => {
+          if (!chatbotPopup.contains(event.target) && !chatbotLauncher.contains(event.target)) {
+            hideChatPopup();
+          }
+        });
+      }
+
       if (!trigger || !modal || !confirmBtn || !cancelBtn) return;
 
       let logoutUrl = trigger.getAttribute("href") || "";

@@ -200,6 +200,31 @@ def _to_float(value: str, field_name: str, min_value: float, max_value: float) -
     return parsed
 
 
+def _normalize_average_sleep_hours(value: Any, *, required: bool = False) -> Optional[int]:
+    text = str(value or "").strip()
+    if not text:
+        if required:
+            raise ValueError("Average Sleep Hours is required.")
+        return None
+    if any(ch in text.lower() for ch in ("e", "+", "-", ".")):
+        raise ValueError("Average Sleep Hours must be a whole number between 3 and 12.")
+    parsed = _to_int(text, "Average Sleep Hours", 3, 12)
+    return parsed
+
+
+def _sleep_category_details(value: Any) -> tuple[str, str]:
+    hours = _to_float_or_none(value)
+    if hours is None:
+        return ("", "")
+    if hours < 5:
+        return ("Poor Sleep", "High health risk")
+    if hours <= 6:
+        return ("Low Sleep", "Not enough rest")
+    if hours <= 9:
+        return ("Healthy Sleep", "Recommended")
+    return ("Excess Sleep", "Possible fatigue")
+
+
 def _utc_now_iso() -> str:
     return datetime.utcnow().isoformat(timespec="seconds") + "Z"
 
@@ -331,6 +356,7 @@ def _save_patient_profile_to_db(row: Dict[str, Any], patient_name: str = "") -> 
         "blood_pressure_diastolic": _extract_diastolic_bp(row.get("BloodPressure")),
         "smoking_habit": _safe_db_text(row.get("Smoking_Habit")),
         "alcohol_habit": _safe_db_text(row.get("Alcohol_Habit")),
+        "average_sleep_hours": _to_float_or_none(row.get("Average_Sleep_Hours")),
         "family_history": _safe_db_text(row.get("Family_History")),
         "medical_history": _safe_db_text(row.get("Medical_History")),
         "health_data_submitted_at": _normalize_submission_timestamp(row.get(HEALTH_DATA_SUBMITTED_AT_COLUMN)),
@@ -359,6 +385,7 @@ def _build_csv_row_from_features(patient_id: str, patient_features: Dict[str, An
         "BMI_Category": str(patient_features.get("BMI_Category", "")).strip(),
         "Smoking_Habit": _yes_no_to_csv_value(patient_features.get("Smoking_Habit")),
         "Alcohol_Habit": _yes_no_to_csv_value(patient_features.get("Alcohol_Habit")),
+        "Average_Sleep_Hours": _normalize_average_sleep_hours(patient_features.get("Average_Sleep_Hours")),
         "Medical_History": str(patient_features.get("Medical_History", "")).strip(),
         "Family_History": _yes_no_to_csv_value(patient_features.get("Family_History")),
         HEALTH_DATA_SUBMITTED_AT_COLUMN: _normalize_submission_timestamp(
@@ -385,6 +412,7 @@ def upsert_new_patient_csv_from_features(
         "BMI_Category",
         "Smoking_Habit",
         "Alcohol_Habit",
+        "Average_Sleep_Hours",
         "Medical_History",
         "Family_History",
         HEALTH_DATA_SUBMITTED_AT_COLUMN,
@@ -963,6 +991,7 @@ def _build_features_from_new_patient_row(row: Dict[str, Any]) -> Dict[str, Any]:
         bmi = _calculate_bmi(height_cm, weight_kg)
     smoking_habit = str(row.get("Smoking_Habit", "")).strip().lower()
     alcohol_habit = str(row.get("Alcohol_Habit", "")).strip().lower()
+    average_sleep_hours = _to_float_or_none(row.get("Average_Sleep_Hours"))
     medical_history = str(row.get("Medical_History", "")).strip()
     family_history = str(row.get("Family_History", "")).strip().lower()
     health_data_submitted_at = _normalize_submission_timestamp(row.get(HEALTH_DATA_SUBMITTED_AT_COLUMN))
@@ -980,6 +1009,7 @@ def _build_features_from_new_patient_row(row: Dict[str, Any]) -> Dict[str, Any]:
             "Weight_kg": weight_kg,
             "Smoking_Habit": smoking_habit,
             "Alcohol_Habit": alcohol_habit,
+            "Average_Sleep_Hours": average_sleep_hours,
             "Medical_History": medical_history,
             "Family_History": family_history,
             HEALTH_DATA_SUBMITTED_AT_COLUMN: health_data_submitted_at,
@@ -1024,6 +1054,257 @@ def get_features_for_patient(patient_id: str) -> Dict[str, Any]:
     if new_features is not None:
         return new_features
     raise ValueError("Patient_ID not found in new_patient_data.csv")
+
+
+def _patient_chat_profile(patient_id: str) -> Dict[str, Any]:
+    profile = patient_db.get_profile(patient_id)
+    return profile if isinstance(profile, dict) else {}
+
+
+def _patient_chat_appointments(patient_id: str) -> list[Dict[str, Any]]:
+    normalized_pid = _normalize_patient_id(patient_id)
+    items: list[Dict[str, Any]] = []
+    for item in patient_db.list_appointments(patient_id=patient_id):
+        if _normalize_patient_id(item.get("patient_id")) != normalized_pid:
+            continue
+        dt = _parse_appointment_time(item.get("appointment_time"))
+        normalized = dict(item)
+        normalized["appointment_dt"] = dt
+        items.append(normalized)
+    items.sort(key=lambda ap: ap.get("appointment_dt") or datetime.min, reverse=True)
+    return items
+
+
+def _chat_text(value: Any, fallback: str = "not available") -> str:
+    text = str(value or "").strip()
+    if not text or text.lower() in {"nan", "none"}:
+        return fallback
+    return text
+
+
+def _chat_number(value: Any, suffix: str = "") -> str:
+    if value is None:
+        return "not available"
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return _chat_text(value)
+    if parsed.is_integer():
+        text = str(int(parsed))
+    else:
+        text = f"{parsed:.1f}".rstrip("0").rstrip(".")
+    return f"{text}{suffix}"
+
+
+def _patient_precautions(profile: Dict[str, Any], features: Dict[str, Any], risk_result: Any) -> list[str]:
+    precautions: list[str] = []
+    risk_level = _normalize_risk_label(getattr(risk_result, "risk_level", ""))
+    glucose = _to_float_or_none(profile.get("glucose"))
+    systolic = _to_float_or_none(profile.get("blood_pressure_systolic"))
+    bmi = _to_float_or_none(profile.get("calculated_bmi"))
+    symptoms = _chat_text(profile.get("symptoms"), "").lower()
+    smoking = _chat_text(profile.get("smoking_habit"), "").lower()
+    alcohol = _chat_text(profile.get("alcohol_habit"), "").lower()
+    sleep_hours = _to_float_or_none(profile.get("average_sleep_hours"))
+    sleep_category, sleep_meaning = _sleep_category_details(sleep_hours)
+
+    if risk_level == "High Risk":
+        precautions.append("Your current record looks high risk. Follow the recommended urgent consultation slot and do not delay care.")
+    elif risk_level == "Medium Risk":
+        precautions.append("Your record suggests medium risk. Try to see the doctor on the same day and keep symptoms under observation.")
+    else:
+        precautions.append("Your record looks lower risk right now, but continue monitoring symptoms and attend routine follow-up.")
+
+    if glucose is not None and glucose >= 126:
+        precautions.append("Your glucose appears elevated. Avoid excess sugar, stay hydrated, and discuss diabetic screening with your doctor.")
+    if systolic is not None and systolic >= 140:
+        precautions.append("Your blood pressure reading is elevated. Reduce salt, rest well, and ask the doctor for a blood pressure review.")
+    if bmi is not None and bmi >= 30:
+        precautions.append("Your BMI is in the obese range. Ask for a doctor-guided weight, diet, and activity plan.")
+    elif bmi is not None and bmi < 18.5:
+        precautions.append("Your BMI is in the underweight range. Ask the doctor about nutrition support and underlying causes.")
+    if smoking == "yes":
+        precautions.append("Smoking increases health risk. The doctor will likely advise stopping smoking and avoiding smoke exposure.")
+    if alcohol == "yes":
+        precautions.append("Limit alcohol intake and mention your current drinking habit during consultation.")
+    if sleep_category == "Poor Sleep":
+        precautions.append("Your sleep pattern falls under Poor Sleep. This is a higher-risk sleep pattern and should be discussed with the doctor.")
+    elif sleep_category == "Low Sleep":
+        precautions.append("Your sleep pattern falls under Low Sleep. You may not be getting enough rest, so discuss sleep quality and routine.")
+    elif sleep_category == "Excess Sleep":
+        precautions.append("Your sleep pattern falls under Excess Sleep. Mention fatigue, weakness, or daytime drowsiness to the doctor.")
+    if "chest pain" in symptoms or "breath" in symptoms:
+        precautions.append("Chest pain or breathing-related symptoms should be discussed urgently, especially if they worsen suddenly.")
+
+    medical_history = _chat_text(profile.get("medical_history"), "")
+    if medical_history:
+        precautions.append(f"Share your medical history clearly with the doctor: {medical_history}.")
+
+    deduped: list[str] = []
+    for item in precautions:
+        if item not in deduped:
+            deduped.append(item)
+    return deduped[:5]
+
+
+def _doctor_match_reason(symptoms_text: str, risk_label: str) -> str:
+    symptoms_text = symptoms_text.lower()
+    if "chest pain" in symptoms_text or "breath" in symptoms_text:
+        return "Your symptoms should be reviewed promptly because chest pain or breathing issues may need urgent evaluation."
+    if "fever" in symptoms_text or "cough" in symptoms_text:
+        return "Start with a general medicine doctor for symptom review and next-step treatment."
+    if "headache" in symptoms_text or "dizziness" in symptoms_text:
+        return "A general medicine doctor is a good first consultation for headache, dizziness, and vital-sign review."
+    if risk_label == "High Risk":
+        return "Because your AI risk is high, emergency-capable doctors are ranked first."
+    if risk_label == "Medium Risk":
+        return "Because your AI risk is medium, faster same-day review is preferred."
+    return "A general medicine doctor is the best first consultation based on the current data in your portal."
+
+
+def _recommended_doctors_for_patient(symptoms_text: str, risk_label: str) -> list[Dict[str, str]]:
+    profiles = _load_doctor_profiles_df()
+    if profiles.empty:
+        return []
+
+    rows: list[Dict[str, str]] = []
+    prioritize_emergency = risk_label == "High Risk"
+    profiles = profiles.sort_values(by=["doctor_name", "doctor_id"], kind="stable")
+    for _, row in profiles.iterrows():
+        doctor = {
+            "doctor_id": str(row.get("doctor_id", "")).strip(),
+            "doctor_name": str(row.get("doctor_name", "")).strip() or str(row.get("doctor_id", "")).strip(),
+            "specialization": str(row.get("specialization", "General Medicine")).strip() or "General Medicine",
+            "available_time": str(row.get("available_time", "10:00 AM to 9:00 PM")).strip() or "10:00 AM to 9:00 PM",
+            "emergency_doctor": _normalize_emergency_flag(row.get("emergency_doctor", "no")),
+        }
+        if doctor["doctor_id"]:
+            rows.append(doctor)
+
+    rows.sort(
+        key=lambda item: (
+            0 if (prioritize_emergency and item.get("emergency_doctor") == "yes") else 1,
+            0 if item.get("emergency_doctor") == "yes" else 1,
+            item.get("doctor_name", "").lower(),
+            item.get("doctor_id", "").lower(),
+        )
+    )
+    return rows[:4]
+
+
+def _patient_chat_response(patient_id: str, user_message: str) -> Dict[str, Any]:
+    profile = _patient_chat_profile(patient_id)
+    appointments = _patient_chat_appointments(patient_id)
+    try:
+        features = get_features_for_patient(patient_id)
+    except ValueError:
+        features = {}
+
+    risk_result = None
+    if features:
+        try:
+            risk_result = risk_engine.predict(features)
+        except Exception:
+            risk_result = None
+
+    precautions = _patient_precautions(profile, features, risk_result)
+    name = _chat_text(profile.get("patient_name") or session.get("patient_name"), "Patient")
+    age = _chat_number(profile.get("age"))
+    gender = _chat_text(profile.get("gender"))
+    symptoms = _chat_text(profile.get("symptoms"))
+    glucose = _chat_number(profile.get("glucose"), " mg/dL")
+    bmi = _chat_number(profile.get("calculated_bmi"))
+    bp_sys = _chat_number(profile.get("blood_pressure_systolic"))
+    bp_dia = _chat_number(profile.get("blood_pressure_diastolic"))
+    sleep_hours = _chat_number(profile.get("average_sleep_hours"), " hours")
+    sleep_category, sleep_meaning = _sleep_category_details(profile.get("average_sleep_hours"))
+    risk_label = _normalize_risk_label(getattr(risk_result, "risk_level", ""))
+    recommended_slot = getattr(determine_priority(getattr(risk_result, "risk_level", "")), "recommended_slot", "Next Available Date")
+    doctor_reason = _doctor_match_reason(symptoms, risk_label)
+    suggested_doctors = _recommended_doctors_for_patient(symptoms, risk_label)
+    latest_appointment = appointments[0] if appointments else {}
+    future_appointments = [ap for ap in appointments if ap.get("appointment_dt") and ap["appointment_dt"] >= datetime.now()]
+    upcoming_appointment = min(future_appointments, key=lambda ap: ap["appointment_dt"]) if future_appointments else {}
+
+    message = str(user_message or "").strip().lower()
+    doctor_keywords = ("doctor", "precaution", "advice", "care", "treatment", "medicine")
+    appointment_keywords = ("appointment", "booking", "doctor assigned", "doctor name", "visit")
+    vitals_keywords = ("bp", "blood pressure", "glucose", "sugar", "bmi", "weight", "height")
+    doctor_list_requested = (
+        ("doctor" in message or "doctors" in message)
+        and any(term in message for term in ("list", "consult", "recommend", "suggest", "available", "avail", "condition", "issue", "show", "who"))
+    )
+
+    if any(key in message for key in ("name", "age", "gender", "patient detail", "patient details", "profile")):
+        sleep_text = f" Average sleep: {sleep_hours}."
+        if sleep_category:
+            sleep_text += f" Sleep category: {sleep_category} ({sleep_meaning})."
+        reply = f"Patient summary: {name}, age {age}, gender {gender}. Symptoms: {symptoms}.{sleep_text}"
+    elif any(key in message for key in ("symptom", "history", "family", "smoking", "alcohol")):
+        reply = (
+            f"Symptoms: {symptoms}. Medical history: {_chat_text(profile.get('medical_history'))}. "
+            f"Family history: {_chat_text(profile.get('family_history'))}. Smoking: {_chat_text(profile.get('smoking_habit'))}. "
+            f"Alcohol: {_chat_text(profile.get('alcohol_habit'))}. Average sleep: {sleep_hours}"
+            + (f" ({sleep_category}: {sleep_meaning})." if sleep_category else ".")
+        )
+    elif any(key in message for key in vitals_keywords):
+        reply = (
+            f"Vitals summary: blood pressure {bp_sys}/{bp_dia} mmHg, glucose {glucose}, BMI {bmi}, "
+            f"weight {_chat_number(profile.get('weight_kg'), ' kg')}, height {_chat_number(profile.get('height_cm'), ' cm')}, "
+            f"average sleep {sleep_hours}"
+            + (f" ({sleep_category}: {sleep_meaning})." if sleep_category else ".")
+        )
+    elif "risk" in message or "prediction" in message:
+        reply = f"Current AI risk summary: {risk_label}. Recommended slot: {recommended_slot}."
+    elif any(key in message for key in appointment_keywords):
+        if upcoming_appointment:
+            dt = upcoming_appointment.get("appointment_dt")
+            reply = (
+                f"Your next appointment is with Dr. {_chat_text(upcoming_appointment.get('doctor_id'))} for "
+                f"{_chat_text(upcoming_appointment.get('appointment_type'))} on {_format_date_label(dt)} at {_format_time_label(dt)}."
+            )
+        elif latest_appointment:
+            dt = latest_appointment.get("appointment_dt")
+            reply = (
+                f"Your latest appointment on record is with Dr. {_chat_text(latest_appointment.get('doctor_id'))} on "
+                f"{_format_date_label(dt)} at {_format_time_label(dt)}."
+            )
+        else:
+            reply = "No appointment is currently stored for this patient."
+    elif doctor_list_requested:
+        if suggested_doctors:
+            doctor_lines = [
+                f"{idx}. Dr. {item['doctor_name']} ({item['specialization']}) - Available: {item['available_time']}"
+                + (" - Emergency doctor" if item.get("emergency_doctor") == "yes" else "")
+                for idx, item in enumerate(suggested_doctors, start=1)
+            ]
+            reply = f"{doctor_reason}\nRecommended doctors for you:\n" + "\n".join(doctor_lines)
+        else:
+            reply = "I could not find any doctor profiles in the current portal data."
+    elif any(key in message for key in doctor_keywords):
+        reply = "Doctor precautions based on your current record: " + " ".join(precautions)
+    else:
+        reply = (
+            f"I can help with your patient details, appointment plan, AI risk summary, and doctor precautions. "
+            f"Right now your record shows {risk_label.lower()} with symptoms: {symptoms}. "
+            f"Main precautions: {' '.join(precautions[:3])}"
+        )
+
+    return {
+        "reply": reply,
+        "patient_snapshot": {
+            "patient_name": name,
+            "age": age,
+            "gender": gender,
+            "risk_level": risk_label,
+            "recommended_slot": recommended_slot,
+            "symptoms": symptoms,
+            "average_sleep_hours": sleep_hours,
+            "sleep_category": sleep_category,
+        },
+        "precautions": precautions,
+        "suggested_doctors": suggested_doctors,
+    }
 
 
 @app.route("/")
@@ -1106,6 +1387,7 @@ def health_details() -> Any:
         "bmi": "",
         "smoking_habit": "",
         "alcohol_habit": "",
+        "average_sleep_hours": "",
         "medical_history": "",
         "family_history": "",
     }
@@ -1124,6 +1406,7 @@ def health_details() -> Any:
                 "bmi": request.form.get("bmi", "").strip(),
                 "smoking_habit": request.form.get("smoking_habit", "").strip().lower(),
                 "alcohol_habit": request.form.get("alcohol_habit", "").strip().lower(),
+                "average_sleep_hours": request.form.get("average_sleep_hours", "").strip(),
                 "medical_history": request.form.get("medical_history", "").strip(),
                 "family_history": request.form.get("family_history", "").strip().lower(),
             }
@@ -1149,12 +1432,13 @@ def health_details() -> Any:
             blood_pressure = _to_float(form_data["blood_pressure"], "BloodPressure", 0, 400)
             height_cm = _to_float(form_data["height_cm"], "Height (cm)", 1, 300)
             weight_kg = _to_float(form_data["weight_kg"], "Weight (kg)", 1, 500)
+            average_sleep_hours = _normalize_average_sleep_hours(form_data["average_sleep_hours"], required=True)
             bmi = _calculate_bmi(height_cm, weight_kg)
             form_data["bmi"] = f"{bmi:.2f}"
         except ValueError as exc:
             errors.append(str(exc))
             age = symptom_count = 0
-            glucose = blood_pressure = bmi = 0.0
+            glucose = blood_pressure = bmi = average_sleep_hours = 0.0
             height_cm = weight_kg = 0.0
 
         if not errors:
@@ -1171,6 +1455,7 @@ def health_details() -> Any:
                 "Weight_kg": weight_kg,
                 "Smoking_Habit": form_data["smoking_habit"],
                 "Alcohol_Habit": form_data["alcohol_habit"],
+                "Average_Sleep_Hours": average_sleep_hours,
                 "Medical_History": form_data["medical_history"],
                 "Family_History": form_data["family_history"],
                 HEALTH_DATA_SUBMITTED_AT_COLUMN: _utc_now_iso(),
@@ -1266,6 +1551,34 @@ def book_appointment() -> Any:
         doctor_ids=doctor_ids,
         patient_name=patient_name,
     )
+
+
+@app.route("/patient/ai-chat")
+@patient_required()
+def patient_ai_chat() -> Any:
+    patient_id = str(session.get("patient_id", "")).strip()
+    patient_name = str(session.get("patient_name", "")).strip() or _get_patient_name_by_id(patient_id) or "Patient"
+    initial_payload = _patient_chat_response(patient_id, "Give my patient summary and precautions.")
+    return render_template(
+        "flask_patient_ai_chat.html",
+        patient_id=patient_id,
+        patient_name=patient_name,
+        initial_reply=initial_payload.get("reply", ""),
+        initial_snapshot=initial_payload.get("patient_snapshot", {}),
+        initial_precautions=initial_payload.get("precautions", []),
+        initial_suggested_doctors=initial_payload.get("suggested_doctors", []),
+    )
+
+
+@app.post("/patient/ai-chat/message")
+@patient_required(api=True)
+def patient_ai_chat_message() -> Any:
+    patient_id = str(session.get("patient_id", "")).strip()
+    payload = request.get_json(silent=True) or {}
+    message = str(payload.get("message", "")).strip()
+    if not message:
+        return jsonify({"detail": "message is required"}), 400
+    return jsonify(_patient_chat_response(patient_id, message))
 
 
 @app.route("/patient/logout")

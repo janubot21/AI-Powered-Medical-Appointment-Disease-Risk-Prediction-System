@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Chat Assistant</title>
+  <style>
+    :root {
+      --bg-a: #edf4f5;
+      --bg-b: #dce9f1;
+      --panel: rgba(248, 252, 252, 0.92);
+      --line: #c8dfe1;
+      --text: #133f4b;
+      --muted: #52727a;
+      --accent: #2c9098;
+      --accent-dark: #166c74;
+      --bubble-user: #d8f1f4;
+      --bubble-bot: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Consolas, "Lucida Console", monospace;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 12%, rgba(83, 173, 184, 0.18), transparent 28%),
+        radial-gradient(circle at 90% 82%, rgba(61, 110, 180, 0.16), transparent 30%),
+        linear-gradient(180deg, var(--bg-a) 0%, var(--bg-b) 100%);
+    }
+    .app-sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: 252px;
+      padding: 12px 10px;
+      background: linear-gradient(180deg, #f7fcff 0%, #eef8f8 100%);
+      border-right: 1px solid #d7e7e7;
+      box-shadow: 10px 0 26px rgba(44, 109, 109, 0.14);
+      overflow-y: auto;
+    }
+    .sidebar-top { display: grid; gap: 8px; margin-bottom: 8px; }
+    .sidebar-headline { display: flex; align-items: center; justify-content: space-between; }
+    .menu-title {
+      margin: 0;
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      color: #4f6f7a;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .sidebar-toggle {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      border: 1px solid #cde4e4;
+      background: #fff;
+      color: #2b7f86;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .sidebar-brand, .sidebar-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 14px;
+      border: 1px solid #cee6e6;
+      background: linear-gradient(135deg, #dff3f5, #ecf8f8);
+    }
+    .brand-icon, .profile-avatar-mini, .sidebar-icon {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid #bde0e0;
+      background: #f3fbfb;
+      color: #2f8f95;
+    }
+    .brand-icon svg, .sidebar-icon svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .brand-title { font-size: 0.8rem; color: #1f878d; font-weight: 800; }
+    .brand-sub, .profile-role-mini { font-size: 0.62rem; color: #67939a; font-weight: 700; text-transform: uppercase; }
+    .profile-avatar-mini {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: 2px solid #b8dddd;
+      background: linear-gradient(145deg, #e8f9fb, #d2eef1);
+      color: #1e6f78;
+      font-weight: 800;
+    }
+    .profile-name-mini { color: #1f4d56; font-size: 0.88rem; font-weight: 800; }
+    .sidebar-menu { list-style: none; margin: 4px 0 0; padding: 0 0 8px; display: grid; gap: 4px; }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: #215d66;
+      font-weight: 700;
+      font-size: 0.84rem;
+    }
+    .sidebar-link:hover { background: #e8f5f6; color: #1d646d; }
+    .sidebar-link.active {
+      background: linear-gradient(120deg, #d6eff2, #cfeaed);
+      color: #1a7880;
+      box-shadow: inset 0 0 0 1px #b9dfe4;
+    }
+    .sidebar-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 8px;
+      background: #eef9fa;
+      border: 1px solid #c8e6e8;
+      color: #2e9198;
+    }
+    .page {
+      padding: 18px 18px 22px calc(18px + 252px);
+    }
+    .shell {
+      max-width: 1380px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(290px, 0.8fr) minmax(520px, 1.4fr);
+      gap: 18px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 18px 32px rgba(23, 63, 75, 0.12);
+    }
+    .summary-card { padding: 20px; }
+    .eyebrow {
+      margin: 0 0 6px;
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #5d7b81;
+      font-weight: 800;
+    }
+    h1, h2, h3 { margin: 0; }
+    h1 { font-size: clamp(1.8rem, 3vw, 2.7rem); color: #164852; }
+    .subtitle { margin: 10px 0 0; color: var(--muted); line-height: 1.6; }
+    .snapshot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .snapshot-item {
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid #d6e9eb;
+    }
+    .snapshot-label {
+      display: block;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b8a90;
+      margin-bottom: 6px;
+    }
+    .snapshot-value { font-size: 0.98rem; font-weight: 800; color: #194b56; }
+    .precautions {
+      margin-top: 18px;
+      padding-left: 18px;
+      color: #305b65;
+      line-height: 1.55;
+    }
+    .doctor-panel-title {
+      margin: 18px 0 10px;
+      color: #164852;
+      font-size: 1rem;
+    }
+    .doctor-list {
+      display: grid;
+      gap: 10px;
+    }
+    .doctor-card {
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid #d6e9eb;
+      box-shadow: 0 10px 18px rgba(22, 71, 81, 0.08);
+    }
+    .doctor-name {
+      font-size: 0.96rem;
+      font-weight: 800;
+      color: #18505a;
+    }
+    .doctor-meta {
+      margin-top: 4px;
+      color: #4f6f76;
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+    .doctor-badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #d9f5e8;
+      color: #15694b;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .doctor-badge.normal {
+      background: #ecf4ff;
+      color: #2c5e99;
+    }
+    .chat-card {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 56px);
+    }
+    .chat-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .chat-status {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #daf1f4;
+      color: #1a7178;
+      font-size: 0.76rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .chat-stream {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 8px 4px 18px;
+    }
+    .bubble {
+      max-width: min(82%, 720px);
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid #d2e5e8;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      box-shadow: 0 10px 18px rgba(22, 71, 81, 0.08);
+    }
+    .bubble.bot {
+      align-self: flex-start;
+      background: var(--bubble-bot);
+      color: #1f4f58;
+    }
+    .bubble.user {
+      align-self: flex-end;
+      background: var(--bubble-user);
+      color: #12434d;
+      border-color: #bde1e6;
+    }
+    .composer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding-top: 14px;
+      border-top: 1px solid #d7e8ea;
+    }
+    .composer textarea {
+      min-height: 64px;
+      max-height: 180px;
+      resize: vertical;
+      border-radius: 16px;
+      border: 1px solid #c7dde0;
+      padding: 14px;
+      font: inherit;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.96);
+      outline: none;
+    }
+    .composer button {
+      border: 0;
+      border-radius: 16px;
+      padding: 0 20px;
+      min-width: 132px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #fff;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .quick-prompts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0 0;
+    }
+    .prompt-chip {
+      border: 1px solid #c5dfe2;
+      background: #fff;
+      color: #245f67;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .error-text { color: #b42318; font-weight: 700; margin: 8px 0 0; min-height: 20px; }
+    @media (max-width: 1080px) {
+      .shell { grid-template-columns: 1fr; }
+      .chat-card { min-height: auto; }
+    }
+    @media (max-width: 780px) {
+      .app-sidebar {
+        position: static;
+        width: auto;
+        height: auto;
+        box-shadow: none;
+        border-right: 0;
+      }
+      .page { padding: 14px; }
+      .snapshot-grid { grid-template-columns: 1fr; }
+      .composer { grid-template-columns: 1fr; }
+      .bubble { max-width: 100%; }
+    }
+  </style>
+</head>
+<body data-nav-active="AI Chat">
+  <aside class="app-sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-headline">
+        <p class="menu-title">Menu</p>
+        <button class="sidebar-toggle" type="button" aria-label="Portal menu">&#8249;</button>
+      </div>
+      <div class="sidebar-brand">
+        <span class="brand-icon"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/><path d="M7 7h10v10H7z"/></svg></span>
+        <div>
+          <div class="brand-title">AIHealth Hub</div>
+          <div class="brand-sub">Healthcare System</div>
+        </div>
+      </div>
+      <div class="sidebar-profile">
+        <span class="profile-avatar-mini">{{ (patient_name or "PT")[:2]|upper }}</span>
+        <div>
+          <div class="profile-name-mini">{{ patient_name or "Patient" }}</div>
+          <div class="profile-role-mini">Patient Portal</div>
+        </div>
+      </div>
+    </div>
+    <ul class="sidebar-menu">
+      <li><a class="sidebar-link" href="/about"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7h.01"/></svg></span><span>About</span></a></li>
+      <li><a class="sidebar-link" href="/patient/book-appointment"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 9h18M5 5h14v16H5z"/></svg></span><span>Book Appointment</span></a></li>
+      <li><a class="sidebar-link" href="/patient/health-details"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 5.6-7 10-7 10Z"/></svg></span><span>Health Details</span></a></li>
+      <li><a class="sidebar-link active" href="/patient/ai-chat"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M8 10h8"/><path d="M8 14h5"/><path d="M5 19l1.2-3.2A8 8 0 1 1 20 12a8 8 0 0 1-8 8H5z"/></svg></span><span>AI Chat</span></a></li>
+      <li><a class="sidebar-link" href="/patient/book-appointment#overallRisk"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg></span><span>AI Risk Prediction</span></a></li>
+      <li><a class="sidebar-link" href="/patient/booking-confirmation"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg></span><span>Profile</span></a></li>
+      <li><a class="sidebar-link" href="/patient/logout"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><span>Logout</span></a></li>
+    </ul>
+  </aside>
+
+  <main class="page">
+    <div class="shell">
+      <section class="card summary-card">
+        <p class="eyebrow">Patient AI Assistant</p>
+        <h1>Ask about your health record</h1>
+        <p class="subtitle">This chat assistant answers from the logged-in patient profile, appointment history, AI risk summary, and doctor-style precautions already stored in the portal.</p>
+
+        <div class="snapshot-grid">
+          <div class="snapshot-item">
+            <span class="snapshot-label">Patient</span>
+            <span class="snapshot-value">{{ initial_snapshot.patient_name or patient_name }}</span>
+          </div>
+          <div class="snapshot-item">
+            <span class="snapshot-label">Age</span>
+            <span class="snapshot-value">{{ initial_snapshot.age or "--" }}</span>
+          </div>
+          <div class="snapshot-item">
+            <span class="snapshot-label">Gender</span>
+            <span class="snapshot-value">{{ initial_snapshot.gender or "--" }}</span>
+          </div>
+          <div class="snapshot-item">
+            <span class="snapshot-label">Risk Level</span>
+            <span class="snapshot-value">{{ initial_snapshot.risk_level or "--" }}</span>
+          </div>
+          <div class="snapshot-item">
+            <span class="snapshot-label">Recommended Slot</span>
+            <span class="snapshot-value">{{ initial_snapshot.recommended_slot or "--" }}</span>
+          </div>
+          <div class="snapshot-item">
+            <span class="snapshot-label">Symptoms</span>
+            <span class="snapshot-value">{{ initial_snapshot.symptoms or "--" }}</span>
+          </div>
+          <div class="snapshot-item">
+            <span class="snapshot-label">Sleep Hours</span>
+            <span class="snapshot-value">{{ initial_snapshot.average_sleep_hours or "--" }}</span>
+          </div>
+        </div>
+
+        <h3 style="margin-top:18px;">Doctor Precautions</h3>
+        <ul class="precautions" id="precautionList">
+          {% for item in initial_precautions %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+        <h3 class="doctor-panel-title">Suggested Doctors</h3>
+        <div class="doctor-list" id="doctorList">
+          {% for item in initial_suggested_doctors %}
+          <div class="doctor-card">
+            <div class="doctor-name">Dr. {{ item.doctor_name or item.doctor_id }}</div>
+            <div class="doctor-meta">
+              <div>Specialization: {{ item.specialization }}</div>
+              <div>Available: {{ item.available_time }}</div>
+            </div>
+            <span class="doctor-badge {{ 'emergency' if item.emergency_doctor == 'yes' else 'normal' }}">
+              {{ 'Emergency Doctor' if item.emergency_doctor == 'yes' else 'Available Doctor' }}
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="card chat-card">
+        <div class="chat-head">
+          <div>
+            <p class="eyebrow">Live Chat</p>
+            <h2>Patient Support Bot</h2>
+            <p class="subtitle">Try questions like “show my patient details”, “what is my risk level?”, “what precautions should I follow?”, or “who is my next doctor?”.</p>
+          </div>
+          <div class="chat-status">Patient {{ patient_id }}</div>
+        </div>
+
+        <div class="quick-prompts">
+          <button class="prompt-chip" type="button" data-prompt="Show my patient details">Patient Details</button>
+          <button class="prompt-chip" type="button" data-prompt="What is my risk level?">Risk Level</button>
+          <button class="prompt-chip" type="button" data-prompt="Give doctor precautions for me">Doctor Precautions</button>
+          <button class="prompt-chip" type="button" data-prompt="Give me a doctors list for my condition">Doctors List</button>
+          <button class="prompt-chip" type="button" data-prompt="Who is my next doctor appointment with?">Next Appointment</button>
+        </div>
+
+        <div class="chat-stream" id="chatStream">
+          <div class="bubble bot">{{ initial_reply }}</div>
+        </div>
+
+        <form class="composer" id="chatForm">
+          <textarea id="chatInput" placeholder="Ask about your patient details, symptoms, appointments, risk, or precautions..."></textarea>
+          <button type="submit" id="sendBtn">Send</button>
+        </form>
+        <div class="error-text" id="chatError"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const chatStream = document.getElementById("chatStream");
+    const chatForm = document.getElementById("chatForm");
+    const chatInput = document.getElementById("chatInput");
+    const chatError = document.getElementById("chatError");
+    const sendBtn = document.getElementById("sendBtn");
+    const precautionList = document.getElementById("precautionList");
+    const doctorList = document.getElementById("doctorList");
+
+    function appendBubble(text, role) {
+      const bubble = document.createElement("div");
+      bubble.className = `bubble ${role}`;
+      bubble.textContent = text;
+      chatStream.appendChild(bubble);
+      chatStream.scrollTop = chatStream.scrollHeight;
+    }
+
+    function renderPrecautions(items) {
+      if (!precautionList || !Array.isArray(items)) return;
+      precautionList.innerHTML = "";
+      items.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        precautionList.appendChild(li);
+      });
+    }
+
+    function renderSuggestedDoctors(items) {
+      if (!doctorList || !Array.isArray(items)) return;
+      doctorList.innerHTML = "";
+      if (items.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "doctor-card";
+        empty.innerHTML = '<div class="doctor-name">No doctors found</div><div class="doctor-meta">No matching doctor profiles are currently available in the portal data.</div>';
+        doctorList.appendChild(empty);
+        return;
+      }
+      items.forEach((item) => {
+        const card = document.createElement("div");
+        const isEmergency = String(item.emergency_doctor || "").toLowerCase() === "yes";
+        card.className = "doctor-card";
+        card.innerHTML = `
+          <div class="doctor-name">Dr. ${item.doctor_name || item.doctor_id || "-"}</div>
+          <div class="doctor-meta">
+            <div>Specialization: ${item.specialization || "General Medicine"}</div>
+            <div>Available: ${item.available_time || "10:00 AM to 9:00 PM"}</div>
+          </div>
+          <span class="doctor-badge ${isEmergency ? "emergency" : "normal"}">${isEmergency ? "Emergency Doctor" : "Available Doctor"}</span>
+        `;
+        doctorList.appendChild(card);
+      });
+    }
+
+    async function sendMessage(message) {
+      const trimmed = String(message || "").trim();
+      if (!trimmed) return;
+      chatError.textContent = "";
+      appendBubble(trimmed, "user");
+      chatInput.value = "";
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Sending...";
+      try {
+        const res = await fetch("/patient/ai-chat/message", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ message: trimmed })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Unable to get chatbot response.");
+        appendBubble(data.reply || "No response available.", "bot");
+        renderPrecautions(data.precautions || []);
+        renderSuggestedDoctors(data.suggested_doctors || []);
+      } catch (error) {
+        appendBubble("I could not answer that right now. Please try again.", "bot");
+        chatError.textContent = error.message || "Chat failed.";
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = "Send";
+        chatInput.focus();
+      }
+    }
+
+    chatForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      await sendMessage(chatInput.value);
+    });
+
+    document.querySelectorAll("[data-prompt]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        await sendMessage(button.getAttribute("data-prompt") || "");
+      });
+    });
+
+    const chatSubtitle = document.querySelector(".chat-head .subtitle");
+    if (chatSubtitle) {
+      chatSubtitle.textContent = 'Try questions like "show my patient details", "what is my risk level?", "give doctor precautions", or "give me a doctors list for my condition".';
+    }
+  </script>
+</body>
+</html>

@@ -38,6 +38,7 @@ class PatientDatabase:
                     blood_pressure_diastolic REAL,
                     smoking_habit TEXT,
                     alcohol_habit TEXT,
+                    average_sleep_hours REAL,
                     family_history TEXT,
                     medical_history TEXT,
                     health_data_submitted_at TEXT,
@@ -51,6 +52,8 @@ class PatientDatabase:
             }
             if "health_data_submitted_at" not in existing_columns:
                 conn.execute("ALTER TABLE patient_profiles ADD COLUMN health_data_submitted_at TEXT")
+            if "average_sleep_hours" not in existing_columns:
+                conn.execute("ALTER TABLE patient_profiles ADD COLUMN average_sleep_hours REAL")
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS appointments (
@@ -84,12 +87,12 @@ class PatientDatabase:
                     patient_id, patient_name, age, gender, symptoms, symptom_count, glucose,
                     height_cm, weight_kg, weight_category, calculated_bmi,
                     blood_pressure_systolic, blood_pressure_diastolic, smoking_habit,
-                    alcohol_habit, family_history, medical_history, health_data_submitted_at, updated_at
+                    alcohol_habit, average_sleep_hours, family_history, medical_history, health_data_submitted_at, updated_at
                 ) VALUES (
                     :patient_id, :patient_name, :age, :gender, :symptoms, :symptom_count, :glucose,
                     :height_cm, :weight_kg, :weight_category, :calculated_bmi,
                     :blood_pressure_systolic, :blood_pressure_diastolic, :smoking_habit,
-                    :alcohol_habit, :family_history, :medical_history, :health_data_submitted_at, :updated_at
+                    :alcohol_habit, :average_sleep_hours, :family_history, :medical_history, :health_data_submitted_at, :updated_at
                 )
                 ON CONFLICT(patient_id) DO UPDATE SET
                     patient_name=excluded.patient_name,
@@ -106,6 +109,7 @@ class PatientDatabase:
                     blood_pressure_diastolic=excluded.blood_pressure_diastolic,
                     smoking_habit=excluded.smoking_habit,
                     alcohol_habit=excluded.alcohol_habit,
+                    average_sleep_hours=excluded.average_sleep_hours,
                     family_history=excluded.family_history,
                     medical_history=excluded.medical_history,
                     health_data_submitted_at=excluded.health_data_submitted_at,
@@ -127,6 +131,7 @@ class PatientDatabase:
                     "blood_pressure_diastolic": payload.get("blood_pressure_diastolic"),
                     "smoking_habit": payload.get("smoking_habit"),
                     "alcohol_habit": payload.get("alcohol_habit"),
+                    "average_sleep_hours": payload.get("average_sleep_hours"),
                     "family_history": payload.get("family_history"),
                     "medical_history": payload.get("medical_history"),
                     "health_data_submitted_at": payload.get("health_data_submitted_at") or now,
@@ -154,6 +159,7 @@ class PatientDatabase:
                     blood_pressure_diastolic,
                     smoking_habit,
                     alcohol_habit,
+                    average_sleep_hours,
                     family_history,
                     medical_history,
                     health_data_submitted_at,
@@ -168,6 +174,41 @@ class PatientDatabase:
                 """
             ).fetchall()
         return [dict(row) for row in rows]
+
+    def get_profile(self, patient_id: str) -> Dict[str, Any]:
+        patient_id = str(patient_id).strip()
+        if not patient_id:
+            return {}
+        with self._connect() as conn:
+            row = conn.execute(
+                """
+                SELECT
+                    patient_id,
+                    patient_name,
+                    age,
+                    gender,
+                    symptoms,
+                    symptom_count,
+                    glucose,
+                    height_cm,
+                    weight_kg,
+                    weight_category,
+                    calculated_bmi,
+                    blood_pressure_systolic,
+                    blood_pressure_diastolic,
+                    smoking_habit,
+                    alcohol_habit,
+                    average_sleep_hours,
+                    family_history,
+                    medical_history,
+                    health_data_submitted_at,
+                    updated_at
+                FROM patient_profiles
+                WHERE patient_id = ?
+                """,
+                (patient_id,),
+            ).fetchone()
+        return dict(row) if row else {}
 
     def add_appointment(self, payload: Dict[str, Any]) -> None:
         appointment_id = str(payload.get("appointment_id", "")).strip()

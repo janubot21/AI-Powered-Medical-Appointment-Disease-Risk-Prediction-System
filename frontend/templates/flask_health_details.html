@@ -325,6 +325,14 @@
       line-height: 1.5;
       animation: rise-in 900ms ease 120ms both;
     }
+    .field-warning {
+      margin-top: 6px;
+      min-height: 18px;
+      color: #b45309;
+      font-size: 0.82rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
     .leave-modal {
       position: fixed;
       inset: 0;
@@ -507,6 +515,90 @@
         line-height: 1.35;
       }
     }
+    .chatbot-float {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 2400;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+    .chatbot-popup {
+      width: min(280px, calc(100vw - 28px));
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid #bfd8f5;
+      background: rgba(250, 253, 255, 0.97);
+      color: #21486f;
+      box-shadow: 0 18px 30px rgba(44, 81, 131, 0.18);
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    .chatbot-popup.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .chatbot-popup h4 {
+      margin: 0 0 6px;
+      color: #225f9d;
+      font-size: 0.98rem;
+    }
+    .chatbot-popup p {
+      margin: 0;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #466282;
+    }
+    .chatbot-popup-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .chatbot-open-link,
+    .chatbot-close-btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 9px 12px;
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .chatbot-open-link {
+      background: linear-gradient(120deg, var(--brand-a), var(--brand-b));
+      color: #fff;
+    }
+    .chatbot-close-btn {
+      background: #eaf2fb;
+      color: #275789;
+    }
+    .chatbot-launcher {
+      width: 58px;
+      height: 58px;
+      border-radius: 999px;
+      border: 1px solid #b9d1f4;
+      background: linear-gradient(135deg, #f9fbff, #dceaff);
+      color: #2f6fdb;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 16px 28px rgba(52, 95, 158, 0.2);
+      cursor: pointer;
+    }
+    .chatbot-launcher svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
   </style>
 </head>
 <body>
@@ -611,6 +703,12 @@
           </select>
         </div>
 
+        <div>
+          <label for="average_sleep_hours">Average Sleep Hours</label>
+          <input id="average_sleep_hours" name="average_sleep_hours" type="number" step="1" min="3" max="12" inputmode="numeric" value="{{ form_data.average_sleep_hours }}" required />
+          <div id="sleepWarning" class="field-warning" aria-live="polite"></div>
+        </div>
+
         <div class="full">
           <label for="medical_history">Medical History (Past illnesses, ongoing treatment, allergies)</label>
           <textarea id="medical_history" name="medical_history" placeholder="Example: diabetes, asthma, thyroid medication">{{ form_data.medical_history }}</textarea>
@@ -639,6 +737,19 @@
       </div>
     </div>
   </div>
+  <div class="chatbot-float" aria-label="AI chat shortcut">
+    <div class="chatbot-popup" id="chatbotPopup">
+      <h4>Need help with your record?</h4>
+      <p>Open the AI Chat bot to ask about patient details, risk level, or doctor precautions.</p>
+      <div class="chatbot-popup-actions">
+        <a class="chatbot-open-link" href="/patient/ai-chat">Open Chat</a>
+        <button class="chatbot-close-btn" id="chatbotCloseBtn" type="button">Close</button>
+      </div>
+    </div>
+    <button class="chatbot-launcher" id="chatbotLauncher" type="button" aria-label="Open AI chat popup">
+      <svg viewBox="0 0 24 24"><path d="M8 10h8"/><path d="M8 14h5"/><path d="M5 19l1.2-3.2A8 8 0 1 1 20 12a8 8 0 0 1-8 8H5z"/></svg>
+    </button>
+  </div>
   <script>
     const LEAVE_WARNING_MESSAGE = "Please enter your health details to proceed with appointment booking.";
     const healthForm = document.querySelector("form");
@@ -646,6 +757,8 @@
     const stayOnPageBtn = document.getElementById("stayOnPageBtn");
     const leavePageBtn = document.getElementById("leavePageBtn");
     const symptomsEl = document.getElementById("symptoms");
+    const sleepEl = document.getElementById("average_sleep_hours");
+    const sleepWarningEl = document.getElementById("sleepWarning");
     let healthFormSubmitted = false;
     let isLeaveModalOpen = false;
 
@@ -670,6 +783,50 @@
         return false;
       }
       symptomsEl.setCustomValidity("");
+      return true;
+    }
+
+    function normalizeSleepInputValue(value) {
+      return String(value ?? "").replace(/[^\d]/g, "");
+    }
+
+    function getSleepCategoryInfo(value) {
+      const hours = Number(value);
+      if (!Number.isInteger(hours)) return null;
+      if (hours < 5) {
+        return "Poor Sleep - High health risk";
+      }
+      if (hours <= 6) {
+        return "Low Sleep - Not enough rest";
+      }
+      if (hours <= 9) {
+        return "Healthy Sleep - Recommended";
+      }
+      return "Excess Sleep - Possible fatigue";
+    }
+
+    function validateSleepHours() {
+      if (!sleepEl) return true;
+      const cleaned = normalizeSleepInputValue(sleepEl.value);
+      if (sleepEl.value !== cleaned) {
+        sleepEl.value = cleaned;
+      }
+      const raw = sleepEl.value.trim();
+      if (!raw) {
+        sleepEl.setCustomValidity("Average Sleep Hours is required.");
+        if (sleepWarningEl) sleepWarningEl.textContent = "";
+        return false;
+      }
+      const parsed = Number(raw);
+      if (!Number.isInteger(parsed) || parsed < 3 || parsed > 12) {
+        sleepEl.setCustomValidity("Average Sleep Hours must be a whole number between 3 and 12.");
+        if (sleepWarningEl) sleepWarningEl.textContent = "";
+        return false;
+      }
+      sleepEl.setCustomValidity("");
+      if (sleepWarningEl) {
+        sleepWarningEl.textContent = getSleepCategoryInfo(parsed) || "";
+      }
       return true;
     }
 
@@ -706,11 +863,25 @@
       validateSymptoms();
     }
 
+    if (sleepEl) {
+      sleepEl.addEventListener("input", validateSleepHours);
+      sleepEl.addEventListener("keydown", (event) => {
+        if (["e", "E", "+", "-", "."].includes(event.key)) {
+          event.preventDefault();
+        }
+      });
+      validateSleepHours();
+    }
+
     if (healthForm) {
       healthForm.addEventListener("submit", (event) => {
-        if (!validateSymptoms()) {
+        if (!validateSymptoms() || !validateSleepHours()) {
           event.preventDefault();
-          symptomsEl.reportValidity();
+          if (!validateSymptoms()) {
+            symptomsEl.reportValidity();
+          } else if (sleepEl) {
+            sleepEl.reportValidity();
+          }
           return;
         }
         healthFormSubmitted = true;
@@ -774,6 +945,22 @@
         window.location.href = href;
       }
     });
+
+    const chatbotPopup = document.getElementById("chatbotPopup");
+    const chatbotLauncher = document.getElementById("chatbotLauncher");
+    const chatbotCloseBtn = document.getElementById("chatbotCloseBtn");
+    if (chatbotPopup && chatbotLauncher && chatbotCloseBtn) {
+      const hideChatPopup = () => chatbotPopup.classList.remove("show");
+      chatbotLauncher.addEventListener("click", () => {
+        chatbotPopup.classList.toggle("show");
+      });
+      chatbotCloseBtn.addEventListener("click", hideChatPopup);
+      document.addEventListener("click", (event) => {
+        if (!chatbotPopup.contains(event.target) && !chatbotLauncher.contains(event.target)) {
+          hideChatPopup();
+        }
+      });
+    }
   </script>
   <footer class="global-page-footer">
     <div class="global-page-footer-line">

@@ -768,6 +768,9 @@
       background: #ffffff;
       padding: 10px 12px;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      animation: panelReveal 520ms ease both;
+      animation-delay: 320ms;
+      overflow: hidden;
     }
     .recommend-box h3 {
       margin: 0 0 6px;
@@ -779,7 +782,17 @@
       padding-left: 18px;
       color: #334c72;
     }
-    .recommend-box li { margin: 4px 0; }
+    .recommend-box li {
+      margin: 4px 0;
+      opacity: 0;
+      transform: translateX(-10px);
+      animation: recommendationEnter 420ms ease forwards;
+    }
+    .recommend-box li:nth-child(1) { animation-delay: 80ms; }
+    .recommend-box li:nth-child(2) { animation-delay: 140ms; }
+    .recommend-box li:nth-child(3) { animation-delay: 200ms; }
+    .recommend-box li:nth-child(4) { animation-delay: 260ms; }
+    .recommend-box li:nth-child(5) { animation-delay: 320ms; }
     .notice-box {
       margin-top: 10px;
       border: 1px solid rgba(168, 186, 216, 0.55);
@@ -788,6 +801,36 @@
       padding: 10px 12px;
       color: #334c72;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .sleep-notice-box {
+      margin-top: 10px;
+      border: 1px solid rgba(230, 181, 116, 0.55);
+      border-radius: 12px;
+      background: linear-gradient(135deg, #fffaf0, #fff4df);
+      padding: 10px 12px;
+      color: #8a4b08;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      display: none;
+      transform-origin: top center;
+    }
+    .sleep-notice-box.show {
+      display: block;
+      animation: sleepNoticeEnter 460ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+    .sleep-notice-box.good {
+      border-color: rgba(80, 166, 109, 0.45);
+      background: linear-gradient(135deg, #f2fff6, #ebf9ef);
+      color: #1f6b39;
+    }
+    .sleep-notice-box.warn {
+      border-color: rgba(230, 181, 116, 0.55);
+      background: linear-gradient(135deg, #fffaf0, #fff4df);
+      color: #8a4b08;
+    }
+    .sleep-notice-box.risk {
+      border-color: rgba(226, 97, 97, 0.45);
+      background: linear-gradient(135deg, #fff4f4, #ffe8e8);
+      color: #9b1c1c;
     }
     .book-meta {
       margin: 0 0 12px;
@@ -1182,6 +1225,15 @@
       0%, 100% { transform: translateX(0); }
       50% { transform: translateX(-2px); }
     }
+    @keyframes recommendationEnter {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes sleepNoticeEnter {
+      0% { opacity: 0; transform: translateY(-10px) scale(0.98); }
+      65% { opacity: 1; transform: translateY(2px) scale(1.01); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation: none !important;
@@ -1192,6 +1244,91 @@
     body {
       background: linear-gradient(160deg, #FFE3E1 0%, #9CD5FF 100%) !important;
       background-color: #FFE3E1 !important;
+    }
+    .chatbot-float {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 2400;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+    .chatbot-popup {
+      width: min(290px, calc(100vw - 28px));
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid #b9dfe4;
+      background: rgba(250, 255, 255, 0.96);
+      color: #1e4f58;
+      box-shadow: 0 18px 30px rgba(29, 86, 95, 0.18);
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    .chatbot-popup.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .chatbot-popup h4 {
+      margin: 0 0 6px;
+      font-size: 0.98rem;
+      color: #156972;
+    }
+    .chatbot-popup p {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      color: #355e66;
+    }
+    .chatbot-popup-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .chatbot-open-link,
+    .chatbot-close-btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 9px 12px;
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .chatbot-open-link {
+      background: linear-gradient(135deg, #249aa4, #1e7480);
+      color: #fff;
+    }
+    .chatbot-close-btn {
+      background: #e7f3f5;
+      color: #1f6870;
+    }
+    .chatbot-launcher {
+      width: 58px;
+      height: 58px;
+      border-radius: 999px;
+      border: 1px solid #a9d7dd;
+      background: linear-gradient(135deg, #e6fbfd, #c8eef2);
+      color: #14717a;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 16px 28px rgba(23, 90, 99, 0.22);
+      cursor: pointer;
+    }
+    .chatbot-launcher svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }</style>
 </head>
 <body data-nav-active="Book Appointment">
@@ -1238,6 +1375,7 @@
       {% elif session.get('patient_authenticated') %}
       <li><a class="sidebar-link" data-nav="Book Appointment" href="/patient/book-appointment"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 9h18M5 5h14v16H5z"/></svg></span><span class="sidebar-label">Book Appointment</span></a></li>
       <li><a class="sidebar-link" data-nav="Health Details" href="/patient/health-details"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 5.6-7 10-7 10Z"/></svg></span><span class="sidebar-label">Health Details</span></a></li>
+      <li><a class="sidebar-link" data-nav="AI Chat" href="/patient/ai-chat"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M8 10h8"/><path d="M8 14h5"/><path d="M5 19l1.2-3.2A8 8 0 1 1 20 12a8 8 0 0 1-8 8H5z"/></svg></span><span class="sidebar-label">AI Chat</span></a></li>
       <li><a class="sidebar-link" data-nav="AI Risk Prediction" href="/patient/book-appointment#overallRisk"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg></span><span class="sidebar-label">AI Risk Prediction</span></a></li>
       <li><a class="sidebar-link" data-nav="Profile" href="/patient/booking-confirmation"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg></span><span class="sidebar-label">Profile</span></a></li>
       <li><a class="sidebar-link" data-nav="Logout" href="/patient/logout"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><span class="sidebar-label">Logout</span></a></li>
@@ -1331,6 +1469,10 @@
               </select>
             </div>
             <div class="feature-row">
+              <label for="featureAverageSleepHours">Average Sleep Hours</label>
+              <input id="featureAverageSleepHours" type="number" step="1" min="3" max="12" inputmode="numeric" />
+            </div>
+            <div class="feature-row">
               <label for="featureFamilyHistory">Family History</label>
               <select id="featureFamilyHistory">
                 <option value="">Select</option>
@@ -1371,6 +1513,10 @@
             <div class="snapshot-item">
               <span class="snapshot-key">Symptom Count</span>
               <span class="snapshot-val" id="snapSymCount">--</span>
+            </div>
+            <div class="snapshot-item">
+              <span class="snapshot-key">Sleep Hours</span>
+              <span class="snapshot-val" id="snapSleepHours">--</span>
             </div>
           </div>
           <div class="care-track">
@@ -1452,6 +1598,10 @@
             <ul id="recommendList">
               <li>Risk recommendations will appear after loading your details.</li>
             </ul>
+          </div>
+          <div class="sleep-notice-box" id="sleepNoticeBox">
+            <strong>Sleep Notice</strong><br>
+            <span id="sleepNoticeText"></span>
           </div>
           <div class="notice-box">
             <strong>Important Notice</strong><br>
@@ -1577,6 +1727,20 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="chatbot-float" aria-label="AI chat shortcut">
+    <div class="chatbot-popup" id="chatbotPopup">
+      <h4>AI Chat Assistant</h4>
+      <p>Ask about patient details, risk level, upcoming appointment, and doctor precautions.</p>
+      <div class="chatbot-popup-actions">
+        <a class="chatbot-open-link" href="/patient/ai-chat">Open Chat</a>
+        <button class="chatbot-close-btn" id="chatbotCloseBtn" type="button">Close</button>
+      </div>
+    </div>
+    <button class="chatbot-launcher" id="chatbotLauncher" type="button" aria-label="Open AI chat popup">
+      <svg viewBox="0 0 24 24"><path d="M8 10h8"/><path d="M8 14h5"/><path d="M5 19l1.2-3.2A8 8 0 1 1 20 12a8 8 0 0 1-8 8H5z"/></svg>
+    </button>
   </div>
 
   <script>
@@ -1953,6 +2117,7 @@
       const normalizedGender = hasValue(f.Gender) ? formatGender(f.Gender) : "";
       const smokingHabit = hasValue(f.Smoking_Habit) ? String(f.Smoking_Habit).toLowerCase() : "";
       const alcoholHabit = hasValue(f.Alcohol_Habit) ? String(f.Alcohol_Habit).toLowerCase() : "";
+      const averageSleepHours = f.Average_Sleep_Hours ?? "";
       const familyHistory = hasValue(f.Family_History) ? String(f.Family_History).toLowerCase() : "";
       const submissionTimestamp = f.Health_Data_Submitted_At ?? f.health_data_submitted_at ?? "";
       const weightCategory = hasValue(f.Weight_Category)
@@ -1974,9 +2139,11 @@
       setInputValue("featureBpDiastolic", bpDiastolic);
       setInputValue("featureSmokingHabit", smokingHabit);
       setInputValue("featureAlcoholHabit", alcoholHabit);
+      setInputValue("featureAverageSleepHours", averageSleepHours);
       setInputValue("featureFamilyHistory", familyHistory);
       setInputValue("featureMedicalHistory", f.Medical_History);
       setHealthDataSubmittedOn(submissionTimestamp);
+      syncFeatureSleepValidation();
     }
 
     function setFeatureEditMode(canEdit) {
@@ -2010,6 +2177,7 @@
       const bmi = features.BMI ?? "";
       const smokingHabit = features.Smoking_Habit ?? "";
       const alcoholHabit = features.Alcohol_Habit ?? "";
+      const averageSleepHours = features.Average_Sleep_Hours ?? "";
       const familyHistory = features.Family_History ?? "";
       const medicalHistory = features.Medical_History ?? "";
       const submittedAt = formatSubmissionTimestamp(
@@ -2028,6 +2196,7 @@
         `bmi: ${escapeHtml(bmi)}`,
         `smoking habit: ${escapeHtml(smokingHabit)}`,
         `alcohol habit: ${escapeHtml(alcoholHabit)}`,
+        `average sleep hours: ${escapeHtml(averageSleepHours)}`,
         `family history: ${escapeHtml(familyHistory)}`,
         `medical history: ${escapeHtml(medicalHistory)}`
       ].join("<br>");
@@ -2083,6 +2252,68 @@
         .replace(/^,\s*|\s*,\s*$/g, "");
     }
 
+    function normalizeSleepHoursInput(value) {
+      return String(value ?? "").replace(/[^\d]/g, "");
+    }
+
+    function getSleepCategoryInfo(value) {
+      const hours = Number(value);
+      if (!Number.isInteger(hours)) {
+        return null;
+      }
+      if (hours < 5) {
+        return {
+          title: "Poor Sleep",
+          meaning: "High health risk",
+          tone: "risk",
+          detail: "Poor Sleep: High health risk."
+        };
+      }
+      if (hours <= 6) {
+        return {
+          title: "Low Sleep",
+          meaning: "Not enough rest",
+          tone: "warn",
+          detail: "Low Sleep: Not enough rest."
+        };
+      }
+      if (hours <= 9) {
+        return {
+          title: "Healthy Sleep",
+          meaning: "Recommended",
+          tone: "good",
+          detail: "Healthy Sleep: Recommended."
+        };
+      }
+      return {
+        title: "Excess Sleep",
+        meaning: "Possible fatigue",
+        tone: "warn",
+        detail: "Excess Sleep: Possible fatigue."
+      };
+    }
+
+    function syncFeatureSleepValidation() {
+      const sleepInput = document.getElementById("featureAverageSleepHours");
+      if (!sleepInput) return true;
+      const cleaned = normalizeSleepHoursInput(sleepInput.value);
+      if (sleepInput.value !== cleaned) {
+        sleepInput.value = cleaned;
+      }
+      const raw = sleepInput.value.trim();
+      if (!raw) {
+        sleepInput.setCustomValidity("Average Sleep Hours is required.");
+        return false;
+      }
+      const parsed = Number(raw);
+      if (!Number.isInteger(parsed) || parsed < 3 || parsed > 12) {
+        sleepInput.setCustomValidity("Average Sleep Hours must be a whole number between 3 and 12.");
+        return false;
+      }
+      sleepInput.setCustomValidity("");
+      return true;
+    }
+
     function syncSymptomFlags(features) {
       const synced = { ...(features || {}) };
       if (!Object.prototype.hasOwnProperty.call(synced, "Symptoms")) {
@@ -2126,6 +2357,7 @@
       const diastolic = document.getElementById("featureBpDiastolic").value.trim();
       const smokingHabit = document.getElementById("featureSmokingHabit").value.trim();
       const alcoholHabit = document.getElementById("featureAlcoholHabit").value.trim();
+      const averageSleepHours = document.getElementById("featureAverageSleepHours").value.trim();
       const familyHistory = document.getElementById("featureFamilyHistory").value.trim();
       const medicalHistory = document.getElementById("featureMedicalHistory").value.trim();
       const hasHeightInput = heightCm !== "";
@@ -2134,6 +2366,10 @@
       const computedCategory = hasHeightInput || hasWeightInput
         ? bmiMetrics.category
         : (base.Weight_Category ?? base.BMI_Category ?? "");
+
+      if (!syncFeatureSleepValidation()) {
+        throw new Error("Average Sleep Hours must be a whole number between 3 and 12.");
+      }
 
       base.Age = age === "" ? null : toNumber(age, null);
       base.Gender = gender === "" ? null : gender;
@@ -2151,6 +2387,7 @@
       base.BP_Diastolic = diastolic === "" ? null : toNumber(diastolic, null);
       base.Smoking_Habit = smokingHabit === "" ? null : smokingHabit.toLowerCase();
       base.Alcohol_Habit = alcoholHabit === "" ? null : alcoholHabit.toLowerCase();
+      base.Average_Sleep_Hours = averageSleepHours === "" ? null : toNumber(averageSleepHours, null);
       base.Family_History = familyHistory === "" ? null : familyHistory.toLowerCase();
       base.Medical_History = medicalHistory === "" ? null : medicalHistory;
       setInputValue("featureWeightCategory", computedCategory);
@@ -2227,6 +2464,7 @@
         f.Weight_kg ?? f.WeightKg ?? f.Weight
       );
       const bmi = bmiMetrics.bmi ?? (f.BMI ?? "--");
+      const sleepHours = f.Average_Sleep_Hours ?? "--";
       const gender = f.Gender == null ? "--" : formatGender(f.Gender);
 
       const set = (id, val) => {
@@ -2239,6 +2477,7 @@
       set("snapBp", bp);
       set("snapBmi", bmi);
       set("snapSymCount", symptomCount);
+      set("snapSleepHours", sleepHours);
     }
 
     function formatSubmissionTimestamp(value) {
@@ -2293,30 +2532,52 @@
       return level;
     }
 
-    function renderRecommendations(overallLevel) {
+    function renderRecommendations(overallLevel, features) {
       const el = document.getElementById("recommendList");
       if (!el) return;
+      const items = [];
       if (overallLevel === "HIGH") {
-        el.innerHTML = [
-          "<li>Consult a doctor soon for a detailed clinical evaluation.</li>",
-          "<li>Follow a low-sodium, balanced diet and reduce sugar intake.</li>",
-          "<li>Track blood pressure and glucose regularly at home.</li>",
-          "<li>Start light daily activity and avoid smoking/alcohol.</li>"
-        ].join("");
+        items.push(
+          "Consult a doctor soon for a detailed clinical evaluation.",
+          "Follow a low-sodium, balanced diet and reduce sugar intake.",
+          "Track blood pressure and glucose regularly at home.",
+          "Start light daily activity and avoid smoking/alcohol."
+        );
       } else if (overallLevel === "MEDIUM") {
-        el.innerHTML = [
-          "<li>Maintain regular physical activity (at least 150 minutes/week).</li>",
-          "<li>Prefer whole foods, vegetables, and controlled carbohydrate intake.</li>",
-          "<li>Monitor BP and glucose periodically and review trends.</li>",
-          "<li>Keep stress levels manageable through rest and relaxation.</li>"
-        ].join("");
+        items.push(
+          "Maintain regular physical activity (at least 150 minutes/week).",
+          "Prefer whole foods, vegetables, and controlled carbohydrate intake.",
+          "Monitor BP and glucose periodically and review trends.",
+          "Keep stress levels manageable through rest and relaxation."
+        );
       } else {
-        el.innerHTML = [
-          "<li>Continue a heart-healthy balanced diet.</li>",
-          "<li>Stay physically active with regular exercise.</li>",
-          "<li>Maintain healthy sleep and hydration routines.</li>",
-          "<li>Attend preventive check-ups as scheduled.</li>"
-        ].join("");
+        items.push(
+          "Continue a heart-healthy balanced diet.",
+          "Stay physically active with regular exercise.",
+          "Maintain healthy sleep and hydration routines.",
+          "Attend preventive check-ups as scheduled."
+        );
+      }
+
+      const sleepValue = Number(
+        (features && features.Average_Sleep_Hours) ?? document.getElementById("featureAverageSleepHours")?.value ?? NaN
+      );
+      el.innerHTML = items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+
+      const sleepNoticeBox = document.getElementById("sleepNoticeBox");
+      const sleepNoticeText = document.getElementById("sleepNoticeText");
+      if (!sleepNoticeBox || !sleepNoticeText) return;
+
+      sleepNoticeBox.classList.remove("good", "warn", "risk");
+      const sleepInfo = getSleepCategoryInfo(sleepValue);
+      if (sleepInfo) {
+        sleepNoticeText.textContent = `${sleepInfo.title} - ${sleepInfo.meaning}`;
+        sleepNoticeBox.classList.remove("show");
+        void sleepNoticeBox.offsetWidth;
+        sleepNoticeBox.classList.add("show", sleepInfo.tone);
+      } else {
+        sleepNoticeText.textContent = "";
+        sleepNoticeBox.classList.remove("show");
       }
     }
 
@@ -2540,7 +2801,7 @@
         modelResult && modelResult.recommended_slot ? modelResult.recommended_slot : triage.slot,
         modelResult && modelResult.priority_badge_color ? modelResult.priority_badge_color : triage.color
       );
-      renderRecommendations(overall);
+      renderRecommendations(overall, features);
     }
 
     async function updateRiskPanel(features) {
@@ -2554,7 +2815,7 @@
         setRiskCard("hypertension", 0);
         setOverallBanner("LOW");
         setTriageBanner("Normal Appointment", "Next Available Date", "green");
-        renderRecommendations("LOW");
+        renderRecommendations("LOW", features);
         return;
       }
 
@@ -2571,7 +2832,7 @@
         setRiskCard("hypertension", 0);
         setOverallBanner("LOW");
         setTriageBanner("Normal Appointment", "Next Available Date", "green");
-        renderRecommendations("LOW");
+        renderRecommendations("LOW", features);
       }
     }
 
@@ -2697,7 +2958,11 @@
     document.getElementById("featureFields").addEventListener("input", () => {
       if (riskPanelTimer) clearTimeout(riskPanelTimer);
       riskPanelTimer = setTimeout(() => {
-        updateRiskPanel(parseEditableFeatures());
+        try {
+          updateRiskPanel(parseEditableFeatures());
+        } catch (_) {
+          // Skip recalculation while the sleep-hours field is invalid.
+        }
       }, 280);
     });
 
@@ -2725,6 +2990,17 @@
         symptomsInput.value = cleaned;
       }
     });
+
+    const featureSleepInput = document.getElementById("featureAverageSleepHours");
+    if (featureSleepInput) {
+      featureSleepInput.addEventListener("keydown", (event) => {
+        if (["e", "E", "+", "-", "."].includes(event.key)) {
+          event.preventDefault();
+        }
+      });
+      featureSleepInput.addEventListener("input", syncFeatureSleepValidation);
+      syncFeatureSleepValidation();
+    }
 
     document.getElementById("editFeaturesBtn").addEventListener("click", () => {
       setFeatureEditMode(true);
@@ -2754,6 +3030,22 @@
     });
 
     setFeatureEditMode(false);
+
+    const chatbotPopup = document.getElementById("chatbotPopup");
+    const chatbotLauncher = document.getElementById("chatbotLauncher");
+    const chatbotCloseBtn = document.getElementById("chatbotCloseBtn");
+    if (chatbotPopup && chatbotLauncher && chatbotCloseBtn) {
+      const hideChatPopup = () => chatbotPopup.classList.remove("show");
+      chatbotLauncher.addEventListener("click", () => {
+        chatbotPopup.classList.toggle("show");
+      });
+      chatbotCloseBtn.addEventListener("click", hideChatPopup);
+      document.addEventListener("click", (event) => {
+        if (!chatbotPopup.contains(event.target) && !chatbotLauncher.contains(event.target)) {
+          hideChatPopup();
+        }
+      });
+    }
 
     loadPatientFeatures().catch((err) => {
       renderOutput(err.message, true);
