@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import re
 from datetime import datetime, timedelta
@@ -55,6 +56,10 @@ PASSWORD_POLICY_MESSAGE = (
 )
 SYMPTOMS_SANITIZE_PATTERN = re.compile(r"[^A-Za-z0-9,\s./()+:&'-]+")
 HEALTH_DATA_SUBMITTED_AT_COLUMN = "Health_Data_Submitted_At"
+OPENAI_CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini").strip() or "gpt-4o-mini"
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
+_openai_chat_client: Any = None
+_openai_chat_client_ready = False
 
 
 def _is_patient_authenticated() -> bool:
@@ -1216,6 +1221,80 @@ def _recommended_doctors_for_patient(symptoms_text: str, risk_label: str) -> lis
     return rows[:4]
 
 
+def _get_openai_chat_client() -> Any:
+    global _openai_chat_client, _openai_chat_client_ready
+    if _openai_chat_client_ready:
+        return _openai_chat_client
+
+    _openai_chat_client_ready = True
+    if not OPENAI_API_KEY:
+        return None
+
+    try:
+        from openai import OpenAI
+    except Exception as exc:  # pragma: no cover - optional dependency
+        app.logger.warning("OpenAI SDK unavailable for patient chat: %s", exc)
+        return None
+
+    try:
+        _openai_chat_client = OpenAI(api_key=OPENAI_API_KEY)
+    except Exception as exc:  # pragma: no cover - startup guard
+        app.logger.warning("OpenAI client initialization failed: %s", exc)
+        _openai_chat_client = None
+    return _openai_chat_client
+
+
+def _extract_openai_output_text(response: Any) -> str:
+    text = str(getattr(response, "output_text", "") or "").strip()
+    if text:
+        return text
+
+    for item in getattr(response, "output", []) or []:
+        for content in getattr(item, "content", []) or []:
+            candidate = str(getattr(content, "text", "") or "").strip()
+            if candidate:
+                return candidate
+    return ""
+
+
+def _patient_chat_openai_reply(
+    *,
+    user_message: str,
+    context: Dict[str, Any],
+) -> Optional[str]:
+    client = _get_openai_chat_client()
+    if client is None:
+        return None
+
+    system_prompt = (
+        "You are a patient support assistant inside a healthcare portal. "
+        "Answer only from the supplied patient context. "
+        "Do not invent appointments, doctor names, medical facts, or measurements that are not present. "
+        "Keep the answer concise, practical, and easy to understand. "
+        "Do not claim to replace a doctor. "
+        "If the question goes beyond the provided portal data, say that clearly."
+    )
+    user_prompt = (
+        "Patient portal context:\n"
+        f"{json.dumps(context, ensure_ascii=True, indent=2)}\n\n"
+        f"Patient question:\n{user_message}\n"
+    )
+
+    try:
+        response = client.responses.create(
+            model=OPENAI_CHAT_MODEL,
+            instructions=system_prompt,
+            input=user_prompt,
+            max_output_tokens=300,
+        )
+    except Exception as exc:  # pragma: no cover - network/service dependent
+        app.logger.warning("OpenAI patient chat request failed: %s", exc)
+        return None
+
+    reply = _extract_openai_output_text(response)
+    return reply or None
+
+
 def _patient_chat_response(patient_id: str, user_message: str) -> Dict[str, Any]:
     profile = _patient_chat_profile(patient_id)
     appointments = _patient_chat_appointments(patient_id)
@@ -1313,6 +1392,55 @@ def _patient_chat_response(patient_id: str, user_message: str) -> Dict[str, Any]
             f"Right now your record shows {risk_label.lower()} with symptoms: {symptoms}. "
             f"Main precautions: {' '.join(precautions[:3])}"
         )
+
+    chat_context = {
+        "patient_id": patient_id,
+        "patient_name": name,
+        "profile": {
+            "age": age,
+            "gender": gender,
+            "symptoms": symptoms,
+            "glucose": glucose,
+            "bmi": bmi,
+            "blood_pressure_systolic": bp_sys,
+            "blood_pressure_diastolic": bp_dia,
+            "average_sleep_hours": sleep_hours,
+            "sleep_category": sleep_category,
+            "sleep_meaning": sleep_meaning,
+            "medical_history": _chat_text(profile.get("medical_history")),
+            "family_history": _chat_text(profile.get("family_history")),
+            "smoking_habit": _chat_text(profile.get("smoking_habit")),
+            "alcohol_habit": _chat_text(profile.get("alcohol_habit")),
+        },
+        "risk_summary": {
+            "risk_level": risk_label,
+            "recommended_slot": recommended_slot,
+        },
+        "appointments": {
+            "upcoming": {
+                "doctor_id": _chat_text(upcoming_appointment.get("doctor_id"), ""),
+                "appointment_type": _chat_text(upcoming_appointment.get("appointment_type"), ""),
+                "appointment_date": _format_date_label(upcoming_appointment.get("appointment_dt")),
+                "appointment_time": _format_time_label(upcoming_appointment.get("appointment_dt")),
+            }
+            if upcoming_appointment
+            else {},
+            "latest": {
+                "doctor_id": _chat_text(latest_appointment.get("doctor_id"), ""),
+                "appointment_type": _chat_text(latest_appointment.get("appointment_type"), ""),
+                "appointment_date": _format_date_label(latest_appointment.get("appointment_dt")),
+                "appointment_time": _format_time_label(latest_appointment.get("appointment_dt")),
+            }
+            if latest_appointment
+            else {},
+        },
+        "precautions": precautions,
+        "suggested_doctors": suggested_doctors,
+        "fallback_reply": reply,
+    }
+    openai_reply = _patient_chat_openai_reply(user_message=user_message, context=chat_context)
+    if openai_reply:
+        reply = openai_reply
 
     return {
         "reply": reply,
