@@ -1321,34 +1321,168 @@ def _is_general_chat_message(message: str) -> bool:
         return False
 
     portal_keywords = (
-        "patient",
-        "profile",
-        "age",
-        "gender",
-        "symptom",
-        "history",
-        "family",
-        "smoking",
-        "alcohol",
-        "sleep",
-        "bp",
-        "blood pressure",
-        "glucose",
-        "sugar",
-        "bmi",
-        "weight",
-        "height",
-        "risk",
-        "prediction",
+        "my profile",
+        "my details",
+        "patient details",
+        "patient detail",
+        "show my profile",
+        "show my details",
+        "my medical history",
+        "my family history",
+        "my blood pressure",
+        "my bp",
+        "my glucose",
+        "my sugar",
+        "my bmi",
+        "my weight",
+        "my height",
+        "my vitals",
+        "my risk level",
+        "risk summary",
+        "current risk",
+        "my appointment",
+        "next appointment",
+        "doctor assigned",
         "appointment",
         "booking",
-        "doctor",
-        "precaution",
-        "report",
+        "patient portal",
         "record",
         "portal",
     )
     return not any(keyword in normalized for keyword in portal_keywords)
+
+
+def _contains_any(text: str, phrases: tuple[str, ...]) -> bool:
+    normalized = str(text or "").strip().lower()
+    return any(phrase in normalized for phrase in phrases)
+
+
+def _is_portal_profile_question(message: str) -> bool:
+    return _contains_any(
+        message,
+        (
+            "my profile",
+            "my details",
+            "patient details",
+            "patient detail",
+            "show my details",
+            "show my profile",
+            "my age",
+            "my gender",
+            "my patient",
+            "my record",
+            "my portal",
+            "name age gender",
+        ),
+    )
+
+
+def _is_portal_history_question(message: str) -> bool:
+    return _contains_any(
+        message,
+        (
+            "my symptoms",
+            "my symptom",
+            "medical history",
+            "family history",
+            "smoking habit",
+            "alcohol habit",
+            "my history",
+            "health history",
+            "in my record",
+            "on my record",
+        ),
+    )
+
+
+def _is_portal_vitals_question(message: str) -> bool:
+    return _contains_any(
+        message,
+        (
+            "my bp",
+            "my blood pressure",
+            "my glucose",
+            "my sugar",
+            "my bmi",
+            "my weight",
+            "my height",
+            "my vitals",
+            "vitals summary",
+            "show my vitals",
+        ),
+    )
+
+
+def _is_portal_risk_question(message: str) -> bool:
+    normalized = str(message or "").strip().lower()
+    if "risk" not in normalized and "prediction" not in normalized:
+        return False
+    return _contains_any(
+        normalized,
+        (
+            "my risk",
+            "risk level",
+            "risk summary",
+            "my prediction",
+            "ai risk",
+            "current risk",
+            "portal risk",
+        ),
+    )
+
+
+def _is_portal_appointment_question(message: str) -> bool:
+    return _contains_any(
+        message,
+        (
+            "my appointment",
+            "next appointment",
+            "latest appointment",
+            "doctor assigned",
+            "doctor name on appointment",
+            "booking confirmation",
+            "appointment with",
+            "when is my appointment",
+            "who is my next doctor",
+        ),
+    )
+
+
+def _is_portal_doctor_list_question(message: str) -> bool:
+    normalized = str(message or "").strip().lower()
+    if not (("doctor" in normalized) or ("doctors" in normalized)):
+        return False
+    return _contains_any(
+        normalized,
+        (
+            "for my condition",
+            "for me",
+            "recommended doctor",
+            "suggested doctor",
+            "doctor list",
+            "available doctor",
+            "show doctors",
+            "consult for my",
+            "who should i consult for my",
+        ),
+    )
+
+
+def _is_portal_precaution_question(message: str) -> bool:
+    normalized = str(message or "").strip().lower()
+    if "precaution" in normalized:
+        return True
+    return _contains_any(
+        normalized,
+        (
+            "doctor advice for me",
+            "advice for my condition",
+            "based on my record",
+            "my care plan",
+            "my treatment plan",
+            "what should i do based on my record",
+        ),
+    )
 
 
 def _is_general_greeting(message: str) -> bool:
@@ -1397,6 +1531,174 @@ def _try_math_answer(message: str) -> Optional[str]:
     return f"The answer is {result:.4f}".rstrip("0").rstrip(".") + "."
 
 
+def _to_float_or_none(value: Any) -> Optional[float]:
+    try:
+        text = str(value or "").strip()
+        return float(text) if text else None
+    except Exception:
+        return None
+
+
+def _doctor_or_hospital_suggestion(user_message: str, context: Dict[str, Any]) -> Optional[str]:
+    normalized = str(user_message or "").strip().lower()
+    profile = context.get("profile", {}) if isinstance(context, dict) else {}
+    risk_summary = context.get("risk_summary", {}) if isinstance(context, dict) else {}
+    bp_sys = _to_float_or_none(profile.get("blood_pressure_systolic"))
+    bp_dia = _to_float_or_none(profile.get("blood_pressure_diastolic"))
+    risk_label = _chat_text(risk_summary.get("risk_level"), "").lower()
+
+    health_terms = (
+        "salt",
+        "salty",
+        "sodium",
+        "food",
+        "diet",
+        "eat",
+        "nutrition",
+        "doctor",
+        "specialist",
+        "hospital",
+        "fever",
+        "cough",
+        "cold",
+        "sore throat",
+        "headache",
+        "migraine",
+        "stomach",
+        "abdomen",
+        "vomit",
+        "vomiting",
+        "diarrhea",
+        "loose motion",
+        "chest pain",
+        "shortness of breath",
+        "breathing trouble",
+        "sleep",
+        "insomnia",
+        "exercise",
+        "workout",
+        "walking",
+        "fitness",
+        "dizziness",
+        "weakness",
+        "faint",
+        "bp",
+        "blood pressure",
+        "glucose",
+        "sugar",
+        "symptom",
+        "signs of",
+        "pain",
+        "rash",
+        "infection",
+    )
+    if not any(term in normalized for term in health_terms) and "high risk" not in risk_label:
+        return None
+
+    emergency_terms = (
+        "chest pain",
+        "shortness of breath",
+        "breathing trouble",
+        "can't breathe",
+        "seizure",
+        "faint",
+        "unconscious",
+        "stroke",
+        "paralysis",
+        "blood in vomit",
+        "blood in stool",
+        "severe bleeding",
+    )
+    urgent_terms = (
+        "high fever",
+        "severe headache",
+        "vomiting",
+        "diarrhea",
+        "stomach pain",
+        "dizziness",
+        "palpitation",
+        "weakness",
+    )
+
+    if any(term in normalized for term in emergency_terms):
+        return "Suggestion: go to the hospital or emergency care immediately."
+    if "high risk" in risk_label:
+        return "Suggestion: because your portal shows high risk, go to the hospital or see a doctor as soon as possible."
+    if bp_sys is not None and bp_dia is not None:
+        if bp_sys >= 180 or bp_dia >= 120:
+            return "Suggestion: your blood pressure is dangerously high, so go to the hospital immediately."
+        if bp_sys < 90 or bp_dia < 60:
+            return "Suggestion: if low blood pressure comes with dizziness, fainting, or weakness, go to a hospital or urgent clinic promptly."
+    if any(term in normalized for term in urgent_terms):
+        return "Suggestion: book a doctor visit soon, and go to the hospital if symptoms become severe or sudden."
+    if any(term in normalized for term in ("fever", "cough", "cold", "sore throat", "headache", "diet", "food", "sleep", "exercise")):
+        return "Suggestion: start with rest and home care, but visit a doctor if symptoms do not improve or get worse."
+    return "Suggestion: if this problem is continuing, book a doctor appointment for proper evaluation."
+
+
+def _append_action_suggestion(answer: str, user_message: str, context: Dict[str, Any]) -> str:
+    suggestion = _doctor_or_hospital_suggestion(user_message, context)
+    if not suggestion:
+        return answer
+    answer_text = str(answer or "").strip()
+    if not answer_text:
+        return suggestion
+    if suggestion.lower() in answer_text.lower():
+        return answer_text
+    return f"{answer_text}\n\n{suggestion}"
+
+
+def _is_health_related_message(message: str) -> bool:
+    normalized = str(message or "").strip().lower()
+    health_terms = (
+        "salt",
+        "salty",
+        "sodium",
+        "food",
+        "diet",
+        "eat",
+        "nutrition",
+        "doctor",
+        "specialist",
+        "hospital",
+        "fever",
+        "cough",
+        "cold",
+        "sore throat",
+        "headache",
+        "migraine",
+        "stomach",
+        "abdomen",
+        "vomit",
+        "vomiting",
+        "diarrhea",
+        "loose motion",
+        "chest pain",
+        "shortness of breath",
+        "breathing trouble",
+        "sleep",
+        "insomnia",
+        "exercise",
+        "workout",
+        "walking",
+        "fitness",
+        "dizziness",
+        "weakness",
+        "faint",
+        "bp",
+        "blood pressure",
+        "glucose",
+        "sugar",
+        "symptom",
+        "signs of",
+        "pain",
+        "rash",
+        "infection",
+        "risk",
+    )
+    return any(term in normalized for term in health_terms)
+
+
 def _offline_general_chat_reply(user_message: str, context: Dict[str, Any]) -> str:
     normalized = str(user_message or "").strip().lower()
     profile = context.get("profile", {}) if isinstance(context, dict) else {}
@@ -1405,12 +1707,14 @@ def _offline_general_chat_reply(user_message: str, context: Dict[str, Any]) -> s
     symptoms = _chat_text(profile.get("symptoms"), "not available")
     bp_sys = _chat_text(profile.get("blood_pressure_systolic"), "")
     bp_dia = _chat_text(profile.get("blood_pressure_diastolic"), "")
+    bp_sys_num = _to_float_or_none(bp_sys)
+    bp_dia_num = _to_float_or_none(bp_dia)
 
     if _is_general_greeting(normalized):
-        return (
+        return _append_action_suggestion((
             "Hello! Ask me any health or general question and I will do my best to answer here. "
             "I can also help with your patient profile, appointments, risk summary, and doctor precautions."
-        )
+        ), user_message, context)
 
     math_answer = _try_math_answer(user_message)
     if math_answer:
@@ -1427,58 +1731,78 @@ def _offline_general_chat_reply(user_message: str, context: Dict[str, Any]) -> s
         return "I can answer health questions, explain basic topics, help with simple calculations, and guide you through your patient profile, appointments, and risk summary."
 
     if any(term in normalized for term in ("salt", "salty", "sodium")):
-        bp_note = ""
-        if bp_sys and bp_dia:
-            bp_note = f" Your portal blood pressure reading is {bp_sys}/{bp_dia} mmHg, so avoiding extra salt is a safer choice."
-        return (
-            "Usually it is better to limit salty foods, especially if you have high blood pressure, kidney issues, swelling, or heart concerns. "
-            "Choose fresh food, avoid packaged snacks, chips, pickles, and instant foods, and drink enough water." + bp_note
-        )
+        if bp_sys_num is not None and bp_dia_num is not None and (bp_sys_num <= 90 or bp_dia_num <= 60):
+            return _append_action_suggestion((
+                f"Because your portal blood pressure reading is {bp_sys}/{bp_dia} mmHg, a small to moderate amount of salt may be acceptable if your doctor has advised it for low blood pressure. "
+                "Do not overdo salty packaged food. Prefer balanced meals, fluids, and medical advice if you feel dizziness, faintness, or weakness."
+            ), user_message, context)
+        if bp_sys_num is not None and bp_dia_num is not None and (bp_sys_num >= 140 or bp_dia_num >= 90):
+            return _append_action_suggestion((
+                f"Because your portal blood pressure reading is {bp_sys}/{bp_dia} mmHg, limiting salty foods is the safer choice. "
+                "Choose fresh food, avoid packaged snacks, chips, pickles, and instant foods, and drink enough water."
+            ), user_message, context)
+        return _append_action_suggestion((
+            "Salty foods are best kept in moderation. Too much salt can raise blood pressure, while very low blood pressure may sometimes need a different plan. "
+            "If you have dizziness, swelling, kidney problems, or hypertension, follow a doctor's advice."
+        ), user_message, context)
 
     if any(term in normalized for term in ("food", "diet", "eat", "meal", "nutrition")):
-        return (
+        return _append_action_suggestion((
             f"A balanced diet is usually the safest choice: more vegetables, fruits, pulses, whole grains, enough water, and less fried, sugary, and very salty food. "
             f"Based on your portal, your current risk summary is {risk_label.lower()} and your recorded symptoms are {symptoms}."
-        )
+        ), user_message, context)
+
+    if any(term in normalized for term in ("which doctor", "what doctor", "what type of doctor", "which specialist", "what specialist")):
+        if any(term in normalized for term in ("fever", "cold", "cough", "sore throat", "infection")):
+            return _append_action_suggestion("A general medicine doctor is usually the best first choice for fever, cough, cold, or sore throat. If breathing becomes difficult, seek urgent care.", user_message, context)
+        if any(term in normalized for term in ("skin", "rash", "itching", "acne")):
+            return _append_action_suggestion("A dermatologist is usually the right doctor for skin, rash, itching, or acne problems.", user_message, context)
+        if any(term in normalized for term in ("headache", "dizziness", "seizure", "numbness")):
+            return _append_action_suggestion("A general medicine doctor is a good first step, and a neurologist may be needed if symptoms are severe, repeated, or linked to weakness, seizures, or numbness.", user_message, context)
+        if any(term in normalized for term in ("stomach", "abdomen", "vomit", "diarrhea", "acidity")):
+            return _append_action_suggestion("A general medicine doctor is a good first choice for stomach problems. A gastroenterologist may be needed if symptoms are ongoing or severe.", user_message, context)
+        if any(term in normalized for term in ("chest pain", "heart", "palpitation")):
+            return _append_action_suggestion("Chest pain can be serious. Please seek urgent or emergency medical care first, and a cardiology review may be needed.", user_message, context)
+        return _append_action_suggestion("A general medicine doctor is usually the best first doctor to consult. They can examine the problem and refer you to a specialist if needed.", user_message, context)
 
     if any(term in normalized for term in ("fever", "temperature")):
-        return (
+        return _append_action_suggestion((
             "For fever, rest, drink plenty of fluids, eat light food, and monitor the temperature. "
             "Get medical help quickly if the fever is very high, lasts more than a few days, or comes with breathing trouble, confusion, severe weakness, or dehydration."
-        )
+        ), user_message, context)
 
     if any(term in normalized for term in ("cough", "cold", "sore throat", "runny nose")):
-        return (
+        return _append_action_suggestion((
             "For a mild cough or cold, rest, warm fluids, steam inhalation, and staying hydrated can help. "
             "Please seek medical care if you have shortness of breath, chest pain, high fever, or symptoms that keep getting worse."
-        )
+        ), user_message, context)
 
     if any(term in normalized for term in ("headache", "migraine")):
-        return (
+        return _append_action_suggestion((
             "A mild headache often improves with water, food, rest, and sleep. "
             "Please get urgent care if it is sudden and severe or comes with weakness, confusion, vomiting, fainting, vision changes, or high fever."
-        )
+        ), user_message, context)
 
     if any(term in normalized for term in ("stomach pain", "abdomen", "vomit", "vomiting", "diarrhea", "loose motion")):
-        return (
+        return _append_action_suggestion((
             "For stomach upset, focus on fluids, simple food, and rest. "
             "Please get medical help if you have blood in vomit or stool, severe pain, dehydration, or symptoms lasting more than a day or two."
-        )
+        ), user_message, context)
 
     if any(term in normalized for term in ("chest pain", "shortness of breath", "breathing trouble", "can't breathe")):
-        return "Chest pain or trouble breathing can be serious. Please seek emergency medical care immediately."
+        return _append_action_suggestion("Chest pain or trouble breathing can be serious. Please seek emergency medical care immediately.", user_message, context)
 
     if any(term in normalized for term in ("sleep", "insomnia", "can't sleep")):
-        return (
+        return _append_action_suggestion((
             "Try a fixed sleep time, less screen use before bed, less caffeine late in the day, and a quiet dark room. "
             "If poor sleep continues for weeks or affects daytime functioning, speak with a doctor."
-        )
+        ), user_message, context)
 
     if any(term in normalized for term in ("exercise", "workout", "walking", "fitness")):
-        return (
+        return _append_action_suggestion((
             "For most people, starting with light walking and gradually increasing activity is a good approach. "
             "Stop and seek medical advice if exercise causes chest pain, dizziness, severe breathlessness, or unusual weakness."
-        )
+        ), user_message, context)
 
     if "python" in normalized:
         return "Python is a popular programming language known for simple syntax. People use it for web apps, automation, data science, AI, and scripting."
@@ -1490,6 +1814,17 @@ def _offline_general_chat_reply(user_message: str, context: Dict[str, Any]) -> s
         return "CSS is used to style web pages by controlling colors, layout, spacing, fonts, and visual appearance."
     if "javascript" in normalized:
         return "JavaScript is a programming language used to add interaction and dynamic behavior to websites."
+
+    symptoms_of_map = {
+        "flu": "Common flu symptoms include fever, cough, sore throat, body aches, tiredness, headache, and sometimes a runny or blocked nose.",
+        "common cold": "Common cold symptoms often include sneezing, runny nose, blocked nose, sore throat, mild cough, and sometimes a low fever.",
+        "dengue": "Common dengue symptoms include high fever, severe body pain, headache, pain behind the eyes, nausea, rash, and unusual weakness.",
+        "malaria": "Common malaria symptoms include fever with chills, sweating, headache, body pain, weakness, nausea, and sometimes vomiting.",
+        "diabetes": "Common diabetes symptoms include increased thirst, frequent urination, tiredness, blurry vision, slow wound healing, and unexplained weight change.",
+    }
+    for condition, answer in symptoms_of_map.items():
+        if f"symptoms of {condition}" in normalized or f"signs of {condition}" in normalized:
+            return _append_action_suggestion(answer, user_message, context)
 
     what_is_match = re.match(r"^what is ([a-z0-9 ._-]+)\??$", normalized)
     if what_is_match:
@@ -1543,42 +1878,42 @@ def _patient_chat_response(patient_id: str, user_message: str) -> Dict[str, Any]
     upcoming_appointment = min(future_appointments, key=lambda ap: ap["appointment_dt"]) if future_appointments else {}
 
     message = str(user_message or "").strip().lower()
-    doctor_keywords = ("doctor", "precaution", "advice", "care", "treatment", "medicine")
-    appointment_keywords = ("appointment", "booking", "doctor assigned", "doctor name", "visit")
-    vitals_keywords = ("bp", "blood pressure", "glucose", "sugar", "bmi", "weight", "height")
     is_general_chat = _is_general_chat_message(message)
-    doctor_list_requested = (
-        ("doctor" in message or "doctors" in message)
-        and any(term in message for term in ("list", "consult", "recommend", "suggest", "available", "avail", "condition", "issue", "show", "who"))
-    )
+    is_profile_question = _is_portal_profile_question(message)
+    is_history_question = _is_portal_history_question(message)
+    is_vitals_question = _is_portal_vitals_question(message)
+    is_risk_question = _is_portal_risk_question(message)
+    is_appointment_question = _is_portal_appointment_question(message)
+    doctor_list_requested = _is_portal_doctor_list_question(message)
+    is_precaution_question = _is_portal_precaution_question(message)
 
     if _is_general_greeting(message):
         reply = (
             "Hello! You can ask me about your patient profile, appointments, risk summary, and doctor precautions. "
             "If OpenAI is configured, I can also answer general questions here in the same chat."
         )
-    elif any(key in message for key in ("name", "age", "gender", "patient detail", "patient details", "profile")):
+    elif is_profile_question:
         sleep_text = f" Average sleep: {sleep_hours}."
         if sleep_category:
             sleep_text += f" Sleep category: {sleep_category} ({sleep_meaning})."
         reply = f"Patient summary: {name}, age {age}, gender {gender}. Symptoms: {symptoms}.{sleep_text}"
-    elif any(key in message for key in ("symptom", "history", "family", "smoking", "alcohol")):
+    elif is_history_question:
         reply = (
             f"Symptoms: {symptoms}. Medical history: {_chat_text(profile.get('medical_history'))}. "
             f"Family history: {_chat_text(profile.get('family_history'))}. Smoking: {_chat_text(profile.get('smoking_habit'))}. "
             f"Alcohol: {_chat_text(profile.get('alcohol_habit'))}. Average sleep: {sleep_hours}"
             + (f" ({sleep_category}: {sleep_meaning})." if sleep_category else ".")
         )
-    elif any(key in message for key in vitals_keywords):
+    elif is_vitals_question:
         reply = (
             f"Vitals summary: blood pressure {bp_sys}/{bp_dia} mmHg, glucose {glucose}, BMI {bmi}, "
             f"weight {_chat_number(profile.get('weight_kg'), ' kg')}, height {_chat_number(profile.get('height_cm'), ' cm')}, "
             f"average sleep {sleep_hours}"
             + (f" ({sleep_category}: {sleep_meaning})." if sleep_category else ".")
         )
-    elif "risk" in message or "prediction" in message:
+    elif is_risk_question:
         reply = f"Current AI risk summary: {risk_label}. Recommended slot: {recommended_slot}."
-    elif any(key in message for key in appointment_keywords):
+    elif is_appointment_question:
         if upcoming_appointment:
             dt = upcoming_appointment.get("appointment_dt")
             reply = (
@@ -1603,13 +1938,19 @@ def _patient_chat_response(patient_id: str, user_message: str) -> Dict[str, Any]
             reply = f"{doctor_reason}\nRecommended doctors for you:\n" + "\n".join(doctor_lines)
         else:
             reply = "I could not find any doctor profiles in the current portal data."
-    elif any(key in message for key in doctor_keywords):
+    elif is_precaution_question:
         reply = "Doctor precautions based on your current record: " + " ".join(precautions)
     elif is_general_chat:
-        reply = (
-            "I can answer general questions here once the OpenAI chat service is configured with a valid `OPENAI_API_KEY` in `.env`. "
-            "For now, I can still help with your patient details, appointments, risk summary, and doctor precautions."
-        )
+        reply = _offline_general_chat_reply(user_message, {
+            "profile": {
+                "symptoms": symptoms,
+                "blood_pressure_systolic": bp_sys,
+                "blood_pressure_diastolic": bp_dia,
+            },
+            "risk_summary": {
+                "risk_level": risk_label,
+            },
+        })
     else:
         reply = (
             f"I can help with your patient details, appointment plan, AI risk summary, and doctor precautions. "
@@ -1668,6 +2009,20 @@ def _patient_chat_response(patient_id: str, user_message: str) -> Dict[str, Any]
         reply = openai_reply
     elif is_general_chat:
         reply = _offline_general_chat_reply(user_message, chat_context)
+
+    should_add_action_suggestion = any(
+        (
+            _is_health_related_message(user_message),
+            is_history_question,
+            is_vitals_question,
+            is_risk_question,
+            is_appointment_question,
+            doctor_list_requested,
+            is_precaution_question,
+        )
+    )
+    if should_add_action_suggestion:
+        reply = _append_action_suggestion(reply, user_message, chat_context)
 
     return {
         "reply": reply,

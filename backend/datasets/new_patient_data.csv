@@ -17,4 +17,5 @@ Patient_ID,Age,Gender,Symptoms,Symptom_Count,Glucose,BloodPressure,BMI,Height_cm
 17,23.0,male,"chest pain, fever",2.0,86.0,120.0,20.1,180.0,65.0,no,no,,no,Normal,2026-03-12T08:52:55Z,
 18,22.0,female,"fever, cold",2.0,86.0,120.0,18.0,175.0,55.0,no,no,,no,Underweight,2026-03-12T14:15:55Z,8.0
 20,17.0,male,cold fever headache,3.0,96.0,120.0,16.9,179.0,54.0,no,no,no,no,Underweight,2026-03-23T07:24:21Z,6.0
-21,22.0,female,fever cold cough headache chest pain,5.0,89.0,120.0,20.4,180.0,66.0,no,no,nan,no,Normal,2026-03-23T10:39:57Z,7
+21,22.0,female,fever cold cough headache chest pain,5.0,89.0,120.0,20.4,180.0,66.0,no,no,,no,Normal,2026-03-23T10:39:57Z,7.0
+22,22.0,male,fever cold cough headache chest pain,5.0,89.0,120.0,19.1,180.0,62.0,no,no,nan,no,Normal,2026-03-23T12:36:25Z,8
