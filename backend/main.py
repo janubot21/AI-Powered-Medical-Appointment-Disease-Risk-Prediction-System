@@ -9,15 +9,15 @@ from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from flask_app import app as flask_portal_app
- 
+
 from doctor_auth import DoctorAuthManager, DoctorLoginRequest, DoctorSignupRequest
 from patient_auth import (
     PatientAuthManager,
     PatientLoginRequest,
     PatientSignupRequest,
-)
+)   
 from predict import (
-    AppointmentBookingRequest,
+    AppointmentBookingRequest,    
     AppointmentBookingResponse,
     LABEL_ENCODER_PATH,
     MODEL_PATH,
