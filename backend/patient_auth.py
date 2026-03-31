@@ -77,6 +77,38 @@ class PatientAuthManager:
                 accounts[pid] = row
         return accounts
 
+    def account_exists(self, patient_id: str) -> bool:
+        pid = patient_id.strip()
+        if not pid:
+            return False
+        return pid in self._read_accounts()
+
+    def import_plaintext_password(self, patient_id: str, password: str) -> None:
+        pid = patient_id.strip()
+        pwd = password.strip()
+        if not pid or not pwd:
+            raise ValueError("patient_id and password are required for migration.")
+        if self.account_exists(pid):
+            return
+
+        salt = os.urandom(16)
+        password_hash = self._hash_password(pwd, salt)
+        created_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+        with self.csv_path.open("a", newline="", encoding="utf-8") as csv_file:
+            writer = csv.DictWriter(
+                csv_file,
+                fieldnames=["patient_id", "salt_hex", "password_hash", "created_at"],
+            )
+            writer.writerow(
+                {
+                    "patient_id": pid,
+                    "salt_hex": salt.hex(),
+                    "password_hash": password_hash,
+                    "created_at": created_at,
+                }
+            )
+
     def signup(self, patient_id: str, password: str) -> None:
         pid = patient_id.strip()
         pwd = password.strip()

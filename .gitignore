@@ -3,9 +3,16 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.env
+.pytest_cache/
+htmlcov/
+coverage.xml
+*.db
+*.sqlite3
 
 backend/__pycache__/
 documentation/__pycache__/
+tests/__pycache__/
 
 .DS_Store
 Thumbs.db

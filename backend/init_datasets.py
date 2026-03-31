@@ -47,7 +47,7 @@ def main() -> None:
     )
     _ensure_csv(
         PATIENTS_CSV,
-        ["patient_id", "name", "unique_code", "password", "health_details_submitted", "created_at"],
+        ["patient_id", "name", "unique_code", "health_details_submitted", "created_at"],
     )
     _ensure_csv(
         DOCTOR_ACCOUNTS_CSV,

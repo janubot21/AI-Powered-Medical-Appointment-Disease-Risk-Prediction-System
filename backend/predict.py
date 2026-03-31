@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 import joblib
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from paths import NEW_PATIENT_CSV
 
@@ -26,6 +26,13 @@ class RiskPredictionRequest(BaseModel):
         description="Feature dictionary expected by the trained model.",
     )
 
+    @field_validator("patient_features")
+    @classmethod
+    def validate_patient_features(cls, value: Dict[str, Any]) -> Dict[str, Any]:
+        if not isinstance(value, dict) or not value:
+            raise ValueError("patient_features cannot be empty")
+        return value
+
 
 class AppointmentBookingRequest(BaseModel):
     patient_id: str = Field(..., description="Unique patient identifier")
@@ -35,6 +42,34 @@ class AppointmentBookingRequest(BaseModel):
         None,
         description="Feature dictionary expected by the trained model.",
     )
+
+    @field_validator("patient_id")
+    @classmethod
+    def validate_patient_id(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("patient_id cannot be empty")
+        return cleaned
+
+    @field_validator("doctor_id")
+    @classmethod
+    def validate_doctor_id(cls, value: Optional[str]) -> Optional[str]:
+        cleaned = str(value or "").strip()
+        return cleaned or None
+
+    @field_validator("appointment_time")
+    @classmethod
+    def validate_appointment_time(cls, value: datetime) -> datetime:
+        if value <= datetime.now(value.tzinfo):
+            raise ValueError("appointment_time must be in the future")
+        return value
+
+    @field_validator("patient_features")
+    @classmethod
+    def validate_optional_patient_features(cls, value: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        if value is not None and (not isinstance(value, dict) or not value):
+            raise ValueError("patient_features must be a non-empty object when provided")
+        return value
 
 
 class RiskPredictionResponse(BaseModel):

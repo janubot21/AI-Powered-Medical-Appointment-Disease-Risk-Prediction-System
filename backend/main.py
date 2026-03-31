@@ -1,21 +1,33 @@
 from __future__ import annotations
 
-from datetime import datetime
+import logging
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
+from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from flask_app import app as flask_portal_app
 
+from api_auth import (
+    APIPrincipal,
+    assert_doctor_scope,
+    assert_patient_scope,
+    create_api_token,
+    require_api_roles,
+)
 from doctor_auth import DoctorAuthManager, DoctorLoginRequest, DoctorSignupRequest 
+from nurse_auth import NurseAuthManager, NurseLoginRequest, NurseSignupRequest
+from paths import PATIENT_DB_PATH
 from patient_auth import (
     PatientAuthManager,
     PatientLoginRequest,
     PatientSignupRequest,
 )   
+from patient_db import PatientDatabase
 from predict import (
     AppointmentBookingRequest,    
     AppointmentBookingResponse,
@@ -34,6 +46,7 @@ BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR.parent / "frontend"
 TEMPLATES_DIR = FRONTEND_DIR / "templates"
 STATIC_DIR = FRONTEND_DIR / "static"
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Disease Risk Prediction Engine",
@@ -49,9 +62,10 @@ try:
 except Exception as exc:  # pragma: no cover - startup guard
     raise RuntimeError(f"Failed to initialize risk engine: {exc}") from exc
 
-APPOINTMENTS: List[Dict[str, Any]] = []
 patient_auth_manager = PatientAuthManager()
 doctor_auth_manager = DoctorAuthManager()
+nurse_auth_manager = NurseAuthManager()
+patient_db = PatientDatabase(PATIENT_DB_PATH)
 
 
 def _read_template(name: str) -> str:
@@ -59,6 +73,10 @@ def _read_template(name: str) -> str:
     if not path.exists():
         raise FileNotFoundError(f"Template not found: {path}")
     return path.read_text(encoding="utf-8")
+
+
+def _doctor_can_access_patient(doctor_id: str, patient_id: str) -> bool:
+    return bool(patient_db.list_appointments(patient_id=patient_id, doctor_id=doctor_id))
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -107,10 +125,17 @@ def patient_signup(payload: PatientSignupRequest) -> Dict[str, str]:
 def patient_login(payload: PatientLoginRequest) -> Dict[str, str]:
     try:
         patient_auth_manager.login(payload.patient_id, payload.password)
-        return {"status": "ok", "message": "Login successful. Redirecting to Patient Portal."}
+        return {
+            "status": "ok",
+            "message": "Login successful. Redirecting to Patient Portal.",
+            "patient_id": payload.patient_id,
+            "role": "patient",
+            "api_token": create_api_token("patient", payload.patient_id),
+        }
     except ValueError as exc:
         raise HTTPException(status_code=401, detail=str(exc)) from exc
     except Exception as exc:
+        logger.exception("Patient API login failed for patient_id=%s", payload.patient_id)
         raise HTTPException(status_code=500, detail=f"Login failed: {exc}") from exc
 
 
@@ -133,11 +158,53 @@ def doctor_signup(payload: DoctorSignupRequest) -> Dict[str, str]:
 @app.post("/doctor-login")
 def doctor_login(payload: DoctorLoginRequest) -> Dict[str, str]:
     try:
-        doctor_auth_manager.login(payload.doctor_id, payload.id_type, payload.id_number, payload.password)
-        return {"status": "ok", "message": "Login successful. Redirecting to Doctor Dashboard."}
+        resolved_doctor_id = doctor_auth_manager.login(
+            payload.doctor_id,
+            payload.id_type or "",
+            payload.id_number or "",
+            payload.password,
+        )
+        return {
+            "status": "ok",
+            "message": "Login successful. Redirecting to Doctor Dashboard.",
+            "doctor_id": resolved_doctor_id,
+            "role": "doctor",
+            "api_token": create_api_token("doctor", resolved_doctor_id),
+        }
     except ValueError as exc:
         raise HTTPException(status_code=401, detail=str(exc)) from exc
     except Exception as exc:
+        logger.exception("Doctor API login failed for doctor_id=%s", payload.doctor_id)
+        raise HTTPException(status_code=500, detail=f"Login failed: {exc}") from exc
+
+
+@app.post("/nurse-signup")
+def nurse_signup(payload: NurseSignupRequest) -> Dict[str, str]:
+    try:
+        nurse_auth_manager.signup(payload.nurse_id, payload.password)
+        return {"status": "ok", "message": "Signup successful. Redirecting to Nurse Dashboard."}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Nurse API signup failed for nurse_id=%s", payload.nurse_id)
+        raise HTTPException(status_code=500, detail=f"Signup failed: {exc}") from exc
+
+
+@app.post("/nurse-login")
+def nurse_login(payload: NurseLoginRequest) -> Dict[str, str]:
+    try:
+        resolved_nurse_id = nurse_auth_manager.login(payload.nurse_id, payload.password)
+        return {
+            "status": "ok",
+            "message": "Login successful. Redirecting to Nurse Dashboard.",
+            "nurse_id": resolved_nurse_id,
+            "role": "nurse",
+            "api_token": create_api_token("nurse", resolved_nurse_id),
+        }
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Nurse API login failed for nurse_id=%s", payload.nurse_id)
         raise HTTPException(status_code=500, detail=f"Login failed: {exc}") from exc
 
 
@@ -162,17 +229,30 @@ def chrome_devtools_probe() -> Response:
 
 
 @app.post("/predict-risk", response_model=RiskPredictionResponse)
-def predict_risk(payload: RiskPredictionRequest) -> RiskPredictionResponse:
+def predict_risk(
+    payload: RiskPredictionRequest,
+    _: APIPrincipal = Depends(require_api_roles("patient", "doctor", "nurse")),
+) -> RiskPredictionResponse:
     try:
         return risk_engine.predict(payload.patient_features)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
+        logger.exception("Risk prediction failed for authenticated API request.")
         raise HTTPException(status_code=500, detail=f"Prediction failed: {exc}") from exc
 
 
 @app.post("/book-appointment", response_model=AppointmentBookingResponse)
-def book_appointment(payload: AppointmentBookingRequest) -> AppointmentBookingResponse:
+def book_appointment(
+    payload: AppointmentBookingRequest,
+    principal: APIPrincipal = Depends(require_api_roles("patient", "doctor", "nurse")),
+) -> AppointmentBookingResponse:
+    if principal.role == "patient":
+        assert_patient_scope(principal, payload.patient_id)
+    if principal.role == "doctor":
+        target_doctor_id = (payload.doctor_id or "").strip() or principal.subject
+        assert_doctor_scope(principal, target_doctor_id)
+
     features = payload.patient_features
     doctor_id = (payload.doctor_id or "").strip() or "Unassigned"
     if features is None:
@@ -186,6 +266,7 @@ def book_appointment(payload: AppointmentBookingRequest) -> AppointmentBookingRe
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
+        logger.exception("Risk assessment failed during booking for patient_id=%s", payload.patient_id)
         raise HTTPException(status_code=500, detail=f"Risk assessment failed: {exc}") from exc
 
     booking_status = "confirmed"
@@ -199,11 +280,16 @@ def book_appointment(payload: AppointmentBookingRequest) -> AppointmentBookingRe
         appointment_priority=priority.priority,
         recommended_slot=priority.recommended_slot,
     )
-    APPOINTMENTS.append(
+    patient_profile = patient_db.get_profile(payload.patient_id)
+    patient_db.add_appointment(
         {
-            "booked_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+            "appointment_id": uuid4().hex,
+            "booked_at": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
             "patient_id": payload.patient_id,
+            "patient_name": patient_profile.get("patient_name") or "",
+            "contact_info": "",
             "doctor_id": doctor_id,
+            "appointment_type": "API Booking",
             "appointment_time": payload.appointment_time.isoformat(),
             "patient_features": to_jsonable(features),
             "risk_assessment": response.risk_assessment.model_dump(),
@@ -217,17 +303,50 @@ def book_appointment(payload: AppointmentBookingRequest) -> AppointmentBookingRe
 
 
 @app.get("/patient-features/{patient_id}")
-def patient_features(patient_id: str) -> Dict[str, Any]:
+def patient_features(
+    patient_id: str,
+    principal: APIPrincipal = Depends(require_api_roles("patient", "doctor", "nurse")),
+) -> Dict[str, Any]:
+    if principal.role == "patient":
+        assert_patient_scope(principal, patient_id)
+    elif principal.role == "doctor" and not _doctor_can_access_patient(principal.subject, patient_id):
+        raise HTTPException(status_code=403, detail="Forbidden for this doctor's patients.")
     try:
         features = risk_engine.get_patient_features(patient_id)
         return {"patient_id": patient_id, "patient_features": features}
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Patient feature lookup failed for patient_id=%s", patient_id)
+        raise HTTPException(status_code=500, detail=f"Patient lookup failed: {exc}") from exc
 
 
 @app.get("/appointments")
-def list_appointments() -> Dict[str, Any]:
-    return {"appointments": APPOINTMENTS}
+def list_appointments(
+    patient_id: str | None = None,
+    doctor_id: str | None = None,
+    principal: APIPrincipal = Depends(require_api_roles("patient", "doctor", "nurse")),
+) -> Dict[str, Any]:
+    requested_patient_id = str(patient_id or "").strip()
+    requested_doctor_id = str(doctor_id or "").strip()
+
+    if principal.role == "patient":
+        target_patient_id = requested_patient_id or principal.subject
+        assert_patient_scope(principal, target_patient_id)
+        requested_patient_id = target_patient_id
+    elif principal.role == "doctor":
+        target_doctor_id = requested_doctor_id or principal.subject
+        assert_doctor_scope(principal, target_doctor_id)
+        requested_doctor_id = target_doctor_id
+        if requested_patient_id and not _doctor_can_access_patient(principal.subject, requested_patient_id):
+            raise HTTPException(status_code=403, detail="Forbidden for this doctor's patients.")
+
+    return {
+        "appointments": patient_db.list_appointments(
+            patient_id=requested_patient_id or None,
+            doctor_id=requested_doctor_id or None,
+        )
+    }
 
 
 # Portal entry from main.py: all patient/doctor UI flows live in flask_app.py

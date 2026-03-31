@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import ast
 import json
-import os
+import logging
 import re
-from datetime import datetime, timedelta
-from functools import wraps
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 from uuid import uuid4
@@ -13,8 +12,10 @@ from uuid import uuid4
 import pandas as pd
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 
+from app_config import COOKIE_SECURE, OPENAI_API_KEY, OPENAI_CHAT_MODEL, get_flask_secret_key
 from doctor_auth import DoctorAuthManager
 from nurse_auth import NurseAuthManager
+from patient_auth import PatientAuthManager
 from paths import (
     DOCTOR_ACCOUNTS_CSV,
     DOCTOR_LEAVE_CSV,
@@ -26,12 +27,23 @@ from paths import (
     ensure_csv_exists,
 )
 from patient_db import PatientDatabase
+from portal_auth import (
+    _clear_doctor_session,
+    _clear_nurse_session,
+    _clear_patient_session,
+    _is_doctor_authenticated,
+    _is_patient_authenticated,
+    doctor_required,
+    nurse_required,
+    patient_required,
+)
 from predict import LABEL_ENCODER_PATH, MODEL_PATH, RiskEngine, to_jsonable
 from triage import determine_priority
 
 
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR.parent / "frontend"
+logger = logging.getLogger(__name__)
 
 app = Flask(
     __name__,
@@ -39,19 +51,19 @@ app = Flask(
     static_folder=str(FRONTEND_DIR / "static"),
     static_url_path="/static",
 )
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "change-this-secret-key")
-cookie_secure = os.getenv("COOKIE_SECURE", "0").strip().lower() in {"1", "true", "yes"}
+app.secret_key = get_flask_secret_key()
 app.config.update(
     TEMPLATES_AUTO_RELOAD=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=cookie_secure,
+    SESSION_COOKIE_SECURE=COOKIE_SECURE,
     PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
 )
 app.jinja_env.auto_reload = True
 
 doctor_auth_manager = DoctorAuthManager()
 nurse_auth_manager = NurseAuthManager()
+patient_auth_manager = PatientAuthManager()
 risk_engine = RiskEngine(MODEL_PATH, LABEL_ENCODER_PATH)
 patient_db = PatientDatabase(PATIENT_DB_PATH)
 PASSWORD_POLICY_PATTERN = re.compile(r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$")
@@ -59,9 +71,8 @@ PASSWORD_POLICY_MESSAGE = (
     "Password must contain minimum 8 characters, including uppercase (A-Z), lowercase (a-z), number (0-9), and special character (@,!,#,$,%,&,*)."
 )
 SYMPTOMS_SANITIZE_PATTERN = re.compile(r"[^A-Za-z0-9,\s./()+:&'-]+")
+CONTACT_INFO_PATTERN = re.compile(r"^\+?[0-9][0-9\s-]{7,14}$")
 HEALTH_DATA_SUBMITTED_AT_COLUMN = "Health_Data_Submitted_At"
-OPENAI_CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini").strip() or "gpt-4o-mini"
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _openai_chat_client: Any = None
 _openai_chat_client_ready = False
 CHAT_GENERAL_PATTERNS = (
@@ -83,100 +94,6 @@ SAFE_MATH_OPERATORS = {
     ast.USub: lambda a: -a,
     ast.UAdd: lambda a: a,
 }
-
-
-def _is_patient_authenticated() -> bool:
-    return bool(str(session.get("patient_id", "")).strip()) and bool(session.get("patient_authenticated"))
-
-
-def _is_doctor_authenticated() -> bool:
-    return bool(str(session.get("doctor_id", "")).strip()) and bool(session.get("doctor_authenticated"))
-
-
-def _is_nurse_authenticated() -> bool:
-    return bool(str(session.get("nurse_id", "")).strip()) and bool(session.get("nurse_authenticated"))
-
-
-def _active_role() -> str:
-    if _is_doctor_authenticated():
-        return "doctor"
-    if _is_nurse_authenticated():
-        return "nurse"
-    if _is_patient_authenticated():
-        return "patient"
-    return "anonymous"
-
-
-def patient_required(*, api: bool = False):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            role = _active_role()
-            if role == "patient":
-                return func(*args, **kwargs)
-            if role == "doctor":
-                if api:
-                    return jsonify({"detail": "Forbidden: doctor account cannot access patient endpoint."}), 403
-                return redirect(url_for("doctor_dashboard"))
-            if role == "nurse":
-                if api:
-                    return jsonify({"detail": "Forbidden: nurse account cannot access patient endpoint."}), 403
-                return redirect(url_for("nurse_dashboard"))
-            if api:
-                return jsonify({"detail": "Unauthorized"}), 401
-            return redirect(url_for("patient_login"))
-
-        return wrapper
-
-    return decorator
-
-
-def doctor_required(*, api: bool = False):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            role = _active_role()
-            if role == "doctor":
-                return func(*args, **kwargs)
-            if role == "nurse":
-                if api:
-                    return jsonify({"detail": "Forbidden: nurse account cannot access doctor endpoint."}), 403
-                return redirect(url_for("nurse_dashboard"))
-            if role == "patient":
-                if api:
-                    return jsonify({"detail": "Forbidden: patient account cannot access doctor endpoint."}), 403
-                return redirect(url_for("book_appointment"))
-            if api:
-                return jsonify({"detail": "Unauthorized"}), 401
-            return redirect(url_for("doctor_login"))
-
-        return wrapper
-
-    return decorator
-
-
-def nurse_required(*, api: bool = False):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            role = _active_role()
-            if role == "nurse":
-                return func(*args, **kwargs)
-            if role == "doctor":
-                if api:
-                    return jsonify({"detail": "Forbidden: doctor account cannot access nurse endpoint."}), 403
-                return redirect(url_for("doctor_dashboard"))
-            if role == "patient":
-                if api:
-                    return jsonify({"detail": "Forbidden: patient account cannot access nurse endpoint."}), 403
-                return redirect(url_for("book_appointment"))
-            if api:
-                return jsonify({"detail": "Unauthorized"}), 401
-            return redirect(url_for("nurse_login"))
-
-        return wrapper
-
-    return decorator
 
 
 def _parse_appointment_time(value: Any) -> Optional[datetime]:
@@ -309,6 +226,19 @@ def _to_float(value: str, field_name: str, min_value: float, max_value: float) -
     return parsed
 
 
+def _normalize_contact_info(value: Any) -> str:
+    text = str(value or "").strip()
+    if not CONTACT_INFO_PATTERN.fullmatch(text):
+        raise ValueError("contact_info must be a valid phone number.")
+    return text
+
+
+def _ensure_future_appointment_time(value: datetime) -> datetime:
+    if value <= datetime.now(value.tzinfo):
+        raise ValueError("appointment_time must be in the future.")
+    return value
+
+
 def _normalize_average_sleep_hours(value: Any, *, required: bool = False) -> Optional[int]:
     text = str(value or "").strip()
     if not text:
@@ -335,7 +265,7 @@ def _sleep_category_details(value: Any) -> tuple[str, str]:
 
 
 def _utc_now_iso() -> str:
-    return datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def _normalize_submission_timestamp(value: Any) -> str:
@@ -578,17 +508,54 @@ def upsert_new_patient_csv_from_features(
     _save_patient_profile_to_db(row, _get_patient_name_by_id(patient_id))
 
 
+PATIENTS_DF_COLUMNS = ["patient_id", "name", "unique_code", "health_details_submitted", "created_at"]
+LEGACY_PATIENT_PASSWORD_COLUMN = "password"
+
+
+def _save_patients_df(df: pd.DataFrame) -> None:
+    normalized = df.copy()
+    for col in PATIENTS_DF_COLUMNS:
+        if col not in normalized.columns:
+            normalized[col] = ""
+    normalized = normalized[PATIENTS_DF_COLUMNS]
+    normalized.to_csv(PATIENTS_CSV, index=False)
+
+
+def _migrate_legacy_patient_passwords(df: pd.DataFrame) -> pd.DataFrame:
+    if LEGACY_PATIENT_PASSWORD_COLUMN not in df.columns:
+        return df
+
+    migrated_count = 0
+    for _, row in df.iterrows():
+        patient_id = str(row.get("patient_id", "")).strip()
+        legacy_password = str(row.get(LEGACY_PATIENT_PASSWORD_COLUMN, "")).strip()
+        if not patient_id or not legacy_password:
+            continue
+        if patient_auth_manager.account_exists(patient_id):
+            continue
+        patient_auth_manager.import_plaintext_password(patient_id, legacy_password)
+        migrated_count += 1
+
+    if migrated_count:
+        logger.warning("Migrated %s legacy patient account(s) from plaintext storage to hashed credentials.", migrated_count)
+
+    df = df.drop(columns=[LEGACY_PATIENT_PASSWORD_COLUMN], errors="ignore")
+    return df
+
+
 def _load_patients_df() -> pd.DataFrame:
-    columns = ["patient_id", "name", "unique_code", "password", "health_details_submitted", "created_at"]
     ensure_csv_exists(PATIENTS_CSV)
     try:
         df = pd.read_csv(PATIENTS_CSV)
     except Exception:
-        return pd.DataFrame(columns=columns)
-    for col in columns:
+        return pd.DataFrame(columns=PATIENTS_DF_COLUMNS)
+    df = _migrate_legacy_patient_passwords(df)
+    for col in PATIENTS_DF_COLUMNS:
         if col not in df.columns:
             df[col] = ""
-    return df[columns]
+    cleaned = df[PATIENTS_DF_COLUMNS]
+    _save_patients_df(cleaned)
+    return cleaned
 
 
 def _get_patient_name_by_id(patient_id: str) -> str:
@@ -601,10 +568,6 @@ def _get_patient_name_by_id(patient_id: str) -> str:
     if matches.empty:
         return ""
     return str(matches.iloc[-1].get("name", "")).strip()
-
-
-def _save_patients_df(df: pd.DataFrame) -> None:
-    df.to_csv(PATIENTS_CSV, index=False)
 
 
 def _next_patient_id(df: pd.DataFrame) -> str:
@@ -659,10 +622,10 @@ def _create_patient_account(name: str, unique_code: str, password: str) -> str:
         "patient_id": patient_id,
         "name": name,
         "unique_code": normalized_code,
-        "password": password,
         "health_details_submitted": 0,
-        "created_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
     }
+    patient_auth_manager.signup(patient_id, password)
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
     _save_patients_df(df)
     return patient_id
@@ -670,7 +633,6 @@ def _create_patient_account(name: str, unique_code: str, password: str) -> str:
 
 def _authenticate_patient(name: str, unique_code: str, password: str) -> Optional[Dict[str, Any]]:
     df = _load_patients_df()
-    pwd_mask = df["password"].astype(str) == password
     name = str(name or "").strip()
     unique_code = str(unique_code or "").strip()
     has_name = bool(name)
@@ -688,10 +650,20 @@ def _authenticate_patient(name: str, unique_code: str, password: str) -> Optiona
             | (df["unique_code"].astype(str).str.strip().str.upper() == normalized_code.split(":", 1)[-1])
         )
 
-    matches = df[identifier_mask & pwd_mask]
+    matches = df[identifier_mask]
     if matches.empty:
         return None
-    return matches.iloc[-1].to_dict()
+    patient = matches.iloc[-1].to_dict()
+    patient_id = str(patient.get("patient_id", "")).strip()
+    if not patient_id:
+        return None
+
+    try:
+        patient_auth_manager.login(patient_id, password)
+    except ValueError:
+        return None
+
+    return patient
 
 
 def _mark_health_details_submitted(patient_id: str) -> None:
@@ -731,26 +703,6 @@ def _load_nurse_ids() -> list[str]:
         return []
     nurse_ids = [str(v).strip() for v in df["nurse_id"].tolist() if str(v).strip()]
     return sorted(set(nurse_ids))
-
-
-def _clear_patient_session() -> None:
-    session.pop("patient_id", None)
-    session.pop("patient_name", None)
-    session.pop("patient_authenticated", None)
-    session.pop("allow_health_details", None)
-    session.pop("health_confirmation", None)
-
-
-def _clear_doctor_session() -> None:
-    session.pop("doctor_id", None)
-    session.pop("doctor_name", None)
-    session.pop("doctor_authenticated", None)
-
-
-def _clear_nurse_session() -> None:
-    session.pop("nurse_id", None)
-    session.pop("nurse_name", None)
-    session.pop("nurse_authenticated", None)
 
 
 def _empty_nurse_record(patient_id: str, patient_name: str = "") -> Dict[str, Any]:
@@ -2385,1063 +2337,15 @@ def _patient_chat_response(patient_id: str, user_message: str) -> Dict[str, Any]
     }
 
 
-@app.route("/")
-def home() -> Any:
-    return redirect(url_for("role_login"))
 
+from routes.common import register_common_routes
+from routes.patient import register_patient_routes
+from routes.staff import register_staff_routes
 
-@app.route("/login")
-def role_login() -> Any:
-    return render_template("flask_role_login.html")
 
-
-@app.route("/about")
-def about_page() -> Any:
-    return render_template("flask_about.html")
-
-
-@app.route("/patient/signup", methods=["GET", "POST"])
-def patient_signup() -> Any:
-    errors: list[str] = []
-    form_data = {"name": ""}
-
-    if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        password = request.form.get("password", "").strip()
-        confirm_password = request.form.get("confirm_password", "").strip()
-        form_data["name"] = name
-
-        if not name:
-            errors.append("Patient Name is required.")
-        if not PASSWORD_POLICY_PATTERN.fullmatch(password):
-            errors.append(PASSWORD_POLICY_MESSAGE)
-        if password != confirm_password:
-            errors.append("Password and Confirm Password must match.")
-
-        if not errors:
-            try:
-                patient_id = _create_patient_account(name, "", password)
-                _clear_doctor_session()
-                _clear_nurse_session()
-                session["patient_id"] = patient_id
-                session["patient_name"] = name
-                session["patient_authenticated"] = False
-                session["role"] = "patient"
-                session["allow_health_details"] = True
-                return redirect(url_for("health_details", patient_id=patient_id))
-            except ValueError as exc:
-                errors.append(str(exc))
-            except Exception as exc:  # pragma: no cover - guard
-                errors.append(f"Signup failed: {exc}")
-
-    return render_template("flask_patient_signup.html", errors=errors, form_data=form_data)
-
-
-@app.route("/patient/health-details", methods=["GET", "POST"])
-def health_details() -> Any:
-    errors: list[str] = []
-    if not session.get("allow_health_details"):
-        patient_id = session.get("patient_id")
-        if patient_id:
-            return redirect(url_for("book_appointment"))
-        return redirect(url_for("patient_signup"))
-
-    patient_id = (
-        session.get("patient_id", "")
-        or request.args.get("patient_id", "").strip()
-        or request.form.get("patient_id", "").strip()
-    )
-    form_data = {
-        "patient_id": patient_id,
-        "age": "",
-        "gender": "",
-        "symptoms": "",
-        "symptom_count": "",
-        "glucose": "",
-        "blood_pressure": "",
-        "height_cm": "",
-        "weight_kg": "",
-        "bmi": "",
-        "smoking_habit": "",
-        "alcohol_habit": "",
-        "average_sleep_hours": "",
-        "medical_history": "",
-        "family_history": "",
-    }
-
-    if request.method == "POST":
-        form_data.update(
-            {
-                "age": request.form.get("age", "").strip(),
-                "gender": request.form.get("gender", "").strip().lower(),
-                "symptoms": _sanitize_symptoms_text(request.form.get("symptoms", "")),
-                "symptom_count": request.form.get("symptom_count", "").strip(),
-                "glucose": request.form.get("glucose", "").strip(),
-                "blood_pressure": request.form.get("blood_pressure", "").strip(),
-                "height_cm": request.form.get("height_cm", "").strip(),
-                "weight_kg": request.form.get("weight_kg", "").strip(),
-                "bmi": request.form.get("bmi", "").strip(),
-                "smoking_habit": request.form.get("smoking_habit", "").strip().lower(),
-                "alcohol_habit": request.form.get("alcohol_habit", "").strip().lower(),
-                "average_sleep_hours": request.form.get("average_sleep_hours", "").strip(),
-                "medical_history": request.form.get("medical_history", "").strip(),
-                "family_history": request.form.get("family_history", "").strip().lower(),
-            }
-        )
-
-        if not patient_id:
-            errors.append("Patient ID is missing. Please signup again.")
-        if form_data["gender"] not in {"male", "female", "other"}:
-            errors.append("Gender must be one of: male, female, other.")
-        if form_data["smoking_habit"] not in {"yes", "no"}:
-            errors.append("Smoking Habit must be yes or no.")
-        if form_data["alcohol_habit"] not in {"yes", "no"}:
-            errors.append("Alcohol Habit must be yes or no.")
-        if form_data["family_history"] not in {"yes", "no"}:
-            errors.append("Family History must be yes or no.")
-        if not form_data["symptoms"]:
-            errors.append("Symptoms are required.")
-
-        try:
-            age = _to_int(form_data["age"], "Age", 0, 130)
-            symptom_count = _to_int(form_data["symptom_count"], "Symptom_Count", 0, 100)
-            glucose = _to_float(form_data["glucose"], "Glucose", 0, 1000)
-            blood_pressure = _to_float(form_data["blood_pressure"], "BloodPressure", 0, 400)
-            height_cm = _to_float(form_data["height_cm"], "Height (cm)", 1, 300)
-            weight_kg = _to_float(form_data["weight_kg"], "Weight (kg)", 1, 500)
-            average_sleep_hours = _normalize_average_sleep_hours(form_data["average_sleep_hours"], required=True)
-            bmi = _calculate_bmi(height_cm, weight_kg)
-            form_data["bmi"] = f"{bmi:.2f}"
-        except ValueError as exc:
-            errors.append(str(exc))
-            age = symptom_count = 0
-            glucose = blood_pressure = bmi = average_sleep_hours = 0.0
-            height_cm = weight_kg = 0.0
-
-        if not errors:
-            row = {
-                "Patient_ID": patient_id,
-                "Age": age,
-                "Gender": form_data["gender"],
-                "Symptoms": form_data["symptoms"],
-                "Symptom_Count": symptom_count,
-                "Glucose": glucose,
-                "BloodPressure": blood_pressure,
-                "BMI": bmi,
-                "Height_cm": height_cm,
-                "Weight_kg": weight_kg,
-                "Smoking_Habit": form_data["smoking_habit"],
-                "Alcohol_Habit": form_data["alcohol_habit"],
-                "Average_Sleep_Hours": average_sleep_hours,
-                "Medical_History": form_data["medical_history"],
-                "Family_History": form_data["family_history"],
-                HEALTH_DATA_SUBMITTED_AT_COLUMN: _utc_now_iso(),
-            }
-            try:
-                append_to_new_patient_csv(row)
-                _mark_health_details_submitted(patient_id)
-            except Exception as exc:  # pragma: no cover - guard
-                errors.append(f"Could not save health details: {exc}")
-
-            if not errors:
-                session["health_confirmation"] = row
-                session.pop("patient_id", None)
-                session.pop("patient_name", None)
-                session.pop("allow_health_details", None)
-                return redirect(url_for("health_confirmation"))
-
-    return render_template("flask_health_details.html", errors=errors, form_data=form_data)
-
-
-@app.route("/patient/health-confirmation")
-def health_confirmation() -> Any:
-    row = session.get("health_confirmation")
-    if not row:
-        return redirect(url_for("patient_signup"))
-    return render_template("flask_health_confirmation.html", row=row)
-
-
-@app.route("/patient/login", methods=["GET", "POST"])
-def patient_login() -> Any:
-    errors: list[str] = []
-    form_data = {"patient_name": ""}
-
-    if request.method == "GET":
-        # Force explicit patient re-auth when user opens patient login route.
-        _clear_patient_session()
-        if session.get("role") == "patient":
-            session.pop("role", None)
-
-    if request.method == "POST":
-        patient_name = request.form.get("patient_name", "").strip()
-        password = request.form.get("password", "").strip()
-        form_data["patient_name"] = patient_name
-        if not patient_name:
-            errors.append("Enter Patient Name.")
-        if not password:
-            errors.append("Password is required.")
-
-        if not errors:
-            try:
-                patient = _authenticate_patient(patient_name, "", password)
-                if not patient:
-                    raise ValueError("Invalid patient name or password.")
-                patient_id = str(patient.get("patient_id", "")).strip()
-                # Patient login should not inherit doctor portal access.
-                _clear_doctor_session()
-                _clear_nurse_session()
-                session["patient_id"] = patient_id
-                session["patient_name"] = patient_name
-                session["patient_authenticated"] = True
-                session["role"] = "patient"
-                session.pop("health_confirmation", None)
-                session.pop("allow_health_details", None)
-                return render_template(
-                    "flask_patient_login.html",
-                    errors=[],
-                    form_data={"patient_name": ""},
-                    login_success=True,
-                    redirect_url=url_for("book_appointment"),
-                )
-            except ValueError as exc:
-                errors.append(str(exc))
-            except Exception as exc:  # pragma: no cover - guard
-                errors.append(f"Login failed: {exc}")
-
-    return render_template("flask_patient_login.html", errors=errors, form_data=form_data)
-
-
-@app.route("/patient/book-appointment")
-@patient_required()
-def book_appointment() -> Any:
-    patient_id = session.get("patient_id")
-    patient_name = str(session.get("patient_name", "")).strip()
-    if not patient_name:
-        patient_name = _get_patient_name_by_id(str(patient_id).strip())
-    doctor_ids = _load_doctor_ids()
-    patient_features: Dict[str, Any] = {}
-    try:
-        patient_features = get_features_for_patient(str(patient_id).strip())
-    except ValueError:
-        patient_features = {}
-    return render_template(
-        "flask_book_appointment.html",
-        patient_id=patient_id,
-        doctor_ids=doctor_ids,
-        patient_name=patient_name,
-        patient_features=patient_features,
-    )
-
-
-@app.route("/patient/ai-chat")
-@patient_required()
-def patient_ai_chat() -> Any:
-    patient_id = str(session.get("patient_id", "")).strip()
-    patient_name = str(session.get("patient_name", "")).strip() or _get_patient_name_by_id(patient_id) or "Patient"
-    initial_payload = _patient_chat_response(patient_id, "Give my patient summary and precautions.")
-    return render_template(
-        "flask_patient_ai_chat.html",
-        patient_id=patient_id,
-        patient_name=patient_name,
-        initial_reply=initial_payload.get("reply", ""),
-        initial_snapshot=initial_payload.get("patient_snapshot", {}),
-        initial_precautions=initial_payload.get("precautions", []),
-        initial_suggested_doctors=initial_payload.get("suggested_doctors", []),
-    )
-
-
-@app.post("/patient/ai-chat/message")
-@patient_required(api=True)
-def patient_ai_chat_message() -> Any:
-    patient_id = str(session.get("patient_id", "")).strip()
-    payload = request.get_json(silent=True) or {}
-    message = str(payload.get("message", "")).strip()
-    if not message:
-        return jsonify({"detail": "message is required"}), 400
-    return jsonify(_patient_chat_response(patient_id, message))
-
-
-@app.route("/patient/logout")
-def patient_logout() -> Any:
-    session.pop("patient_id", None)
-    session.pop("patient_name", None)
-    session.pop("patient_authenticated", None)
-    if session.get("role") == "patient":
-        session.pop("role", None)
-    session.pop("health_confirmation", None)
-    session.pop("allow_health_details", None)
-    return redirect(url_for("role_login"))
-
-
-@app.route("/patient/booking-confirmation")
-@patient_required()
-def patient_booking_confirmation() -> Any:
-    patient_id = str(session.get("patient_id", "")).strip()
-
-    patient_name = str(session.get("patient_name", "")).strip() or _get_patient_name_by_id(patient_id)
-    normalized_pid = _normalize_patient_id(patient_id)
-
-    patient_appointments: list[Dict[str, Any]] = []
-    stored_appointments = patient_db.list_appointments(patient_id=patient_id)
-    for item in stored_appointments:
-        if _normalize_patient_id(item.get("patient_id")) != normalized_pid:
-            continue
-        dt = _parse_appointment_time(item.get("appointment_time"))
-        doctor_profile = _doctor_profile_by_id(str(item.get("doctor_id", "")).strip())
-        patient_appointments.append(
-            {
-                "appointment_id": str(item.get("appointment_id", "")),
-                "patient_name": str(item.get("patient_name", "")).strip() or patient_name,
-                "doctor_id": str(item.get("doctor_id", "")).strip(),
-                "doctor_name": doctor_profile.get("doctor_name", "").strip() or str(item.get("doctor_id", "")).strip(),
-                "appointment_type": str(item.get("appointment_type", "")).strip(),
-                "appointment_time": dt,
-                "date_label": _format_date_label(dt),
-                "time_label": _format_time_label(dt),
-                "time_value": _format_time_value(dt),
-                "history_status": _appointment_history_status(dt),
-                "appointment_priority": str(item.get("appointment_priority", "")).strip() or "Normal",
-                "recommended_slot": str(item.get("recommended_slot", "")).strip() or "Next Available Date",
-                "priority_badge_text": str(item.get("priority_badge_text", "")).strip() or "Normal Appointment",
-                "priority_badge_color": str(item.get("priority_badge_color", "")).strip() or "green",
-            }
-        )
-
-    patient_appointments.sort(key=lambda x: x.get("appointment_time") or datetime.min, reverse=True)
-
-    now = datetime.now()
-    upcoming = [a for a in patient_appointments if _is_upcoming_appointment_date(a.get("appointment_time"), reference=now)]
-    past = [a for a in patient_appointments if not _is_upcoming_appointment_date(a.get("appointment_time"), reference=now)]
-    upcoming.sort(key=lambda x: x.get("appointment_time") or datetime.max)
-
-    patient_features: Dict[str, Any] = {}
-    if patient_appointments:
-        latest_source = next(
-            (
-                ap
-                for ap in stored_appointments
-                if _normalize_patient_id(ap.get("patient_id")) == normalized_pid and isinstance(ap.get("patient_features"), dict)
-            ),
-            None,
-        )
-        if latest_source:
-            patient_features = dict(latest_source.get("patient_features") or {})
-    if not patient_features:
-        try:
-            patient_features = get_features_for_patient(patient_id)
-        except ValueError:
-            patient_features = {}
-
-    return render_template(
-        "flask_booking_confirmation.html",
-        patient_id=patient_id,
-        patient_name=patient_name,
-        patient_features=patient_features,
-        upcoming_appointments=upcoming,
-        past_appointments=past,
-    )
-
-
-@app.post("/patient/appointments/cancel")
-@patient_required(api=True)
-def patient_cancel_appointment() -> Any:
-    patient_id = str(session.get("patient_id", "")).strip()
-
-    appointment_id = str(request.form.get("appointment_id", "")).strip()
-    if not appointment_id:
-        return redirect(url_for("patient_booking_confirmation"))
-
-    patient_db.delete_appointment(appointment_id, patient_id=patient_id)
-
-    return redirect(url_for("patient_booking_confirmation"))
-
-
-@app.get("/patient/features/<patient_id>")
-def patient_features(patient_id: str) -> Any:
-    if _is_patient_authenticated():
-        session_pid = _normalize_patient_id(session.get("patient_id"))
-        requested_pid = _normalize_patient_id(patient_id)
-        if session_pid != requested_pid:
-            return jsonify({"detail": "Forbidden: you can only access your own patient record."}), 403
-    elif not _is_doctor_authenticated():
-        return jsonify({"detail": "Unauthorized"}), 401
-
-    try:
-        features = get_features_for_patient(patient_id)
-        return jsonify({"patient_id": patient_id, "patient_features": features})
-    except ValueError as exc:
-        return jsonify({"detail": str(exc)}), 404
-    except Exception as exc:  # pragma: no cover - guard
-        return jsonify({"detail": f"Patient lookup failed: {exc}"}), 500
-
-
-@app.post("/patient/features/<patient_id>")
-@patient_required(api=True)
-def update_patient_features(patient_id: str) -> Any:
-    session_pid = _normalize_patient_id(session.get("patient_id"))
-    requested_pid = _normalize_patient_id(patient_id)
-    if not session_pid or requested_pid != session_pid:
-        return jsonify({"detail": "Forbidden: you can only update your own patient record."}), 403
-
-    payload = request.get_json(silent=True) or {}
-    patient_features = payload.get("patient_features")
-    if not isinstance(patient_features, dict) or not patient_features:
-        return jsonify({"detail": "patient_features is required"}), 400
-
-    try:
-        upsert_new_patient_csv_from_features(patient_id, patient_features)
-        refreshed_features = get_features_for_patient(patient_id)
-        return jsonify({"patient_id": patient_id, "patient_features": refreshed_features})
-    except ValueError as exc:
-        return jsonify({"detail": str(exc)}), 400
-    except Exception as exc:  # pragma: no cover - guard
-        return jsonify({"detail": f"Could not update patient features: {exc}"}), 500
-
-
-@app.post("/patient/book-appointment-submit")
-@patient_required(api=True)
-def submit_appointment() -> Any:
-    payload = request.get_json(silent=True) or {}
-    patient_id = str(payload.get("patient_id", "")).strip()
-    patient_name = str(payload.get("patient_name", "")).strip()
-    contact_info = str(payload.get("contact_info", "")).strip()
-    doctor_id = str(payload.get("doctor_id", "")).strip()
-    appointment_type = str(payload.get("appointment_type", "")).strip()
-    appointment_time = str(payload.get("appointment_time", "")).strip()
-    patient_features = payload.get("patient_features")
-
-    if not patient_id:
-        return jsonify({"detail": "patient_id is required"}), 400
-    if not patient_name:
-        return jsonify({"detail": "patient_name is required"}), 400
-    if not contact_info:
-        return jsonify({"detail": "contact_info is required"}), 400
-    if not doctor_id:
-        return jsonify({"detail": "doctor_id is required"}), 400
-    if not appointment_type:
-        return jsonify({"detail": "appointment_type is required"}), 400
-    if not appointment_time:
-        return jsonify({"detail": "appointment_time is required"}), 400
-
-    session_pid = _normalize_patient_id(session.get("patient_id"))
-    payload_pid = _normalize_patient_id(patient_id)
-    if not session_pid or payload_pid != session_pid:
-        return jsonify({"detail": "Forbidden: patient_id does not match your logged-in session."}), 403
-
-    try:
-        parsed_time = datetime.fromisoformat(appointment_time)
-    except ValueError:
-        return jsonify({"detail": "appointment_time must be ISO format"}), 400
-
-    if patient_features is None:
-        try:
-            patient_features = get_features_for_patient(patient_id)
-        except ValueError as exc:
-            return jsonify({"detail": str(exc)}), 400
-
-    try:
-        upsert_new_patient_csv_from_features(patient_id, patient_features)
-    except Exception as exc:  # pragma: no cover - guard
-        return jsonify({"detail": f"Could not update patient CSV: {exc}"}), 500
-
-    try:
-        risk_assessment = risk_engine.predict(patient_features)
-    except ValueError as exc:
-        return jsonify({"detail": str(exc)}), 400
-    except Exception as exc:  # pragma: no cover - guard
-        return jsonify({"detail": f"Risk assessment failed: {exc}"}), 500
-
-    risk_level_text = str(risk_assessment.risk_level or "").strip().lower()
-    selected_doctor_profile = _doctor_profile_by_id(doctor_id)
-
-    if _is_night_emergency_window(parsed_time) and not _is_emergency_doctor_profile(selected_doctor_profile):
-        emergency_doctors = _available_emergency_doctors(parsed_time, exclude_doctor_id=doctor_id)
-        alternative = emergency_doctors[0] if emergency_doctors else None
-        return jsonify(
-            {
-                "booking_status": "doctor_unavailable",
-                "reason": "non_emergency_doctor_night_window",
-                "risk_level": risk_level_text.title() or "Low",
-                "message": "Only emergency doctors are available during night hours (7:00 PM to 7:00 AM). Please choose an emergency doctor.",
-                "selected_doctor": selected_doctor_profile,
-                "alternative_doctor": alternative,
-                "emergency_doctors_available": emergency_doctors,
-                "can_book_alternative": bool(alternative),
-            }
-        )
-
-    if _is_doctor_on_leave(doctor_id, parsed_time):
-        if risk_level_text == "high":
-            emergency_doctors = _available_emergency_doctors(parsed_time, exclude_doctor_id=doctor_id)
-            alternative = emergency_doctors[0] if emergency_doctors else None
-            if alternative:
-                return jsonify(
-                    {
-                        "booking_status": "doctor_unavailable",
-                        "reason": "doctor_on_leave",
-                        "risk_level": "High",
-                        "message": "Selected doctor is on leave. Because your condition is high risk, we recommend consulting an available emergency doctor.",
-                        "selected_doctor": selected_doctor_profile,
-                        "alternative_doctor": alternative,
-                        "emergency_doctors_available": emergency_doctors,
-                        "can_book_alternative": True,
-                    }
-                )
-            return jsonify(
-                {
-                    "booking_status": "doctor_unavailable",
-                    "reason": "doctor_on_leave",
-                    "risk_level": "High",
-                    "message": "Selected doctor is on leave. Because your condition is high risk, no emergency doctor is currently available on this date.",
-                    "selected_doctor": selected_doctor_profile,
-                    "alternative_doctor": None,
-                    "emergency_doctors_available": [],
-                    "can_book_alternative": False,
-                }
-            )
-
-        return jsonify(
-            {
-                "booking_status": "doctor_unavailable",
-                "reason": "doctor_on_leave",
-                "risk_level": risk_level_text.title() or "Low",
-                "message": "Selected doctor is on leave. Please choose another date or another doctor.",
-                "selected_doctor": selected_doctor_profile,
-                "alternative_doctor": None,
-                "emergency_doctors_available": [],
-                "can_book_alternative": False,
-            }
-        )
-
-    priority = determine_priority(risk_assessment.risk_level)
-    appointment_id = uuid4().hex
-    result = {
-        "booking_status": "confirmed",
-        "appointment_id": appointment_id,
-        "patient_id": patient_id,
-        "patient_name": patient_name,
-        "contact_info": contact_info,
-        "doctor_id": doctor_id,
-        "appointment_type": appointment_type,
-        "appointment_time": parsed_time.isoformat(),
-        "predicted_disease": risk_assessment.predicted_class,
-        "risk_level": risk_assessment.risk_level.title(),
-        "appointment_priority": priority.priority,
-        "recommended_slot": priority.recommended_slot,
-        "priority_badge_text": priority.badge_text,
-        "priority_badge_color": priority.badge_color,
-        "redirect_url": url_for("patient_booking_confirmation"),
-    }
-    patient_db.add_appointment(
-        {
-            "appointment_id": appointment_id,
-            "booked_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
-            "patient_id": patient_id,
-            "patient_name": patient_name,
-            "contact_info": contact_info,
-            "doctor_id": doctor_id,
-            "appointment_type": appointment_type,
-            "appointment_time": parsed_time.isoformat(),
-            "patient_features": to_jsonable(patient_features),
-            "risk_assessment": risk_assessment.model_dump(),
-            "appointment_priority": priority.priority,
-            "recommended_slot": priority.recommended_slot,
-            "priority_badge_text": priority.badge_text,
-            "priority_badge_color": priority.badge_color,
-        }
-    )
-    return jsonify(result)
-
-
-@app.route("/doctor/signup", methods=["GET", "POST"])
-def doctor_signup() -> Any:
-    errors: list[str] = []
-    form_data = {"doctor_id": ""}
-
-    if request.method == "POST":
-        doctor_id = request.form.get("doctor_id", "").strip()
-        password = request.form.get("password", "").strip()
-        confirm_password = request.form.get("confirm_password", "").strip()
-        form_data["doctor_id"] = doctor_id
-
-        if not doctor_id:
-            errors.append("Doctor ID is required.")
-        if not PASSWORD_POLICY_PATTERN.fullmatch(password):
-            errors.append(PASSWORD_POLICY_MESSAGE)
-        if password != confirm_password:
-            errors.append("Password and Confirm Password must match.")
-
-        if not errors:
-            try:
-                doctor_auth_manager.signup(doctor_id, password)
-                return redirect(url_for("doctor_login"))
-            except ValueError as exc:
-                errors.append(str(exc))
-            except Exception as exc:  # pragma: no cover - guard
-                errors.append(f"Signup failed: {exc}")
-
-    return render_template("flask_doctor_signup.html", errors=errors, form_data=form_data)
-
-
-@app.route("/doctor/login", methods=["GET", "POST"])
-def doctor_login() -> Any:
-    errors: list[str] = []
-    form_data = {"doctor_id": ""}
-
-    if request.method == "GET":
-        # Force explicit doctor re-auth when user opens doctor login route.
-        _clear_doctor_session()
-        if session.get("role") == "doctor":
-            session.pop("role", None)
-
-    if request.method == "POST":
-        doctor_id = request.form.get("doctor_id", "").strip()
-        password = request.form.get("password", "").strip()
-        form_data["doctor_id"] = doctor_id
-        if not doctor_id:
-            errors.append("Enter Doctor ID.")
-        if not password:
-            errors.append("Password is required.")
-
-        if not errors:
-            try:
-                resolved_doctor_id = doctor_auth_manager.login(doctor_id, "", "", password)
-                # Doctor login should not inherit patient portal access.
-                _clear_patient_session()
-                _clear_nurse_session()
-                session["doctor_id"] = resolved_doctor_id
-                session["doctor_name"] = resolved_doctor_id
-                session["doctor_authenticated"] = True
-                session["role"] = "doctor"
-                return render_template(
-                    "flask_doctor_login.html",
-                    errors=[],
-                    form_data={"doctor_id": ""},
-                    login_success=True,
-                    redirect_url=url_for("doctor_dashboard"),
-                )
-            except ValueError as exc:
-                errors.append(str(exc))
-            except Exception as exc:  # pragma: no cover - guard
-                errors.append(f"Login failed: {exc}")
-
-    return render_template("flask_doctor_login.html", errors=errors, form_data=form_data)
-
-
-@app.route("/nurse/signup", methods=["GET", "POST"])
-def nurse_signup() -> Any:
-    errors: list[str] = []
-    form_data = {"nurse_id": ""}
-
-    if request.method == "POST":
-        nurse_id = request.form.get("nurse_id", "").strip()
-        password = request.form.get("password", "").strip()
-        confirm_password = request.form.get("confirm_password", "").strip()
-        form_data["nurse_id"] = nurse_id
-
-        if not nurse_id:
-            errors.append("Nurse ID is required.")
-        if not PASSWORD_POLICY_PATTERN.fullmatch(password):
-            errors.append(PASSWORD_POLICY_MESSAGE)
-        if password != confirm_password:
-            errors.append("Password and Confirm Password must match.")
-
-        if not errors:
-            try:
-                nurse_auth_manager.signup(nurse_id, password)
-                return redirect(url_for("nurse_login"))
-            except ValueError as exc:
-                errors.append(str(exc))
-            except Exception as exc:  # pragma: no cover - guard
-                errors.append(f"Signup failed: {exc}")
-
-    return render_template("flask_nurse_signup.html", errors=errors, form_data=form_data)
-
-
-@app.route("/nurse/login", methods=["GET", "POST"])
-def nurse_login() -> Any:
-    errors: list[str] = []
-    form_data = {"nurse_id": ""}
-
-    if request.method == "GET":
-        _clear_nurse_session()
-        if session.get("role") == "nurse":
-            session.pop("role", None)
-
-    if request.method == "POST":
-        nurse_id = request.form.get("nurse_id", "").strip()
-        password = request.form.get("password", "").strip()
-        form_data["nurse_id"] = nurse_id
-
-        if not nurse_id:
-            errors.append("Enter Nurse ID.")
-        if not password:
-            errors.append("Password is required.")
-
-        if not errors:
-            try:
-                resolved_nurse_id = nurse_auth_manager.login(nurse_id, password)
-                _clear_patient_session()
-                _clear_doctor_session()
-                session["nurse_id"] = resolved_nurse_id
-                session["nurse_name"] = resolved_nurse_id
-                session["nurse_authenticated"] = True
-                session["role"] = "nurse"
-                return render_template(
-                    "flask_nurse_login.html",
-                    errors=[],
-                    form_data={"nurse_id": ""},
-                    login_success=True,
-                    redirect_url=url_for("nurse_dashboard"),
-                )
-            except ValueError as exc:
-                errors.append(str(exc))
-            except Exception as exc:  # pragma: no cover - guard
-                errors.append(f"Login failed: {exc}")
-
-    return render_template("flask_nurse_login.html", errors=errors, form_data=form_data)
-
-
-@app.route("/nurse/dashboard")
-@nurse_required()
-def nurse_dashboard() -> Any:
-    nurse_id = session.get("nurse_id")
-    nurse_name = str(session.get("nurse_name", "")).strip() or str(nurse_id)
-    return render_template("flask_nurse_dashboard.html", nurse_id=nurse_id, nurse_name=nurse_name)
-
-
-@app.route("/nurse/appointment-queue")
-@nurse_required()
-def nurse_appointment_queue() -> Any:
-    nurse_id = session.get("nurse_id")
-    nurse_name = str(session.get("nurse_name", "")).strip() or str(nurse_id)
-    return render_template("flask_nurse_queue.html", nurse_id=nurse_id, nurse_name=nurse_name)
-
-
-@app.get("/nurse/patient-records")
-@nurse_required(api=True)
-def nurse_patient_records() -> Any:
-    return jsonify({"patients": _nurse_patient_records()})
-
-
-@app.post("/nurse/patient-records")
-@nurse_required(api=True)
-def nurse_update_patient_record() -> Any:
-    payload = request.get_json(silent=True) or {}
-    nurse_id = str(session.get("nurse_id", "")).strip()
-    patient_id = _normalize_patient_id(payload.get("patient_id"))
-    if not patient_id:
-        return jsonify({"detail": "patient_id is required"}), 400
-    try:
-        record = _nurse_record_payload(payload, nurse_id)
-        patient_features = _nurse_patient_features(record)
-        risk_report = _build_risk_report(patient_id, patient_features)
-        upsert_new_patient_csv_from_features(patient_id, patient_features)
-    except ValueError as exc:
-        return jsonify({"detail": str(exc)}), 400
-    except Exception as exc:  # pragma: no cover - guard
-        return jsonify({"detail": f"Could not save nurse record: {exc}"}), 500
-
-    saved_profile = patient_db.get_profile(patient_id)
-    return jsonify({"status": "ok", "patient": saved_profile, "risk_report": risk_report})
-
-
-@app.post("/nurse/predict-risk")
-@nurse_required(api=True)
-def nurse_predict_risk() -> Any:
-    payload = request.get_json(silent=True) or {}
-    nurse_id = str(session.get("nurse_id", "")).strip()
-    patient_id = _normalize_patient_id(payload.get("patient_id"))
-    if not patient_id:
-        return jsonify({"detail": "patient_id is required"}), 400
-
-    try:
-        record = _nurse_record_payload(payload, nurse_id)
-        patient_features = _nurse_patient_features(record)
-        risk_report = _build_risk_report(patient_id, patient_features)
-        return jsonify({"patient_id": patient_id, "risk_report": risk_report})
-    except ValueError as exc:
-        return jsonify({"detail": str(exc)}), 400
-    except Exception as exc:  # pragma: no cover - guard
-        return jsonify({"detail": f"Prediction failed: {exc}"}), 500
-
-
-@app.route("/nurse/logout")
-def nurse_logout() -> Any:
-    _clear_nurse_session()
-    if session.get("role") == "nurse":
-        session.pop("role", None)
-    return redirect(url_for("role_login"))
-
-
-@app.route("/doctor/dashboard")
-@doctor_required()
-def doctor_dashboard() -> Any:
-    doctor_id = session.get("doctor_id")
-    doctor_name = str(session.get("doctor_name", "")).strip() or str(doctor_id)
-    return render_template("flask_doctor_dashboard.html", doctor_id=doctor_id, doctor_name=doctor_name)
-
-
-@app.route("/doctor/past-dashboard")
-@doctor_required()
-def doctor_past_dashboard() -> Any:
-    doctor_id = session.get("doctor_id")
-    doctor_name = str(session.get("doctor_name", "")).strip() or str(doctor_id)
-    return render_template("flask_doctor_past_dashboard.html", doctor_id=doctor_id, doctor_name=doctor_name)
-
-
-@app.route("/doctor/patient-database-page")
-@doctor_required()
-def doctor_patient_database_page() -> Any:
-    doctor_id = session.get("doctor_id")
-    doctor_name = str(session.get("doctor_name", "")).strip() or str(doctor_id)
-    return render_template(
-        "flask_doctor_patient_database.html",
-        doctor_id=doctor_id,
-        doctor_name=doctor_name,
-    )
-
-
-@app.route("/doctor/logout")
-def doctor_logout() -> Any:
-    session.pop("doctor_id", None)
-    session.pop("doctor_name", None)
-    session.pop("doctor_authenticated", None)
-    if session.get("role") == "doctor":
-        session.pop("role", None)
-    return redirect(url_for("role_login"))
-
-
-@app.get("/doctor/appointments")
-@doctor_required(api=True)
-def doctor_appointments() -> Any:
-    current_doctor_id = _normalize_doctor_id(session.get("doctor_id"))
-    appointments = [
-        appointment
-        for appointment in patient_db.list_appointments()
-        if _normalize_doctor_id(appointment.get("doctor_id")) == current_doctor_id
-    ]
-    appointments = sorted(appointments, key=_doctor_appointment_sort_key)
-    return jsonify({"appointments": appointments})
-
-
-@app.get("/doctor/patient-database")
-@doctor_required(api=True)
-def doctor_patient_database() -> Any:
-    current_doctor_id = _normalize_doctor_id(session.get("doctor_id"))
-    all_profiles = patient_db.list_profiles()
-    doctor_appointments = [
-        appointment
-        for appointment in patient_db.list_appointments()
-        if _normalize_doctor_id(appointment.get("doctor_id")) == current_doctor_id
-    ]
-    appointment_lookup: Dict[str, Dict[str, Any]] = {}
-    for appointment in doctor_appointments:
-        pid = _normalize_patient_id(appointment.get("patient_id"))
-        if pid and pid not in appointment_lookup:
-            appointment_lookup[pid] = appointment
-
-    doctor_patient_ids = {
-        _normalize_patient_id(ap.get("patient_id"))
-        for ap in doctor_appointments
-        if _normalize_patient_id(ap.get("patient_id"))
-    }
-
-    patients = []
-    source_rows = [row for row in all_profiles if _normalize_patient_id(row.get("patient_id")) in doctor_patient_ids]
-    for row in source_rows:
-        patient = dict(row)
-        appointment = appointment_lookup.get(_normalize_patient_id(patient.get("patient_id")))
-        profile_features = _patient_features_from_profile(patient)
-        appointment_features = dict((appointment or {}).get("patient_features") or {})
-        merged_features = {
-            **appointment_features,
-            **{
-                key: value
-                for key, value in profile_features.items()
-                if value is not None and value != "" and value != []
-            },
-        }
-        patient["patient_features"] = merged_features
-        try:
-            patient["risk_report"] = _build_risk_report(
-                str(patient.get("patient_id", "")).strip(),
-                merged_features,
-            )
-        except Exception:
-            assessment = (appointment or {}).get("risk_assessment") or {}
-            patient["risk_report"] = (
-                {
-                    **assessment,
-                    "appointment_priority": (appointment or {}).get("appointment_priority"),
-                    "recommended_slot": (appointment or {}).get("recommended_slot"),
-                    "priority_badge_text": (appointment or {}).get("priority_badge_text"),
-                    "priority_badge_color": (appointment or {}).get("priority_badge_color"),
-                }
-                if assessment
-                else {}
-            )
-        patients.append(patient)
-    patients.sort(
-        key=lambda item: (
-            -_datetime_sort_value(_parse_appointment_time(item.get("health_data_submitted_at")), default=0.0),
-            -_datetime_sort_value(_parse_appointment_time(item.get("updated_at")), default=0.0),
-            (0, int(str(item.get("patient_id")))) if str(item.get("patient_id")).isdigit() else (1, str(item.get("patient_id"))),
-        )
-    )
-    return jsonify({"patients": patients})
-
-
-@app.get("/doctor/leaves")
-@doctor_required(api=True)
-def doctor_leaves() -> Any:
-    doctor_id = str(request.args.get("doctor_id", "")).strip()
-    rows = _load_doctor_leave_df().to_dict(orient="records")
-    if doctor_id:
-        doctor_norm = _normalize_doctor_id(doctor_id)
-        rows = [r for r in rows if _normalize_doctor_id(r.get("doctor_id", "")) == doctor_norm]
-    return jsonify({"leaves": rows})
-
-
-@app.post("/doctor/leaves")
-@doctor_required(api=True)
-def upsert_doctor_leave() -> Any:
-    payload = request.get_json(silent=True) or {}
-    leave_date = str(payload.get("leave_date", "")).strip()
-    doctor_id = str(payload.get("doctor_id", "")).strip() or str(session.get("doctor_id", "")).strip()
-    if not doctor_id:
-        return jsonify({"detail": "doctor_id is required"}), 400
-    if not leave_date:
-        return jsonify({"detail": "leave_date is required"}), 400
-    try:
-        _add_doctor_leave(doctor_id, leave_date)
-    except ValueError as exc:
-        return jsonify({"detail": str(exc)}), 400
-    return jsonify({"status": "ok", "doctor_id": doctor_id, "leave_date": leave_date[:10]})
-
-
-@app.get("/doctor/availability-status")
-@doctor_required(api=True)
-def doctor_availability_status() -> Any:
-    doctor_id = str(request.args.get("doctor_id", "")).strip() or str(session.get("doctor_id", "")).strip()
-    if not doctor_id:
-        return jsonify({"detail": "doctor_id is required"}), 400
-    date_text = str(request.args.get("date", "")).strip()
-    date_key = date_text[:10] if date_text else datetime.now().date().isoformat()
-    try:
-        parsed = datetime.fromisoformat(date_key)
-    except ValueError:
-        return jsonify({"detail": "date must be YYYY-MM-DD"}), 400
-    day = parsed.date().isoformat()
-    status = "leave" if _is_doctor_on_leave(doctor_id, parsed) else "available"
-    return jsonify({"doctor_id": doctor_id, "date": day, "status": status})
-
-
-@app.post("/doctor/availability-status")
-@doctor_required(api=True)
-def set_doctor_availability_status() -> Any:
-    payload = request.get_json(silent=True) or {}
-    doctor_id = str(payload.get("doctor_id", "")).strip() or str(session.get("doctor_id", "")).strip()
-    if not doctor_id:
-        return jsonify({"detail": "doctor_id is required"}), 400
-    status = str(payload.get("status", "")).strip().lower()
-    if status not in {"available", "leave"}:
-        return jsonify({"detail": "status must be 'available' or 'leave'"}), 400
-    date_text = str(payload.get("date", "")).strip()
-    date_key = date_text[:10] if date_text else datetime.now().date().isoformat()
-    try:
-        parsed = datetime.fromisoformat(date_key)
-    except ValueError:
-        return jsonify({"detail": "date must be YYYY-MM-DD"}), 400
-    day = parsed.date().isoformat()
-    try:
-        if status == "leave":
-            _add_doctor_leave(doctor_id, day)
-        else:
-            _remove_doctor_leave(doctor_id, day)
-    except ValueError as exc:
-        return jsonify({"detail": str(exc)}), 400
-    return jsonify({"doctor_id": doctor_id, "date": day, "status": status})
-
-
-@app.post("/patient/predict-risk")
-@patient_required(api=True)
-def patient_predict_risk() -> Any:
-    payload = request.get_json(silent=True) or {}
-    patient_features = payload.get("patient_features")
-    if not patient_features:
-        return jsonify({"detail": "patient_features is required"}), 400
-
-    try:
-        result = risk_engine.predict(patient_features)
-        priority = determine_priority(result.risk_level)
-        payload = result.model_dump()
-        payload.update(
-            {
-                "appointment_priority": priority.priority,
-                "recommended_slot": priority.recommended_slot,
-                "priority_badge_text": priority.badge_text,
-                "priority_badge_color": priority.badge_color,
-            }
-        )
-        return jsonify(payload)
-    except ValueError as exc:
-        return jsonify({"detail": str(exc)}), 400
-    except Exception as exc:  # pragma: no cover - guard
-        return jsonify({"detail": f"Prediction failed: {exc}"}), 500
-
-
-@app.get("/patient/emergency-doctors")
-@patient_required(api=True)
-def patient_emergency_doctors() -> Any:
-    date_text = str(request.args.get("date", "")).strip()
-    time_text = str(request.args.get("time", "")).strip()
-    if not date_text:
-        return jsonify({"detail": "date is required (YYYY-MM-DD)"}), 400
-    if not time_text:
-        return jsonify({"detail": "time is required (HH:MM)"}), 400
-    try:
-        parsed = datetime.fromisoformat(f"{date_text}T{time_text}")
-    except ValueError:
-        return jsonify({"detail": "Invalid date/time format"}), 400
-
-    is_night_window = _is_night_emergency_window(parsed)
-    doctors = _available_emergency_doctors(parsed) if is_night_window else []
-    return jsonify(
-        {
-            "date": parsed.date().isoformat(),
-            "time": f"{parsed.hour:02d}:{parsed.minute:02d}",
-            "window_active": is_night_window,
-            "emergency_doctors": doctors,
-        }
-    )
-
-
-@app.post("/doctor/predict-risk")
-@doctor_required(api=True)
-def doctor_predict_risk() -> Any:
-    payload = request.get_json(silent=True) or {}
-    patient_features = payload.get("patient_features")
-    if not patient_features:
-        return jsonify({"detail": "patient_features is required"}), 400
-
-    try:
-        result = risk_engine.predict(patient_features)
-        priority = determine_priority(result.risk_level)
-        payload = result.model_dump()
-        payload.update(
-            {
-                "appointment_priority": priority.priority,
-                "recommended_slot": priority.recommended_slot,
-                "priority_badge_text": priority.badge_text,
-                "priority_badge_color": priority.badge_color,
-            }
-        )
-        return jsonify(payload)
-    except ValueError as exc:
-        return jsonify({"detail": str(exc)}), 400
-    except Exception as exc:  # pragma: no cover - guard
-        return jsonify({"detail": f"Prediction failed: {exc}"}), 500
+register_common_routes(app)
+register_patient_routes(app)
+register_staff_routes(app)
 
 
 if __name__ == "__main__":

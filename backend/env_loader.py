@@ -9,11 +9,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 def _candidate_env_files() -> list[Path]:
     primary = PROJECT_ROOT / ".env"
-    if primary.exists():
-        return [primary]
-
-    fallback = PROJECT_ROOT / ".env.example"
-    return [fallback] if fallback.exists() else []
+    return [primary] if primary.exists() else []
 
 
 def _parse_env_value(raw_value: str) -> str:

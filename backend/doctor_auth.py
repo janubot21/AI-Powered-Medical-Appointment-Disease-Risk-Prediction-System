@@ -7,7 +7,7 @@ import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -46,18 +46,23 @@ class DoctorSignupRequest(BaseModel):
         return cleaned
 
 class DoctorLoginRequest(BaseModel):
-    doctor_id: str = Field(..., min_length=1, description="Existing doctor identifier")
-    id_type: str = Field(..., min_length=1, description="aadhaar or pan")
-    id_number: str = Field(..., min_length=1, description="ID number")
+    doctor_id: str = Field("", description="Existing doctor identifier")
+    id_type: Optional[str] = Field(None, description="aadhaar or pan")
+    id_number: Optional[str] = Field(None, description="ID number")
     password: str = Field(..., min_length=1, description="Doctor password")
 
-    @field_validator("doctor_id", "password", "id_type", "id_number")
+    @field_validator("doctor_id", "password")
     @classmethod
     def validate_non_empty(cls, value: str) -> str:
         cleaned = value.strip()
         if not cleaned:
             raise ValueError("field cannot be empty")
         return cleaned
+
+    @field_validator("id_type", "id_number")
+    @classmethod
+    def validate_optional_text(cls, value: Optional[str]) -> str:
+        return str(value or "").strip()
 
 
 class DoctorAuthManager:
