@@ -504,10 +504,22 @@
     </main>
   </div>
 
+  <script id="doctorPatientDatabasePageData" type="application/json">
+    {{ {"doctorPatientDatabaseApi": url_for("doctor_patient_database"), "doctorAppointmentsApi": url_for("doctor_appointments"), "roleLoginUrl": url_for("role_login")}|tojson }}
+  </script>
+
   <script>
-    const doctorPatientDatabaseApi = {{ url_for("doctor_patient_database")|tojson }};
-    const doctorAppointmentsApi = {{ url_for("doctor_appointments")|tojson }};
-    const roleLoginUrl = {{ url_for("role_login")|tojson }};
+    const doctorPatientDatabasePageDataEl = document.getElementById("doctorPatientDatabasePageData");
+    let doctorPatientDatabasePageData = {};
+    try {
+      doctorPatientDatabasePageData = JSON.parse(doctorPatientDatabasePageDataEl ? doctorPatientDatabasePageDataEl.textContent : "{}");
+    } catch (_) {
+      doctorPatientDatabasePageData = {};
+    }
+
+    const doctorPatientDatabaseApi = String(doctorPatientDatabasePageData.doctorPatientDatabaseApi || "");
+    const doctorAppointmentsApi = String(doctorPatientDatabasePageData.doctorAppointmentsApi || "");
+    const roleLoginUrl = String(doctorPatientDatabasePageData.roleLoginUrl || "");
     const dbRows = document.getElementById("patientDbRows");
     const dbSearch = document.getElementById("dbSearch");
     const dbCount = document.getElementById("dbCount");

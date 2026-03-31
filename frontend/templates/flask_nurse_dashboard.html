@@ -664,11 +664,23 @@
     </section>
   </div>
 
+  <script id="nurseDashboardPageData" type="application/json">
+    {{ {"patientsApi": url_for("nurse_patient_records"), "saveApi": url_for("nurse_update_patient_record"), "predictApi": url_for("nurse_predict_risk"), "loginUrl": url_for("nurse_login")}|tojson }}
+  </script>
+
   <script>
-    const patientsApi = {{ url_for("nurse_patient_records")|tojson }};
-    const saveApi = {{ url_for("nurse_update_patient_record")|tojson }};
-    const predictApi = {{ url_for("nurse_predict_risk")|tojson }};
-    const loginUrl = {{ url_for("nurse_login")|tojson }};
+    const nurseDashboardPageDataEl = document.getElementById("nurseDashboardPageData");
+    let nurseDashboardPageData = {};
+    try {
+      nurseDashboardPageData = JSON.parse(nurseDashboardPageDataEl ? nurseDashboardPageDataEl.textContent : "{}");
+    } catch (_) {
+      nurseDashboardPageData = {};
+    }
+
+    const patientsApi = String(nurseDashboardPageData.patientsApi || "");
+    const saveApi = String(nurseDashboardPageData.saveApi || "");
+    const predictApi = String(nurseDashboardPageData.predictApi || "");
+    const loginUrl = String(nurseDashboardPageData.loginUrl || "");
     const patientList = document.getElementById("patientList");
     const patientSearch = document.getElementById("patientSearch");
     const recordForm = document.getElementById("recordForm");
