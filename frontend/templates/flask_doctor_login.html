@@ -769,7 +769,18 @@
     </div>
   </div>
 
+  <script id="doctorLoginPageData" type="application/json">
+    {{ {"doctorLoginSuccess": login_success, "doctorRedirectUrl": (redirect_url or "")}|tojson }}
+  </script>
+
   <script>
+    const doctorLoginPageDataEl = document.getElementById("doctorLoginPageData");
+    let doctorLoginPageData = {};
+    try {
+      doctorLoginPageData = JSON.parse(doctorLoginPageDataEl ? doctorLoginPageDataEl.textContent : "{}");
+    } catch (_) {
+      doctorLoginPageData = {};
+    }
 
     const sidebarToggle = document.getElementById("sidebarToggle");
     const sidebarLinks = document.querySelectorAll(".sidebar-link");
@@ -860,8 +871,8 @@
       }
     }
 
-    const doctorLoginSuccess = {{ "true" if login_success else "false" }};
-    const doctorRedirectUrl = {{ (redirect_url or "")|tojson }};
+    const doctorLoginSuccess = Boolean(doctorLoginPageData.doctorLoginSuccess);
+    const doctorRedirectUrl = String(doctorLoginPageData.doctorRedirectUrl || "");
     if (doctorLoginSuccess && doctorRedirectUrl) {
       window.location.href = withLoginSuccessFlag(doctorRedirectUrl);
     }

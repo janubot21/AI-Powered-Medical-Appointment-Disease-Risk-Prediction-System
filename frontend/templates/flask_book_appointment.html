@@ -1665,7 +1665,19 @@
     </button>
   </div>
 
+  <script id="bookingPageData" type="application/json">
+    {{ {"initialPatientFeatures": (patient_features or {}), "emergencyDoctorsApi": url_for("patient_emergency_doctors")}|tojson }}
+  </script>
+
   <script>
+    const bookingPageDataEl = document.getElementById("bookingPageData");
+    let bookingPageData = {};
+    try {
+      bookingPageData = JSON.parse(bookingPageDataEl ? bookingPageDataEl.textContent : "{}");
+    } catch (_) {
+      bookingPageData = {};
+    }
+
     const sidebarToggle = document.getElementById("sidebarToggle");
     const sidebarLinks = document.querySelectorAll(".sidebar-link");
 
@@ -1774,11 +1786,11 @@
 
     let bookingRedirectTimer = null;
     let loadedPatientFeatures = null;
-    const initialPatientFeatures = {{ (patient_features or {})|tojson }};
+    const initialPatientFeatures = bookingPageData.initialPatientFeatures || {};
     let riskPanelTimer = null;
     let riskPanelRequestId = 0;
     let appointmentTimeTouched = false;
-    const emergencyDoctorsApi = {{ url_for("patient_emergency_doctors")|tojson }};
+    const emergencyDoctorsApi = String(bookingPageData.emergencyDoctorsApi || "");
     let pendingBookingPayload = null;
 
     const doctorUnavailableModal = document.getElementById("doctorUnavailableModal");
