@@ -171,7 +171,7 @@ def register_patient_routes(app: Any) -> None:
     @app.route("/patient/login", methods=["GET", "POST"])
     def patient_login() -> Any:
         errors: list[str] = []
-        form_data = {"patient_name": ""}
+        form_data = {"patient_name": "", "id_type": "", "id_number": "", "login_using": "patient_name"}
 
         if request.method == "GET":
             fa._clear_patient_session()
@@ -179,19 +179,38 @@ def register_patient_routes(app: Any) -> None:
                 session.pop("role", None)
 
         if request.method == "POST":
+            login_using = request.form.get("login_using", "patient_name").strip().lower()
+            if login_using not in {"patient_name", "id_number"}:
+                login_using = "patient_name"
             patient_name = request.form.get("patient_name", "").strip()
+            id_type = request.form.get("id_type", "").strip().lower()
+            id_number = request.form.get("id_number", "").strip().upper()
             password = request.form.get("password", "").strip()
             form_data["patient_name"] = patient_name
-            if not patient_name:
-                errors.append("Enter Patient Name.")
+            form_data["id_type"] = id_type
+            form_data["id_number"] = id_number
+            form_data["login_using"] = login_using
+
+            unique_code = ""
+            if login_using == "patient_name":
+                if not patient_name:
+                    errors.append("Enter Patient Name.")
+            else:
+                if not id_number:
+                    errors.append("Enter ID Number.")
+                else:
+                    try:
+                        unique_code = fa._compose_unique_code(id_type, id_number)
+                    except ValueError as exc:
+                        errors.append(str(exc))
             if not password:
                 errors.append("Password is required.")
 
             if not errors:
                 try:
-                    patient = fa._authenticate_patient(patient_name, "", password)
+                    patient = fa._authenticate_patient(patient_name, unique_code, password)
                     if not patient:
-                        raise ValueError("Invalid patient name or password.")
+                        raise ValueError("Invalid patient name, unique code, or password.")
                     patient_id = str(patient.get("patient_id", "")).strip()
                     resolved_name = str(patient.get("name", "")).strip() or patient_name
                     fa._clear_doctor_session()
@@ -205,7 +224,7 @@ def register_patient_routes(app: Any) -> None:
                     return render_template(
                         "flask_patient_login.html",
                         errors=[],
-                        form_data={"patient_name": ""},
+                        form_data={"patient_name": "", "id_type": "", "id_number": "", "login_using": "patient_name"},
                         login_success=True,
                         redirect_url=url_for("book_appointment"),
                     )

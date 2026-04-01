@@ -5,683 +5,173 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AIHealth Hub - Nurse Login</title>
   <style>
-    @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap");
-
     :root {
-      --ink: #314375;
-      --ink-strong: #2b3f73;
-      --muted: #4f5f8d;
-      --line: #c3d0ea;
-      --card-bg: rgba(245, 247, 253, 0.88);
-      --button-a: #267fb5;
-      --button-b: #356ddb;
-      --spark: rgba(255, 255, 255, 0.85);
+      --bg-a: #eef6fb;
+      --bg-b: #d8ecf1;
+      --card: rgba(255, 255, 255, 0.9);
+      --line: #c8dde4;
+      --text: #164852;
+      --muted: #58757d;
+      --accent: #1c8a94;
+      --accent-dark: #146870;
     }
-
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       min-height: 100vh;
-      overflow-x: hidden;
-      display: flex;
-      flex-direction: column;
-      font-family: "Manrope", sans-serif;
-      color: var(--ink);
-      background: linear-gradient(92deg, #fbe7e5 0%, #e3e4f2 52%, #dbe6fa 100%);
-      animation: fade-in 700ms ease both;
-    }
-
-    .scene {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
-    }
-
-    .scene::before {
-      content: "";
-      position: absolute;
-      inset: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--text);
       background:
-        radial-gradient(circle at 14% 8%, rgba(255, 243, 228, 0.65) 0%, rgba(255, 243, 228, 0) 38%),
-        radial-gradient(circle at 78% 14%, rgba(238, 244, 255, 0.75) 0%, rgba(238, 244, 255, 0) 36%),
-        radial-gradient(circle at 88% 78%, rgba(173, 210, 255, 0.35) 0%, rgba(173, 210, 255, 0) 40%);
-      animation: drift-bg 16s ease-in-out infinite alternate;
-    }
-
-    .sparkles {
-      position: absolute;
-      inset: 0;
-      background-image:
-        radial-gradient(circle at 2% 20%, var(--spark) 0 3px, transparent 4px),
-        radial-gradient(circle at 8% 36%, var(--spark) 0 2px, transparent 4px),
-        radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.65) 0 1px, transparent 3px),
-        radial-gradient(circle at 64% 16%, rgba(255, 255, 255, 0.76) 0 2px, transparent 4px),
-        radial-gradient(circle at 83% 26%, rgba(255, 255, 255, 0.7) 0 2px, transparent 4px),
-        radial-gradient(circle at 92% 64%, rgba(255, 255, 255, 0.82) 0 2px, transparent 4px),
-        radial-gradient(circle at 34% 68%, rgba(255, 255, 255, 0.62) 0 1px, transparent 3px),
-        radial-gradient(circle at 70% 84%, rgba(255, 255, 255, 0.74) 0 1px, transparent 3px),
-        radial-gradient(circle at 26% 88%, rgba(255, 255, 255, 0.72) 0 2px, transparent 4px);
-      opacity: 0.9;
-      animation: float-spark 22s linear infinite alternate;
-    }
-
-    .medical-icon {
-      position: absolute;
-      width: 68px;
-      height: 68px;
-      stroke: rgba(255, 255, 255, 0.5);
-      stroke-width: 2.2;
-      fill: none;
-      filter: drop-shadow(0 6px 14px rgba(118, 147, 206, 0.25));
-      animation: float-icon 8s ease-in-out infinite;
-    }
-
-    .icon-plus-left { left: 3%; top: 43%; width: 58px; height: 58px; }
-    .icon-lock { left: 7%; top: 53%; animation-delay: -1.5s; }
-    .icon-kit { left: 40%; top: 43%; animation-delay: -0.9s; }
-    .icon-plus-right { right: 2%; top: 62%; width: 58px; height: 58px; animation-delay: -1.9s; }
-    .icon-user { left: 4%; bottom: 14%; animation-delay: -2.4s; }
-
-    .shell {
-      position: relative;
-      z-index: 2;
-      width: min(1320px, 95vw);
-      flex: 1;
-      min-height: calc(100vh - 70px);
-      margin: 0 auto;
-      padding: clamp(1rem, 2.2vw, 1.8rem) clamp(1rem, 2.6vw, 2.2rem) clamp(0.8rem, 1.6vw, 1.2rem);
+        radial-gradient(circle at 12% 14%, rgba(91, 194, 201, 0.18), transparent 28%),
+        radial-gradient(circle at 86% 82%, rgba(60, 133, 180, 0.18), transparent 30%),
+        linear-gradient(180deg, var(--bg-a), var(--bg-b));
       display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
-      gap: clamp(1rem, 2vw, 1.7rem);
-      align-items: center;
+      place-items: center;
+      padding: 18px;
     }
-
-    .hospital {
-      margin: 0;
-      font-size: clamp(1rem, 1.45vw, 1.35rem);
+    .shell {
+      width: min(1080px, 100%);
+      display: grid;
+      grid-template-columns: 1fr minmax(340px, 420px);
+      gap: 18px;
+      align-items: stretch;
+    }
+    .hero, .card {
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      box-shadow: 0 22px 34px rgba(20, 73, 83, 0.12);
+    }
+    .hero {
+      padding: 30px;
+      background:
+        radial-gradient(circle at top right, rgba(87, 172, 195, 0.16), transparent 28%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 248, 249, 0.92));
+    }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: #64848d;
+      font-size: 0.82rem;
       font-weight: 800;
-      letter-spacing: 0.085em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      animation: rise-in 650ms ease both;
     }
-
-    .left h1 {
-      margin: 0.22rem 0 0;
-      font-size: clamp(1.72rem, 3.9vw, 3.1rem);
-      line-height: 1.03;
-      letter-spacing: -0.02em;
-      color: #33497e;
-      animation: rise-in 780ms ease 100ms both;
-    }
-
-    .subtitle {
-      margin: 0.85rem 0 0;
-      font-size: clamp(0.98rem, 1.45vw, 1.34rem);
-      font-weight: 700;
-      color: #364d80;
-      animation: rise-in 840ms ease 180ms both;
-    }
-
-    .desc {
-      margin: 0.6rem 0 0;
-      max-width: 54ch;
-      font-size: clamp(0.92rem, 1.1vw, 1.02rem);
-      line-height: 1.62;
+    h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1.02; }
+    .hero p {
       color: var(--muted);
-      animation: rise-in 940ms ease 220ms both;
-    }
-
-    .bullets {
-      margin: 1rem 0 0;
-      padding-left: 1.15rem;
-      color: #425481;
-      font-size: clamp(0.94rem, 1.2vw, 1.08rem);
       line-height: 1.7;
-      animation: rise-in 980ms ease 280ms both;
+      font-size: 1rem;
+      max-width: 52ch;
     }
-
-    .left-image {
-      margin-top: 0.7rem;
-      width: 100%;
-      max-width: 660px;
-      max-height: 31vh;
-      border-radius: 1.22rem;
-      border: 1px solid rgba(221, 229, 245, 0.96);
-      overflow: hidden;
-      box-shadow: 0 18px 30px rgba(57, 78, 124, 0.17);
-      animation: rise-in 1080ms ease 320ms both;
-    }
-
-    .left-image img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      aspect-ratio: 16 / 9;
-      object-fit: cover;
-      animation: breathe 10s ease-in-out infinite;
-    }
-
-    .right {
-      display: flex;
-      justify-content: center;
-      align-items: start;
-    }
-
-    .card {
-      width: min(540px, 100%);
-      max-height: calc(100vh - 130px);
-      overflow: auto;
-      border-radius: 1.9rem;
-      border: 1px solid rgba(218, 230, 248, 0.95);
-      background: var(--card-bg);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow:
-        0 20px 38px rgba(54, 71, 114, 0.16),
-        0 0 0 1px rgba(255, 255, 255, 0.38) inset;
-      padding: clamp(1.35rem, 2.4vw, 2rem);
-      animation: rise-in 880ms ease 220ms both, card-float 7.5s ease-in-out 1.2s infinite;
-    }
-
-    .card h2 {
-      margin: 0;
-      font-size: clamp(2.2rem, 3.4vw, 3rem);
-      line-height: 1.06;
-      color: var(--ink-strong);
-    }
-
-    .hint {
-      margin: 0.95rem 0 0.3rem;
-      font-size: clamp(1.05rem, 1.35vw, 1.12rem);
-      font-weight: 700;
-      color: #364d81;
-    }
-
+    .hero ul { margin: 18px 0 0; padding-left: 18px; color: #365d67; line-height: 1.8; }
+    .card { padding: 26px; }
+    .card h2 { margin: 0; font-size: 2rem; }
+    .hint { margin: 10px 0 16px; color: var(--muted); }
     label {
       display: block;
-      margin: 0.82rem 0 0.35rem;
-      font-size: clamp(1.07rem, 1.26vw, 1.18rem);
-      font-weight: 800;
-      color: #2f457a;
+      margin: 14px 0 6px;
+      font-weight: 700;
+      color: #23525d;
     }
-
     input {
       width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 0.92rem;
-      padding: 0.86rem 1rem;
+      padding: 13px 14px;
+      border-radius: 14px;
+      border: 1px solid #cadde2;
       font: inherit;
-      font-size: 1rem;
-      color: #2b4274;
-      background: rgba(244, 248, 255, 0.75);
-      transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease, transform 180ms ease;
+      background: #f8fcfd;
     }
-
     input:focus {
       outline: none;
-      border-color: #84acee;
-      box-shadow: 0 0 0 3px rgba(129, 172, 238, 0.22);
-      background: rgba(255, 255, 255, 0.95);
-      transform: translateY(-1px);
+      border-color: #7cc6ce;
+      box-shadow: 0 0 0 3px rgba(54, 154, 166, 0.16);
     }
-
     button {
-      position: relative;
-      overflow: hidden;
-      margin-top: 1.25rem;
       width: 100%;
+      margin-top: 18px;
+      padding: 14px;
       border: 0;
-      border-radius: 0.96rem;
-      padding: 0.9rem;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #fff;
       font: inherit;
-      font-size: clamp(1.25rem, 1.45vw, 1.38rem);
       font-weight: 800;
-      color: #ffffff;
       cursor: pointer;
-      background: linear-gradient(105deg, var(--button-a), var(--button-b));
-      box-shadow: 0 12px 22px rgba(44, 106, 201, 0.34);
-      transition: transform 170ms ease, box-shadow 170ms ease, filter 170ms ease;
     }
-
-    button::after {
-      content: "";
-      position: absolute;
-      top: -25%;
-      left: -30%;
-      width: 25%;
-      height: 150%;
-      transform: rotate(18deg);
-      background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0));
-      animation: sheen 4s ease-in-out infinite;
-    }
-
-    button:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.05);
-      box-shadow: 0 15px 26px rgba(44, 106, 201, 0.4);
-    }
-
-    .create,
-    .link-row a {
-      margin-top: 1rem;
-      display: inline-block;
-      font-size: clamp(1.05rem, 1.28vw, 1.15rem);
-      font-weight: 700;
-      color: #2f6fdb;
-      text-decoration: none;
-    }
-
-    .create:hover,
-    .link-row a:hover {
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
-
     .errors {
-      margin: 0.8rem 0 0.3rem;
-      padding: 0.65rem 0.78rem;
-      border-radius: 0.72rem;
-      border: 1px solid #f0c7c7;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #efc3c3;
       background: #fff1f1;
-      color: #8f2525;
-      font-size: 0.94rem;
+      color: #8a2c2c;
     }
-
     .link-row {
+      margin-top: 16px;
       display: flex;
       justify-content: space-between;
       gap: 12px;
       flex-wrap: wrap;
     }
-
-    .dna-wave {
-      position: absolute;
-      left: -6%;
-      right: -6%;
-      bottom: -16px;
-      height: 210px;
-      opacity: 0.74;
-      filter: drop-shadow(0 -8px 22px rgba(134, 175, 245, 0.43));
-      animation: wave-rise 10s ease-in-out infinite;
-    }
-
-    .dna-wave path {
-      fill: none;
-      stroke: rgba(255, 255, 255, 0.75);
-      stroke-width: 2.2;
-      stroke-dasharray: 2 8;
-    }
-
-    .dna-wave .line-b {
-      stroke: rgba(167, 206, 255, 0.65);
-    }
-
-    @keyframes fade-in {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    @keyframes drift-bg {
-      from { transform: translateY(0) scale(1); }
-      to { transform: translateY(-1.3%) scale(1.03); }
-    }
-
-    @keyframes rise-in {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes float-icon {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-9px); }
-    }
-
-    @keyframes float-spark {
-      from { transform: translateY(0); opacity: 0.72; }
-      to { transform: translateY(-20px); opacity: 1; }
-    }
-
-    @keyframes breathe {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.014); }
-    }
-
-    @keyframes card-float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
-    }
-
-    @keyframes sheen {
-      0%, 72% { left: -30%; }
-      100% { left: 120%; }
-    }
-
-    @keyframes wave-rise {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(4px); }
-    }
-
-    @media (max-width: 1030px) {
-      .shell {
-        min-height: auto;
-        grid-template-columns: 1fr;
-        align-items: start;
-      }
-
-      .left-image {
-        max-width: 100%;
-        max-height: 30vh;
-      }
-
-      .right {
-        justify-content: stretch;
-      }
-
-      .card {
-        width: 100%;
-      }
-
-      .dna-wave {
-        height: 140px;
-        bottom: -22px;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-
-    .global-page-footer {
-      width: min(92vw, 980px);
-      margin: 0 auto 0.5rem;
-      padding: 0.56rem 0.95rem;
-      border-radius: 0.82rem;
-      border: 1px solid rgba(170, 188, 214, 0.85);
-      background: rgba(233, 238, 246, 0.84);
-      color: #607089;
-      text-align: center;
-      line-height: 1.2;
-      font-size: clamp(0.74rem, 0.95vw, 0.84rem);
-      font-weight: 600;
-      letter-spacing: 0.01em;
-      box-shadow: 0 6px 14px rgba(83, 97, 127, 0.08);
-      backdrop-filter: blur(2px);
-      -webkit-backdrop-filter: blur(2px);
-    }
-
-    .global-page-footer-line {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.45rem;
-      white-space: nowrap;
-    }
-
-    .global-page-footer .sep {
-      opacity: 0.6;
+    .link-row a {
+      color: #1b6f78;
+      text-decoration: none;
       font-weight: 700;
     }
-
-    @media (max-width: 840px) {
-      .global-page-footer {
-        width: min(96vw, 980px);
-        font-size: 0.76rem;
-        padding: 0.52rem 0.72rem;
-      }
-
-      .global-page-footer-line {
-        white-space: normal;
-        line-height: 1.35;
-      }
-    }
-
-    .app-dialog-overlay {
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(12, 23, 45, 0.45);
-      z-index: 2200;
-      padding: 16px;
-    }
-
-    .app-dialog-overlay.show {
-      display: flex;
-    }
-
-    .app-dialog {
-      width: min(560px, 100%);
-      border-radius: 16px;
-      border: 1px solid #cfddf2;
-      background: #ffffff;
-      box-shadow: 0 20px 36px rgba(13, 42, 78, 0.24);
-      padding: 20px;
-      text-align: left;
-    }
-
-    .app-dialog h3 {
-      margin: 0 0 8px;
-      font-family: "Space Grotesk", "Segoe UI", sans-serif;
-      font-size: 1.45rem;
-      color: #10284d;
-    }
-
-    .app-dialog p {
-      margin: 0;
-      color: #38557d;
-      font-size: 1rem;
-    }
-
-    .app-dialog-actions {
-      margin-top: 18px;
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    .app-dialog-ok {
-      border: 0;
-      border-radius: 10px;
-      padding: 9px 16px;
-      min-width: 96px;
-      font-weight: 700;
-      cursor: pointer;
-      background: #2f6fd6;
-      color: #fff;
+    @media (max-width: 900px) {
+      .shell { grid-template-columns: 1fr; }
     }
   </style>
   <link rel="stylesheet" href="{{ url_for('static', filename='page-animations.css') }}">
 </head>
 <body>
-  <div class="scene" aria-hidden="true">
-    <div class="sparkles"></div>
-
-    <svg class="medical-icon icon-plus-left" viewBox="0 0 24 24">
-      <path d="M12 4v16M4 12h16" />
-    </svg>
-
-    <svg class="medical-icon icon-lock" viewBox="0 0 24 24">
-      <rect x="4" y="10" width="16" height="10" rx="2" />
-      <path d="M8 10V8a4 4 0 0 1 8 0v2" />
-    </svg>
-
-    <svg class="medical-icon icon-kit" viewBox="0 0 24 24">
-      <rect x="3" y="7" width="18" height="13" rx="2.5" />
-      <path d="M9 7V5a3 3 0 0 1 6 0v2M12 10v6M9 13h6" />
-    </svg>
-
-    <svg class="medical-icon icon-plus-right" viewBox="0 0 24 24">
-      <path d="M12 4v16M4 12h16" />
-    </svg>
-
-    <svg class="medical-icon icon-user" viewBox="0 0 24 24">
-      <circle cx="12" cy="8" r="3.4" />
-      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
-    </svg>
-
-    <svg class="dna-wave" viewBox="0 0 1600 240" preserveAspectRatio="none">
-      <path d="M0 150C130 120 180 210 300 172C410 140 490 82 600 122C730 170 820 232 940 186C1080 132 1140 112 1280 146C1412 178 1490 210 1600 156" />
-      <path class="line-b" d="M0 170C120 132 220 114 340 152C460 190 520 228 640 174C770 118 860 116 980 158C1110 204 1230 216 1370 168C1480 130 1540 132 1600 150" />
-    </svg>
-  </div>
-
   <main class="shell">
-    <section class="left">
-      <p class="hospital"><span style="color:#2f6fdb;">AI</span><span style="color:#d94343;">Health</span> <span style="color:#111111;">Hub</span></p>
-      <h1>Nurse Portal</h1>
-      <p class="subtitle">Secure access for intake and patient record workflow</p>
-      <p class="desc">Use the nurse portal to verify vitals, update symptoms, maintain glucose and blood pressure readings, and prepare each patient record before doctor review.</p>
-      <ul class="bullets">
+    <section class="hero">
+      <p class="eyebrow">Nurse Portal</p>
+      <h1>Patient records start here.</h1>
+      <p>Use the nurse portal to verify vitals, update symptoms, maintain glucose and blood pressure readings, and prepare each patient record before doctor review.</p>
+      <ul>
         <li>Search patient records quickly</li>
         <li>Update glucose, BP, BMI, sleep, symptoms, and history</li>
         <li>Hand over cleaner data to the doctor dashboard</li>
       </ul>
-      <div class="left-image">
-        <img
-          src="https://images.pexels.com/photos/7088530/pexels-photo-7088530.jpeg?auto=compress&cs=tinysrgb&w=1200"
-          onerror="this.onerror=null;this.src='https://images.pexels.com/photos/7089401/pexels-photo-7089401.jpeg?auto=compress&cs=tinysrgb&w=1200';"
-          alt="Medical professional reviewing hospital records"
-        />
-      </div>
     </section>
 
-    <section class="right">
-      <div class="card">
-        <h2>Nurse Login</h2>
-        <p class="hint">Login using your Nurse ID</p>
+    <section class="card">
+      <h2>Nurse Login</h2>
+      <p class="hint">Login using your Nurse ID</p>
 
-        {% if errors %}
-          <div class="errors">
-            {% for error in errors %}
-              <div>{{ error }}</div>
-            {% endfor %}
-          </div>
-        {% endif %}
+      {% if errors %}
+      <div class="errors">
+        {% for error in errors %}
+        <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
 
-        <form method="post" autocomplete="off">
-          <label for="nurse_id">Nurse ID</label>
-          <input id="nurse_id" name="nurse_id" value="{{ form_data.nurse_id }}" placeholder="Enter nurse ID" autocomplete="off" />
+      <form method="post">
+        <label for="nurse_id">Nurse ID</label>
+        <input id="nurse_id" name="nurse_id" value="{{ form_data.nurse_id }}" placeholder="Enter nurse ID" />
 
-          <label for="password">Password</label>
-          <input id="password" name="password" type="password" placeholder="Enter password" autocomplete="new-password" />
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="Enter password" />
 
-          <button type="submit">Login</button>
-        </form>
+        <button type="submit">Login</button>
+      </form>
 
-        <div class="link-row">
-          <a class="create" href="/nurse/signup">Create nurse account</a>
-          <a class="create" href="/login">Back to role login</a>
-        </div>
+      <div class="link-row">
+        <a href="/nurse/signup">Create nurse account</a>
+        <a href="/login">Back to role login</a>
       </div>
     </section>
   </main>
 
-  <div class="app-dialog-overlay" id="appDialog" aria-hidden="true">
-    <div class="app-dialog" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle">
-      <h3 id="appDialogTitle">Notice</h3>
-      <p id="appDialogMessage">Message</p>
-      <div class="app-dialog-actions">
-        <button type="button" class="app-dialog-ok" id="appDialogOkBtn">OK</button>
-      </div>
-    </div>
-  </div>
-
-  <footer class="global-page-footer">
-    <div class="global-page-footer-line">
-      <span>&copy; 2026 AIHealth Hub</span>
-      <span class="sep">|</span>
-      <span>Powered by AI Healthcare System</span>
-      <span class="sep">|</span>
-      <span>Contact: support@aihealthhub.com</span>
-    </div>
-  </footer>
-
-  <script id="nurseLoginPageData" type="application/json">
-    {{ {"nurseLoginSuccess": login_success|default(false), "nurseRedirectUrl": redirect_url|default("", true)}|tojson }}
-  </script>
-
   <script>
-    const nurseLoginPageDataEl = document.getElementById("nurseLoginPageData");
-    let nurseLoginPageData = {};
-    try {
-      nurseLoginPageData = JSON.parse(nurseLoginPageDataEl ? nurseLoginPageDataEl.textContent : "{}");
-    } catch (_) {
-      nurseLoginPageData = {};
-    }
-
-    const appDialog = document.getElementById("appDialog");
-    const appDialogTitle = document.getElementById("appDialogTitle");
-    const appDialogMessage = document.getElementById("appDialogMessage");
-    const appDialogOkBtn = document.getElementById("appDialogOkBtn");
-    let appDialogConfirm = null;
-
-    function closeAppDialog() {
-      if (!appDialog) return;
-      appDialog.classList.remove("show");
-      appDialog.setAttribute("aria-hidden", "true");
-    }
-
-    function openAppDialog(message, options = {}) {
-      if (!appDialog || !appDialogTitle || !appDialogMessage || !appDialogOkBtn) return;
-      appDialogTitle.textContent = options.title || "Notice";
-      appDialogMessage.textContent = message;
-      appDialogOkBtn.textContent = options.okLabel || "OK";
-      appDialogConfirm = typeof options.onConfirm === "function" ? options.onConfirm : null;
-      appDialog.classList.add("show");
-      appDialog.setAttribute("aria-hidden", "false");
-      appDialogOkBtn.focus();
-    }
-
-    if (appDialog && appDialogOkBtn) {
-      appDialogOkBtn.addEventListener("click", () => {
-        const fn = appDialogConfirm;
-        closeAppDialog();
-        if (fn) fn();
-      });
-
-      appDialog.addEventListener("click", (event) => {
-        if (event.target === appDialog) {
-          closeAppDialog();
-        }
-      });
-
-      document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && appDialog.classList.contains("show")) {
-          closeAppDialog();
-        }
-      });
-    }
-
-    const nurseLoginSuccess = Boolean(nurseLoginPageData.nurseLoginSuccess);
-    const nurseRedirectUrl = String(nurseLoginPageData.nurseRedirectUrl || "");
+    const nurseLoginSuccess = {{ "true" if login_success else "false" }};
+    const nurseRedirectUrl = {{ (redirect_url or "")|tojson }};
     if (nurseLoginSuccess && nurseRedirectUrl) {
       window.location.href = nurseRedirectUrl;
     }
-
-    document.querySelector("form").addEventListener("submit", (event) => {
-      const nurseId = document.getElementById("nurse_id").value.trim();
-      const password = document.getElementById("password").value.trim();
-
-      if (!nurseId) {
-        event.preventDefault();
-        openAppDialog("Enter Nurse ID.", { title: "Validation" });
-        return;
-      }
-
-      if (!password) {
-        event.preventDefault();
-        openAppDialog("Password is required.", { title: "Validation" });
-      }
-    });
   </script>
   <script src="{{ url_for('static', filename='page-animations.js') }}"></script>
 </body>
