@@ -41,7 +41,7 @@ def register_staff_routes(app: Any) -> None:
     @app.route("/doctor/login", methods=["GET", "POST"])
     def doctor_login() -> Any:
         errors: list[str] = []
-        form_data = {"doctor_id": "", "id_type": "", "id_number": "", "login_using": "doctor_id"}
+        form_data = {"doctor_id": ""}
 
         if request.method == "GET":
             fa._clear_doctor_session()
@@ -49,39 +49,17 @@ def register_staff_routes(app: Any) -> None:
                 session.pop("role", None)
 
         if request.method == "POST":
-            login_using = request.form.get("login_using", "doctor_id").strip().lower()
-            if login_using not in {"doctor_id", "id_number"}:
-                login_using = "doctor_id"
             doctor_id = request.form.get("doctor_id", "").strip()
-            id_type = request.form.get("id_type", "").strip().lower()
-            id_number = request.form.get("id_number", "").strip().upper()
             password = request.form.get("password", "").strip()
             form_data["doctor_id"] = doctor_id
-            form_data["id_type"] = id_type
-            form_data["id_number"] = id_number
-            form_data["login_using"] = login_using
-
-            if login_using == "doctor_id":
-                id_type = ""
-                id_number = ""
-                form_data["id_type"] = ""
-                form_data["id_number"] = ""
-                if not doctor_id:
-                    errors.append("Enter Doctor ID.")
-            else:
-                if not id_number:
-                    errors.append("Enter ID Number.")
-                else:
-                    try:
-                        fa.doctor_auth_manager._compose_unique_code(id_type, id_number)
-                    except ValueError as exc:
-                        errors.append(str(exc))
+            if not doctor_id:
+                errors.append("Enter Doctor ID.")
             if not password:
                 errors.append("Password is required.")
 
             if not errors:
                 try:
-                    resolved_doctor_id = fa.doctor_auth_manager.login(doctor_id, id_type, id_number, password)
+                    resolved_doctor_id = fa.doctor_auth_manager.login(doctor_id, "", "", password)
                     fa._clear_patient_session()
                     fa._clear_nurse_session()
                     session["doctor_id"] = resolved_doctor_id
@@ -91,7 +69,7 @@ def register_staff_routes(app: Any) -> None:
                     return render_template(
                         "flask_doctor_login.html",
                         errors=[],
-                        form_data={"doctor_id": "", "id_type": "", "id_number": "", "login_using": "doctor_id"},
+                        form_data={"doctor_id": ""},
                         login_success=True,
                         redirect_url=url_for("doctor_dashboard"),
                     )

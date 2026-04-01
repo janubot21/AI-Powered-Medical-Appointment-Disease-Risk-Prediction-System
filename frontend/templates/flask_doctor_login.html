@@ -3,14 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Exafluence Hospital - Doctor Login</title>
+  <title>AIHealth Hub - Doctor Login</title>
   <style>
+    @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap");
+
     :root {
-      --bg: #dfe5ef;
-      --ink: #1e2f57;
-      --muted: #5d6b89;
-      --line: #c6d0e4;
-      --panel: #f3f7ff;
+      --ink: #314375;
+      --ink-strong: #2b3f73;
+      --muted: #4f5f8d;
+      --line: #c3d0ea;
+      --card-bg: rgba(245, 247, 253, 0.88);
+      --button-a: #267fb5;
+      --button-b: #356ddb;
+      --spark: rgba(255, 255, 255, 0.85);
     }
 
     * { box-sizing: border-box; }
@@ -18,230 +23,719 @@
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: Arial, sans-serif;
-      background:
-        radial-gradient(circle at 8% 6%, rgba(73, 137, 255, 0.28), transparent 36%),
-        radial-gradient(circle at 92% 84%, rgba(24, 173, 156, 0.2), transparent 40%),
-        linear-gradient(145deg, #edf4ff 0%, #dfe9f8 55%, #e8f3ff 100%);
-      color: var(--ink);
       overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      font-family: "Manrope", sans-serif;
+      color: var(--ink);
+      background: linear-gradient(92deg, #fbe7e5 0%, #e3e4f2 52%, #dbe6fa 100%);
+      animation: fade-in 700ms ease both;
     }
 
-    .bg-shape-top,
-    .bg-shape-right {
+
+    :root {
+      --sidebar-expanded: 0px;
+      --sidebar-collapsed: 0px;
+    }
+    .app-sidebar {
       position: fixed;
-      z-index: 0;
-      pointer-events: none;
-      opacity: 0.45;
-    }
-
-    .bg-shape-top {
+      left: 0;
       top: 0;
-      right: 0;
-      width: min(760px, 70vw);
-      height: 190px;
-      background: linear-gradient(120deg, rgba(196, 220, 255, 0.78), rgba(202, 240, 235, 0.72));
-      border-bottom-left-radius: 90px;
+      bottom: 0;
+      width: var(--sidebar-expanded);
+      background: linear-gradient(180deg, #f7fcff 0%, #eef8f8 100%);
+      border-right: 1px solid #d7e7e7;
+      box-shadow: 10px 0 26px rgba(44, 109, 109, 0.14);
+      padding: 12px 10px;
+      z-index: 80;
+      transition: width 0.28s ease;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+    .sidebar-top { display: grid; gap: 8px; margin-bottom: 8px; }
+    .sidebar-headline { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
+    .menu-title {
+      margin: 0;
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      color: #4f6f7a;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .sidebar-toggle {
+      display: grid;
+      place-items: center;
+      line-height: 1;
+      border: 1px solid #cde4e4;
+      background: #ffffff;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      color: #2b7f86;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border: 1px solid #cee6e6;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #dff3f5, #ecf8f8);
+      white-space: nowrap;
+    }
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid #bde0e0;
+      background: #f3fbfb;
+      display: grid;
+      place-items: center;
+      color: #2f8f95;
+      flex: 0 0 auto;
+    }
+    .brand-icon svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .brand-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .brand-title { font-size: 0.8rem; color: #1f878d; font-weight: 800; line-height: 1.1; }
+    .brand-sub { font-size: 0.62rem; color: #67939a; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; }
+    .sidebar-profile {
+      margin: 8px 0 6px;
+      padding: 8px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid #cfe5e5;
+      background: rgba(229, 246, 247, 0.9);
+    }
+    .profile-avatar-mini {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: 2px solid #b8dddd;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 0.82rem;
+      color: #1e6f78;
+      background: linear-gradient(145deg, #e8f9fb, #d2eef1);
+      flex: 0 0 auto;
+    }
+    .profile-meta-mini { min-width: 0; line-height: 1.2; }
+    .profile-name-mini { color: #1f4d56; font-size: 0.88rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .profile-role-mini { color: #4d7d85; font-size: 0.72rem; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-chips { display: flex; gap: 6px; margin: 1px 0 6px; padding: 0 2px; }
+    .chip {
+      width: 26px; height: 26px; border-radius: 9px; border: 1px solid #b8dce2;
+      background: #ebf8fb; color: #2f93a4; display: grid; place-items: center;
+      box-shadow: 0 4px 10px rgba(59, 132, 147, 0.12);
+    }
+    .chip svg {
+      width: 13px; height: 13px; stroke: currentColor; stroke-width: 2; fill: none;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+    .sidebar-menu { list-style: none; margin: 4px 0 0; padding: 0 0 8px; display: grid; gap: 4px; }
+    .sidebar-link {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: #215d66;
+      font-weight: 700;
+      font-size: 0.84rem;
+      white-space: nowrap;
+    }
+    .sidebar-link:hover { background: #e8f5f6; color: #1d646d; }
+    .sidebar-link.active { background: linear-gradient(120deg, #d6eff2, #cfeaed); color: #1a7880; box-shadow: inset 0 0 0 1px #b9dfe4; }
+    .sidebar-link.active::before { content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 4px; border-radius: 8px; background: linear-gradient(180deg, #63bfc6, #55aeb6); }
+    .sidebar-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #eef9fa;
+      border: 1px solid #c8e6e8;
+      color: #2e9198;
+      flex: 0 0 auto;
+    }
+    .sidebar-icon svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .sidebar-label { overflow: hidden; text-overflow: ellipsis; }
+    .shell {
+      width: min(1320px, calc(100vw - 24px));
+      margin: 0 auto;
+      transition: margin-left 0.28s ease, width 0.28s ease;
+    }
+    .app-sidebar {
+      display: none !important;
+    }
+    body.sidebar-collapsed .app-sidebar { width: var(--sidebar-collapsed); }
+    body.sidebar-collapsed .menu-title,
+    body.sidebar-collapsed .brand-text,
+    body.sidebar-collapsed .sidebar-label,
+    body.sidebar-collapsed .profile-meta-mini { opacity: 0; visibility: hidden; width: 0; }
+    body.sidebar-collapsed .sidebar-headline,
+    body.sidebar-collapsed .sidebar-brand,
+    body.sidebar-collapsed .sidebar-link { justify-content: center; }
+    body.sidebar-collapsed .sidebar-profile { justify-content: center; }
+    body.sidebar-collapsed .sidebar-chips { display: none; }
+    body.sidebar-collapsed .shell {
+      width: min(1320px, calc(100vw - var(--sidebar-collapsed) - 28px));
+      margin-left: calc(var(--sidebar-collapsed) + 12px);
     }
 
-    .bg-shape-right {
-      right: -160px;
-      bottom: -120px;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle at 35% 35%, rgba(167, 218, 255, 0.82), rgba(174, 233, 223, 0.78));
-      border-radius: 50%;
+
+    .scene {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
     }
+
+    .scene::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 14% 8%, rgba(255, 243, 228, 0.65) 0%, rgba(255, 243, 228, 0) 38%),
+        radial-gradient(circle at 78% 14%, rgba(238, 244, 255, 0.75) 0%, rgba(238, 244, 255, 0) 36%),
+        radial-gradient(circle at 88% 78%, rgba(173, 210, 255, 0.35) 0%, rgba(173, 210, 255, 0) 40%);
+      animation: drift-bg 16s ease-in-out infinite alternate;
+    }
+
+    .sparkles {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 2% 20%, var(--spark) 0 3px, transparent 4px),
+        radial-gradient(circle at 8% 36%, var(--spark) 0 2px, transparent 4px),
+        radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.65) 0 1px, transparent 3px),
+        radial-gradient(circle at 64% 16%, rgba(255, 255, 255, 0.76) 0 2px, transparent 4px),
+        radial-gradient(circle at 83% 26%, rgba(255, 255, 255, 0.7) 0 2px, transparent 4px),
+        radial-gradient(circle at 92% 64%, rgba(255, 255, 255, 0.82) 0 2px, transparent 4px),
+        radial-gradient(circle at 34% 68%, rgba(255, 255, 255, 0.62) 0 1px, transparent 3px),
+        radial-gradient(circle at 70% 84%, rgba(255, 255, 255, 0.74) 0 1px, transparent 3px),
+        radial-gradient(circle at 26% 88%, rgba(255, 255, 255, 0.72) 0 2px, transparent 4px);
+      opacity: 0.9;
+      animation: float-spark 22s linear infinite alternate;
+    }
+
+    .medical-icon {
+      position: absolute;
+      width: 68px;
+      height: 68px;
+      stroke: rgba(255, 255, 255, 0.5);
+      stroke-width: 2.2;
+      fill: none;
+      filter: drop-shadow(0 6px 14px rgba(118, 147, 206, 0.25));
+      animation: float-icon 8s ease-in-out infinite;
+    }
+
+    .icon-plus-left { left: 3%; top: 43%; width: 58px; height: 58px; }
+    .icon-lock { left: 7%; top: 53%; animation-delay: -1.5s; }
+    .icon-kit { left: 40%; top: 43%; animation-delay: -0.9s; }
+    .icon-plus-right { right: 2%; top: 62%; width: 58px; height: 58px; animation-delay: -1.9s; }
+    .icon-user { left: 4%; bottom: 14%; animation-delay: -2.4s; }
 
     .shell {
       position: relative;
-      z-index: 1;
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 36px 22px;
-      min-height: 100vh;
+      z-index: 2;
+      width: min(1320px, calc(100vw - var(--sidebar-expanded) - 28px));
+      flex: 1;
+      min-height: calc(100vh - 70px);
+      margin: 0 12px 0 calc(var(--sidebar-expanded) + 12px);
+      padding: clamp(1rem, 2.2vw, 1.8rem) clamp(1rem, 2.6vw, 2.2rem) clamp(0.8rem, 1.6vw, 1.2rem);
       display: grid;
       grid-template-columns: 1.05fr 0.95fr;
-      gap: 34px;
+      gap: clamp(1rem, 2vw, 1.7rem);
       align-items: center;
+      transition: margin-left 0.28s ease, width 0.28s ease;
     }
 
-    .left h1 {
-      margin: 0 0 8px;
-      font-size: clamp(2rem, 4vw, 3.2rem);
-      line-height: 1.05;
-      letter-spacing: 0.02em;
+    body.sidebar-collapsed .shell {
+      width: min(1320px, calc(100vw - var(--sidebar-collapsed) - 28px));
+      margin-left: calc(var(--sidebar-collapsed) + 12px);
     }
 
     .hospital {
-      display: inline-block;
-      margin-bottom: 18px;
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #2b5f9b;
-      letter-spacing: 0.04em;
+      margin: 0;
+      font-size: clamp(1rem, 1.45vw, 1.35rem);
+      font-weight: 800;
+      letter-spacing: 0.085em;
       text-transform: uppercase;
+      animation: rise-in 650ms ease both;
     }
 
-    .sub {
-      margin: 0 0 14px;
-      color: #2b3a5f;
-      font-size: 1.1rem;
+    .brand-exa { color: #2f6fdb; }
+    .brand-flunce { color: #d94343; }
+    .brand-hospital { color: #111111; }
+
+    .left h1 {
+      margin: 0.22rem 0 0;
+      font-size: clamp(1.72rem, 3.9vw, 3.1rem);
+      line-height: 1.03;
+      letter-spacing: -0.02em;
+      color: #33497e;
+      animation: rise-in 780ms ease 100ms both;
+    }
+
+    .subtitle {
+      margin: 0.85rem 0 0;
+      font-size: clamp(0.98rem, 1.45vw, 1.34rem);
       font-weight: 700;
+      color: #364d80;
+      animation: rise-in 840ms ease 180ms both;
     }
 
     .desc {
-      margin: 0 0 18px;
+      margin: 0.6rem 0 0;
+      max-width: 54ch;
+      font-size: clamp(0.92rem, 1.1vw, 1.02rem);
+      line-height: 1.62;
       color: var(--muted);
-      font-size: 1.05rem;
-      max-width: 530px;
-      line-height: 1.5;
+      animation: rise-in 940ms ease 220ms both;
     }
 
     .bullets {
-      margin: 0;
-      padding-left: 18px;
-      color: #3d4a68;
+      margin: 1rem 0 0;
+      padding-left: 1.15rem;
+      color: #425481;
+      font-size: clamp(0.94rem, 1.2vw, 1.08rem);
       line-height: 1.7;
-      font-size: 1rem;
+      animation: rise-in 980ms ease 280ms both;
     }
 
     .left-image {
-      margin-top: 18px;
+      margin-top: 0.7rem;
       width: 100%;
-      max-width: 620px;
-      border-radius: 16px;
-      border: 1px solid #c4d0e6;
-      background: #edf3ff;
+      max-width: 660px;
+      max-height: 31vh;
+      border-radius: 1.22rem;
+      border: 1px solid rgba(221, 229, 245, 0.96);
       overflow: hidden;
-      box-shadow: 0 10px 22px rgba(38, 58, 99, 0.1);
+      box-shadow: 0 18px 30px rgba(57, 78, 124, 0.17);
+      animation: rise-in 1080ms ease 320ms both;
     }
 
     .left-image img {
       display: block;
       width: 100%;
-      height: auto;
+      height: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      animation: breathe 10s ease-in-out infinite;
     }
 
-    .right {
-      display: flex;
-      justify-content: center;
-    }
+    .right { display: flex; justify-content: center; align-items: start; }
 
     .card {
       width: min(540px, 100%);
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 26px;
-      box-shadow: 0 14px 30px rgba(35, 52, 88, 0.12);
+      max-height: calc(100vh - 130px);
+      overflow: auto;
+      border-radius: 1.9rem;
+      border: 1px solid rgba(218, 230, 248, 0.95);
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 20px 38px rgba(54, 71, 114, 0.16), 0 0 0 1px rgba(255, 255, 255, 0.38) inset;
+      padding: clamp(1.35rem, 2.4vw, 2rem);
+      animation: rise-in 880ms ease 220ms both, card-float 7.5s ease-in-out 1.2s infinite;
     }
 
     .card h2 {
-      margin: 0 0 16px;
-      font-size: 2rem;
-      color: #10264d;
+      margin: 0;
+      font-size: clamp(2.2rem, 3.4vw, 3rem);
+      line-height: 1.06;
+      color: var(--ink-strong);
+    }
+
+    .hint {
+      margin: 0.95rem 0 0.3rem;
+      font-size: clamp(1.05rem, 1.35vw, 1.12rem);
+      font-weight: 700;
+      color: #364d81;
     }
 
     label {
       display: block;
-      margin: 11px 0 7px;
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #0f2142;
+      margin: 0.82rem 0 0.35rem;
+      font-size: clamp(1.07rem, 1.26vw, 1.18rem);
+      font-weight: 800;
+      color: #2f457a;
     }
 
     input, select {
       width: 100%;
-      border: 1px solid #b8c5df;
-      border-radius: 10px;
-      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 0.92rem;
+      padding: 0.86rem 1rem;
+      font: inherit;
       font-size: 1rem;
-      background: var(--panel);
-      color: #14284f;
+      color: #2b4274;
+      background: rgba(244, 248, 255, 0.75);
+      transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease, transform 180ms ease;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #84acee;
+      box-shadow: 0 0 0 3px rgba(129, 172, 238, 0.22);
+      background: rgba(255, 255, 255, 0.95);
+      transform: translateY(-1px);
     }
 
     button {
-      margin-top: 16px;
+      position: relative;
+      overflow: hidden;
+      margin-top: 1.25rem;
       width: 100%;
       border: 0;
-      border-radius: 10px;
-      padding: 12px;
-      background: linear-gradient(120deg, #1c7f8e, #2b69c2);
+      border-radius: 0.96rem;
+      padding: 0.9rem;
+      font: inherit;
+      font-size: clamp(1.25rem, 1.45vw, 1.38rem);
+      font-weight: 800;
       color: #fff;
-      font-size: 1.12rem;
-      font-weight: 700;
       cursor: pointer;
+      background: linear-gradient(105deg, var(--button-a), var(--button-b));
+      box-shadow: 0 12px 22px rgba(44, 106, 201, 0.34);
+      transition: transform 170ms ease, box-shadow 170ms ease, filter 170ms ease;
+    }
+
+    button::after {
+      content: "";
+      position: absolute;
+      top: -25%;
+      left: -30%;
+      width: 25%;
+      height: 150%;
+      transform: rotate(18deg);
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0));
+      animation: sheen 4s ease-in-out infinite;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+      box-shadow: 0 15px 26px rgba(44, 106, 201, 0.4);
     }
 
     .create {
-      margin-top: 14px;
-      font-size: 1rem;
-      font-weight: 700;
-      color: #1f67a6;
-      text-decoration: none;
+      margin-top: 1rem;
       display: inline-block;
+      font-size: clamp(1.05rem, 1.28vw, 1.15rem);
+      font-weight: 700;
+      color: #2f6fdb;
+      text-decoration: none;
+    }
+
+    .create:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
     }
 
     .errors {
-      margin: 0 0 12px;
-      padding: 10px 12px;
-      border: 1px solid #f0c2c2;
-      background: #fff0f0;
-      border-radius: 10px;
-      color: #921d1d;
+      margin: 0.8rem 0 0.3rem;
+      padding: 0.65rem 0.78rem;
+      border-radius: 0.72rem;
+      border: 1px solid #f0c7c7;
+      background: #fff1f1;
+      color: #8f2525;
+      font-size: 0.94rem;
     }
+
     .switch-panel {
       overflow: hidden;
       max-height: 0;
       opacity: 0;
       transform: translateY(-4px);
-      transition: max-height 200ms ease, opacity 180ms ease, transform 180ms ease;
+      transition: max-height 220ms ease, opacity 180ms ease, transform 180ms ease;
     }
+
     .switch-panel.active {
       max-height: 240px;
       opacity: 1;
       transform: translateY(0);
     }
 
-    @media (max-width: 980px) {
+    .dna-wave {
+      position: absolute;
+      left: -6%;
+      right: -6%;
+      bottom: -16px;
+      height: 210px;
+      opacity: 0.74;
+      filter: drop-shadow(0 -8px 22px rgba(134, 175, 245, 0.43));
+      animation: wave-rise 10s ease-in-out infinite;
+    }
+
+    .dna-wave path {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.75);
+      stroke-width: 2.2;
+      stroke-dasharray: 2 8;
+    }
+
+    .dna-wave .line-b { stroke: rgba(167, 206, 255, 0.65); }
+
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes drift-bg { from { transform: translateY(0) scale(1); } to { transform: translateY(-1.3%) scale(1.03); } }
+    @keyframes rise-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes float-icon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+    @keyframes float-spark { from { transform: translateY(0); opacity: 0.72; } to { transform: translateY(-20px); opacity: 1; } }
+    @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.014); } }
+    @keyframes card-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+    @keyframes sheen { 0%, 72% { left: -30%; } 100% { left: 120%; } }
+    @keyframes wave-rise { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+
+    @media (max-width: 1030px) {
+      .app-sidebar {
+        width: var(--sidebar-collapsed);
+      }
+      .menu-title,
+      .brand-text,
+      .sidebar-label,
+      .profile-meta-mini {
+        opacity: 0;
+        visibility: hidden;
+        width: 0;
+      }
+      .sidebar-headline,
+      .sidebar-brand,
+      .sidebar-link,
+      .sidebar-profile {
+        justify-content: center;
+      }
+      .sidebar-chips { display: none; }
       .shell {
+        min-height: auto;
         grid-template-columns: 1fr;
-        gap: 20px;
-        padding-top: 22px;
+        align-items: start;
+        width: calc(100vw - var(--sidebar-collapsed) - 16px);
+        margin: 0 8px 0 calc(var(--sidebar-collapsed) + 8px);
+      }
+      .left-image { max-width: 100%; max-height: 30vh; }
+      .right { justify-content: stretch; }
+      .card { width: 100%; max-height: none; overflow: visible; }
+      .dna-wave { height: 140px; bottom: -22px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
       }
     }
+    .login-footer {
+      margin-top: 18px;
+      width: 100%;
+      text-align: center;
+      padding: 10px 14px 12px;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      color: #4f6076;
+      background: rgba(243, 247, 251, 0.92);
+      border: 1px solid rgba(145, 174, 204, 0.45);
+      border-radius: 12px;
+    }
+
+    @media (max-width: 720px) {
+      .login-footer {
+        font-size: 0.78rem;
+        padding: 9px 10px 10px;
+      }
+    }
+  
+    .global-page-footer {
+      width: min(92vw, 980px);
+      margin: 0 auto 0.5rem;
+      padding: 0.56rem 0.95rem;
+      border-radius: 0.82rem;
+      border: 1px solid rgba(170, 188, 214, 0.85);
+      background: rgba(233, 238, 246, 0.84);
+      color: #607089;
+      text-align: center;
+      line-height: 1.2;
+      font-size: clamp(0.74rem, 0.95vw, 0.84rem);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      box-shadow: 0 6px 14px rgba(83, 97, 127, 0.08);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+
+    .global-page-footer-line {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      white-space: nowrap;
+    }
+
+    .global-page-footer .sep {
+      opacity: 0.6;
+      font-weight: 700;
+    }
+
+    @media (max-width: 840px) {
+      .global-page-footer {
+        width: min(96vw, 980px);
+        font-size: 0.76rem;
+        padding: 0.52rem 0.72rem;
+      }
+
+      .global-page-footer-line {
+        white-space: normal;
+        line-height: 1.35;
+      }
+    }
+    .app-dialog-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(12, 23, 45, 0.45);
+      z-index: 2200;
+      padding: 16px;
+    }
+    .app-dialog-overlay.show {
+      display: flex;
+    }
+    .app-dialog {
+      width: min(560px, 100%);
+      border-radius: 16px;
+      border: 1px solid #cfddf2;
+      background: #ffffff;
+      box-shadow: 0 20px 36px rgba(13, 42, 78, 0.24);
+      padding: 20px;
+      text-align: left;
+    }
+    .app-dialog h3 {
+      margin: 0 0 8px;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      font-size: 1.45rem;
+      color: #10284d;
+    }
+    .app-dialog p {
+      margin: 0;
+      color: #38557d;
+      font-size: 1rem;
+    }
+    .app-dialog-actions {
+      margin-top: 18px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .app-dialog-ok {
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 16px;
+      min-width: 96px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #2f6fd6;
+      color: #fff;
+    }
   </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='page-animations.css') }}">
 </head>
-<body>
-  <div class="bg-shape-top"></div>
-  <div class="bg-shape-right"></div>
+<body data-nav-active="Doctor Login">
+  {% set sidebar_name = (form_data.doctor_id if form_data and form_data.doctor_id else "Doctor") %}
+
+  <aside class="app-sidebar" id="appSidebar" aria-label="Main navigation">
+    <div class="sidebar-top">
+      <div class="sidebar-headline">
+        <p class="menu-title">MENU</p>
+        <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Collapse sidebar" aria-expanded="true">&lsaquo;</button>
+      </div>
+      <div class="sidebar-brand">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/><path d="M7 7h10v10H7z"/></svg>
+        </span>
+        <span class="brand-text">
+          <span class="brand-title">AIHealth Hub</span>
+          <span class="brand-sub">Healthcare System</span>
+        </span>
+      </div>
+      <div class="sidebar-profile" id="sidebarProfile">
+        <span class="profile-avatar-mini">{{ sidebar_name[:2]|upper }}</span>
+        <div class="profile-meta-mini">
+          <div class="profile-name-mini">{{ sidebar_name }}</div>
+          <div class="profile-role-mini">Doctor Portal</div>
+        </div>
+      </div>
+      <div class="sidebar-chips" aria-hidden="true">
+        <span class="chip"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.6-7 10-7 10z"/></svg></span>
+        <span class="chip"><svg viewBox="0 0 24 24"><path d="M4 12h4l2-4 4 8 2-4h4"/></svg></span>
+        <span class="chip"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+      </div>
+    </div>
+    <ul class="sidebar-menu">
+      <li><a class="sidebar-link" data-nav="About" href="/about"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7h.01"/></svg></span><span class="sidebar-label">About</span></a></li>
+      {% if session.get('doctor_authenticated') %}
+      <li><a class="sidebar-link" data-nav="Dashboard" href="/doctor/dashboard"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8v8H3zM13 3h8v8h-8zM13 13h8v8h-8zM3 3h8v8H3z"/></svg></span><span class="sidebar-label">Dashboard</span></a></li>
+      <li><a class="sidebar-link" data-nav="Logout" href="{{ url_for('doctor_logout') }}"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><span class="sidebar-label">Logout</span></a></li>
+      {% elif session.get('patient_authenticated') %}
+      <li><a class="sidebar-link" data-nav="Book Appointment" href="/patient/book-appointment"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 9h18M5 5h14v16H5z"/></svg></span><span class="sidebar-label">Book Appointment</span></a></li>
+      <li><a class="sidebar-link" data-nav="Health Details" href="/patient/health-details"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 5.6-7 10-7 10Z"/></svg></span><span class="sidebar-label">Health Details</span></a></li>
+      <li><a class="sidebar-link" data-nav="AI Risk Prediction" href="/patient/book-appointment#overallRisk"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg></span><span class="sidebar-label">AI Risk Prediction</span></a></li>
+      <li><a class="sidebar-link" data-nav="Profile" href="/patient/booking-confirmation"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg></span><span class="sidebar-label">Profile</span></a></li>
+      <li><a class="sidebar-link" data-nav="Logout" href="/patient/logout"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><span class="sidebar-label">Logout</span></a></li>
+      {% endif %}
+    </ul>
+  </aside>
+
+  <div class="scene" aria-hidden="true">
+    <div class="sparkles"></div>
+
+    <svg class="medical-icon icon-plus-left" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" /></svg>
+    <svg class="medical-icon icon-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2" /><path d="M8 10V8a4 4 0 0 1 8 0v2" /></svg>
+    <svg class="medical-icon icon-kit" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2.5" /><path d="M9 7V5a3 3 0 0 1 6 0v2M12 10v6M9 13h6" /></svg>
+    <svg class="medical-icon icon-plus-right" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" /></svg>
+    <svg class="medical-icon icon-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4" /><path d="M4.5 20a7.5 7.5 0 0 1 15 0" /></svg>
+
+    <svg class="dna-wave" viewBox="0 0 1600 240" preserveAspectRatio="none">
+      <path d="M0 150C130 120 180 210 300 172C410 140 490 82 600 122C730 170 820 232 940 186C1080 132 1140 112 1280 146C1412 178 1490 210 1600 156" />
+      <path class="line-b" d="M0 170C120 132 220 114 340 152C460 190 520 228 640 174C770 118 860 116 980 158C1110 204 1230 216 1370 168C1480 130 1540 132 1600 150" />
+    </svg>
+  </div>
 
   <main class="shell">
     <section class="left">
-      <span class="hospital">Exafluence Hospital</span>
+      <p class="hospital"><span style="color:#2f6fdb;">AI</span><span style="color:#d94343;">Health</span> <span style="color:#111111;">Hub</span></p>
       <h1>Doctor Portal</h1>
-      <p class="sub">Secure access for clinical operations</p>
-      <p class="desc">
-        Access your appointments, review patient details, and continue your workflow through a focused doctor portal.
-      </p>
+      <p class="subtitle">Secure access for your clinical workflow</p>
+      <p class="desc">Manage appointments, review patient records, and continue daily hospital operations through a focused doctor portal.</p>
       <ul class="bullets">
         <li>View scheduled patient appointments</li>
-        <li>Access patient health information securely</li>
-        <li>Continue with doctor login</li>
+        <li>Access patient health details securely</li>
+        <li>Continue securely with doctor login</li>
       </ul>
       <div class="left-image">
         <img
-          src="https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=1200"
-          alt="Doctor with stethoscope"
-          onerror="this.onerror=null;this.src='https://images.pexels.com/photos/8460037/pexels-photo-8460037.jpeg?auto=compress&cs=tinysrgb&w=1200';" />
+          src="https://images.pexels.com/photos/7088530/pexels-photo-7088530.jpeg?auto=compress&cs=tinysrgb&w=1200"
+          onerror="this.onerror=null;this.src='https://images.pexels.com/photos/7089401/pexels-photo-7089401.jpeg?auto=compress&cs=tinysrgb&w=1200';"
+          alt="Doctor reviewing medical scan monitors"
+        />
       </div>
     </section>
 
     <section class="right">
       <div class="card">
         <h2>Doctor Login</h2>
-        <p style="margin:0 0 8px; color:#2b3a5f; font-size:0.96rem; font-weight:700;">Login using Doctor ID OR ID Number</p>
+        <p class="hint">Login using Doctor ID</p>
 
         {% if errors %}
           <div class="errors">
@@ -251,32 +745,12 @@
           </div>
         {% endif %}
 
-        <form method="post">
-          <label for="login_using">Login Using</label>
-          <select id="login_using" name="login_using">
-            <option value="doctor_id" {% if form_data.login_using == "doctor_id" %}selected{% endif %}>Doctor ID</option>
-            <option value="id_number" {% if form_data.login_using == "id_number" %}selected{% endif %}>ID Number</option>
-          </select>
-
-          <div id="doctorPanel" class="switch-panel">
-            <label for="doctor_id">Enter Doctor ID</label>
-            <input id="doctor_id" name="doctor_id" value="{{ form_data.doctor_id }}" placeholder="Enter doctor ID" />
-          </div>
-
-          <div id="idPanel" class="switch-panel">
-            <label for="id_type">ID Type</label>
-            <select id="id_type" name="id_type">
-              <option value="">Select ID Type</option>
-              <option value="aadhaar" {% if form_data.id_type == "aadhaar" %}selected{% endif %}>Aadhaar Card</option>
-              <option value="pan" {% if form_data.id_type == "pan" %}selected{% endif %}>PAN Card</option>
-            </select>
-
-            <label for="id_number">ID Number</label>
-            <input id="id_number" name="id_number" value="{{ form_data.id_number }}" placeholder="Enter ID number" />
-          </div>
+        <form method="post" autocomplete="off">
+          <label for="doctor_id">Enter Doctor ID</label>
+          <input id="doctor_id" name="doctor_id" value="{{ form_data.doctor_id }}" placeholder="Enter doctor ID" autocomplete="off" />
 
           <label for="password">Password</label>
-          <input id="password" name="password" type="password" required />
+          <input id="password" name="password" type="password" required autocomplete="new-password" />
 
           <button type="submit">Login</button>
         </form>
@@ -284,90 +758,151 @@
         <a class="create" href="/doctor/signup">Create new doctor account</a>
       </div>
     </section>
-  </main>
+</main>
+  <div class="app-dialog-overlay" id="appDialog" aria-hidden="true">
+    <div class="app-dialog" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle">
+      <h3 id="appDialogTitle">Notice</h3>
+      <p id="appDialogMessage">Message</p>
+      <div class="app-dialog-actions">
+        <button type="button" class="app-dialog-ok" id="appDialogOkBtn">OK</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    function syncLoginPanels() {
-      const mode = document.getElementById("login_using").value;
-      const doctorPanel = document.getElementById("doctorPanel");
-      const idPanel = document.getElementById("idPanel");
-      const doctorInput = document.getElementById("doctor_id");
-      const idType = document.getElementById("id_type");
-      const idNumber = document.getElementById("id_number");
 
-      const useDoctor = mode === "doctor_id";
-      doctorPanel.classList.toggle("active", useDoctor);
-      idPanel.classList.toggle("active", !useDoctor);
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const sidebarLinks = document.querySelectorAll(".sidebar-link");
 
-      doctorInput.required = useDoctor;
-      idType.required = !useDoctor;
-      idNumber.required = !useDoctor;
-      doctorInput.disabled = !useDoctor;
-      idType.disabled = useDoctor;
-      idNumber.disabled = useDoctor;
-    }
-
-    function syncIdRules() {
-      const typeEl = document.getElementById("id_type");
-      const idEl = document.getElementById("id_number");
-      const t = String(typeEl.value || "").toLowerCase();
-
-      if (t === "aadhaar") {
-        idEl.placeholder = "Enter 12-digit Aadhaar number";
-        idEl.maxLength = 12;
-        idEl.pattern = "[0-9]{12}";
-        idEl.title = "Aadhaar must be exactly 12 digits";
-      } else if (t === "pan") {
-        idEl.placeholder = "Enter PAN in format AAAAA9999A";
-        idEl.maxLength = 10;
-        idEl.pattern = "[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}";
-        idEl.title = "PAN must be in format AAAAA9999A";
-      } else {
-        idEl.placeholder = "Select ID Type first";
-        idEl.maxLength = 30;
-        idEl.removeAttribute("pattern");
-        idEl.title = "";
+    function applySidebarState(collapsed) {
+      document.body.classList.toggle("sidebar-collapsed", collapsed);
+      if (sidebarToggle) {
+        sidebarToggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+        sidebarToggle.innerHTML = collapsed ? "&rsaquo;" : "&lsaquo;";
       }
     }
 
-    document.getElementById("login_using").addEventListener("change", syncLoginPanels);
-    document.getElementById("id_type").addEventListener("change", syncIdRules);
-    syncLoginPanels();
-    syncIdRules();
+    function initSidebar() {
+      const saved = localStorage.getItem("aihealth_sidebar_collapsed");
+      if (saved === "1") {
+        applySidebarState(true);
+      } else if (saved === "0") {
+        applySidebarState(false);
+      } else {
+        applySidebarState(window.matchMedia("(max-width: 900px)").matches);
+      }
+
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener("click", () => {
+          const collapsed = !document.body.classList.contains("sidebar-collapsed");
+          applySidebarState(collapsed);
+          localStorage.setItem("aihealth_sidebar_collapsed", collapsed ? "1" : "0");
+        });
+      }
+
+      const activeName = document.body.dataset.navActive || "";
+      sidebarLinks.forEach((link) => {
+        if (link.dataset.nav === activeName) {
+          link.classList.add("active");
+        }
+      });
+    }
+
+    initSidebar();
+    const appDialog = document.getElementById("appDialog");
+    const appDialogTitle = document.getElementById("appDialogTitle");
+    const appDialogMessage = document.getElementById("appDialogMessage");
+    const appDialogOkBtn = document.getElementById("appDialogOkBtn");
+    let appDialogConfirm = null;
+
+    function closeAppDialog() {
+      if (!appDialog) return;
+      appDialog.classList.remove("show");
+      appDialog.setAttribute("aria-hidden", "true");
+    }
+
+    function openAppDialog(message, options = {}) {
+      if (!appDialog || !appDialogTitle || !appDialogMessage || !appDialogOkBtn) return;
+      appDialogTitle.textContent = options.title || "Notice";
+      appDialogMessage.textContent = message;
+      appDialogOkBtn.textContent = options.okLabel || "OK";
+      appDialogConfirm = typeof options.onConfirm === "function" ? options.onConfirm : null;
+      appDialog.classList.add("show");
+      appDialog.setAttribute("aria-hidden", "false");
+      appDialogOkBtn.focus();
+    }
+
+    if (appDialog && appDialogOkBtn) {
+      appDialogOkBtn.addEventListener("click", () => {
+        const fn = appDialogConfirm;
+        closeAppDialog();
+        if (fn) fn();
+      });
+      appDialog.addEventListener("click", (event) => {
+        if (event.target === appDialog) {
+          closeAppDialog();
+        }
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && appDialog.classList.contains("show")) {
+          closeAppDialog();
+        }
+      });
+    }
+
+    function withLoginSuccessFlag(rawUrl) {
+      try {
+        const next = new URL(rawUrl, window.location.origin);
+        next.searchParams.set("login_success", "1");
+        return next.toString();
+      } catch (_) {
+        return rawUrl;
+      }
+    }
+
+    const doctorLoginSuccess = {{ "true" if login_success else "false" }};
+    const doctorRedirectUrl = {{ (redirect_url or "")|tojson }};
+    if (doctorLoginSuccess && doctorRedirectUrl) {
+      window.location.href = withLoginSuccessFlag(doctorRedirectUrl);
+    }
 
     document.querySelector("form").addEventListener("submit", (event) => {
-      const mode = document.getElementById("login_using").value;
       const did = document.getElementById("doctor_id").value.trim();
-      const idType = document.getElementById("id_type").value.trim();
-      const idNumber = document.getElementById("id_number").value.trim();
       const password = document.getElementById("password").value.trim();
 
-      if (mode === "doctor_id" && !did) {
+      if (!did) {
         event.preventDefault();
-        alert("Enter Doctor ID.");
+        openAppDialog("Enter Doctor ID.", { title: "Validation" });
         return;
       }
 
-      if (mode === "id_number") {
-        if (!idType || !idNumber) {
-          event.preventDefault();
-          alert("Select ID Type and enter ID Number.");
-          return;
-        }
-      }
-
-      if (!did && !idNumber) {
-        event.preventDefault();
-        alert("Enter Doctor ID OR ID Number.");
-        return;
-      }
       if (!password) {
         event.preventDefault();
-        alert("Password is required.");
+        openAppDialog("Password is required.", { title: "Validation" });
+        return;
       }
+
     });
   </script>
+  <footer class="global-page-footer">
+    <div class="global-page-footer-line">
+      <span>&copy; 2026 AIHealth Hub</span>
+      <span class="sep">|</span>
+      <span>Powered by AI Healthcare System</span>
+      <span class="sep">|</span>
+      <span>Contact: support@aihealthhub.com</span>
+    </div>
+  </footer>
+  <script src="{{ url_for('static', filename='page-animations.js') }}"></script>
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 

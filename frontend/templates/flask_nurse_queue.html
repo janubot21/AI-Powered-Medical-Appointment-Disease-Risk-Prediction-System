@@ -57,13 +57,8 @@
     .menu a.active, .menu a:hover { background: #d8eef1; }
     .page {
       padding: 18px;
-      min-height: 0;
     }
     .section {
-      display: flex;
-      flex-direction: column;
-      min-height: calc(100vh - 36px);
-      max-height: calc(100vh - 36px);
       border: 1px solid var(--line);
       border-radius: 22px;
       background: var(--panel);
@@ -102,26 +97,10 @@
       line-height: 1.5;
     }
     .queue-grid {
-      flex: 1;
-      min-height: 0;
       padding: 16px 18px 18px;
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 14px;
-      overflow: auto;
-      overscroll-behavior: contain;
-      scrollbar-width: thin;
-      scrollbar-color: #9dc7cf transparent;
-    }
-    .queue-grid::-webkit-scrollbar {
-      width: 10px;
-    }
-    .queue-grid::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .queue-grid::-webkit-scrollbar-thumb {
-      border-radius: 999px;
-      background: linear-gradient(180deg, #b6dce1, #84b8c1);
     }
     .queue-card {
       border: 1px solid #d2e3e7;
@@ -129,13 +108,6 @@
       background: linear-gradient(180deg, #ffffff, #f5fafb);
       padding: 14px;
       box-shadow: 0 12px 24px rgba(23, 63, 75, 0.08);
-      cursor: pointer;
-      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-    }
-    .queue-card:hover {
-      transform: translateY(-2px);
-      border-color: #9bcdd3;
-      box-shadow: 0 16px 28px rgba(23, 63, 75, 0.12);
     }
     .queue-top {
       display: flex;
@@ -203,10 +175,6 @@
       .layout { grid-template-columns: 1fr; }
       .sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
       .queue-grid { grid-template-columns: 1fr; }
-      .section {
-        min-height: auto;
-        max-height: none;
-      }
     }
   </style>
   <link rel="stylesheet" href="{{ url_for('static', filename='page-animations.css') }}">
@@ -231,7 +199,7 @@
       <section class="section">
         <div class="section-head">
           <h1>Nurse Appointment Queue</h1>
-          <p>All booked patients appear here live. Older bookings stay first, and clicking any patient opens the separate editor and risk prediction page.</p>
+          <p>All booked patients appear here live. Older bookings stay first, and you can open any patient directly in the nurse editor.</p>
         </div>
         <div class="toolbar">
           <input id="queueSearch" class="search" type="search" placeholder="Search by patient ID, name, symptoms..." />
@@ -244,22 +212,10 @@
     </main>
   </div>
 
-  <script id="nurseQueuePageData" type="application/json">
-    {{ {"patientsApi": url_for("nurse_patient_records"), "loginUrl": url_for("nurse_login"), "dashboardUrl": url_for("nurse_dashboard")}|tojson }}
-  </script>
-
   <script>
-    const nurseQueuePageDataEl = document.getElementById("nurseQueuePageData");
-    let nurseQueuePageData = {};
-    try {
-      nurseQueuePageData = JSON.parse(nurseQueuePageDataEl ? nurseQueuePageDataEl.textContent : "{}");
-    } catch (_) {
-      nurseQueuePageData = {};
-    }
-
-    const patientsApi = String(nurseQueuePageData.patientsApi || "");
-    const loginUrl = String(nurseQueuePageData.loginUrl || "");
-    const dashboardUrl = String(nurseQueuePageData.dashboardUrl || "");
+    const patientsApi = {{ url_for("nurse_patient_records")|tojson }};
+    const loginUrl = {{ url_for("nurse_login")|tojson }};
+    const dashboardUrl = {{ url_for("nurse_dashboard")|tojson }};
     const queueSearch = document.getElementById("queueSearch");
     const queueGrid = document.getElementById("queueGrid");
     const queueCount = document.getElementById("queueCount");
@@ -311,7 +267,7 @@
       }
 
       queueGrid.innerHTML = filtered.map((item) => `
-        <article class="queue-card" data-editor-url="${dashboardUrl}?patient_id=${encodeURIComponent(safeText(item.patient_id))}">
+        <article class="queue-card">
           <div class="queue-top">
             <div>
               <strong>${escapeHtml(item.patient_name || "Unnamed Patient")}</strong>
@@ -327,24 +283,11 @@
             Last Nurse Update: ${escapeHtml(item.updated_at || "Not updated")}
           </div>
           <div class="queue-actions">
-            <a class="btn-primary" href="${dashboardUrl}?patient_id=${encodeURIComponent(safeText(item.patient_id))}">Open Editor</a>
-            <a class="btn-secondary" href="${dashboardUrl}?patient_id=${encodeURIComponent(safeText(item.patient_id))}#recordForm">Update & Predict</a>
+            <a class="btn-primary" href="${dashboardUrl}?patient_id=${encodeURIComponent(safeText(item.patient_id))}">Open In Editor</a>
+            <a class="btn-secondary" href="${dashboardUrl}?patient_id=${encodeURIComponent(safeText(item.patient_id))}#recordForm">Update Record</a>
           </div>
         </article>
       `).join("");
-
-      queueGrid.querySelectorAll("[data-editor-url]").forEach((card) => {
-        card.addEventListener("click", (event) => {
-          const target = event.target;
-          if (target instanceof Element && target.closest("a")) {
-            return;
-          }
-          const href = card.getAttribute("data-editor-url");
-          if (href) {
-            window.location.href = href;
-          }
-        });
-      });
     }
 
     async function loadQueue() {

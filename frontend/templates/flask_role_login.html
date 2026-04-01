@@ -3,186 +3,674 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login</title>
+  <title>AIHealth Hub | Portal Access - Login</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
     :root {
-      --bg: #f1f3f8;
-      --ink: #20283a;
-      --muted: #7a8398;
-      --line: #dde3ef;
-      --primary: #2e76b8;
-      --primary-dark: #215f99;
-      --white: #ffffff;
+      --blue-900: #031f36;
+      --blue-700: #0a5a8e;
+      --blue-500: #33c7ff;
+      --teal-600: #09a9b5;
+      --coral-500: #ff8f6b;
+      --white: #f7fbff;
+      --line: rgba(185, 242, 255, 0.62);
+      --panel: rgba(246, 253, 255, 0.84);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
       min-height: 100vh;
-      position: relative;
       display: grid;
       place-items: center;
+      padding: 0;
+      overflow: hidden;
+      font-family: "Poppins", "Inter", sans-serif;
+      color: #13345e;
       background:
-        radial-gradient(circle at 8% 10%, rgba(56, 127, 219, 0.16), transparent 35%),
-        radial-gradient(circle at 92% 82%, rgba(33, 170, 147, 0.16), transparent 38%),
-        url("/static/login-bg.svg?v=6") center center / cover no-repeat fixed;
-      background-color: #e8f0f7;
-      font-family: Arial, sans-serif;
-      color: var(--ink);
-      padding: 18px;
+        radial-gradient(circle at 14% 18%, rgba(86, 221, 255, 0.34), transparent 36%),
+        radial-gradient(circle at 86% 16%, rgba(255, 163, 122, 0.34), transparent 34%),
+        radial-gradient(circle at 80% 84%, rgba(110, 255, 225, 0.22), transparent 44%),
+        linear-gradient(140deg, #04182d 0%, #0a3f67 39%, #0f7a92 70%, #0d5f78 100%);
+      animation: pageFadeIn .7s ease;
     }
 
     body::before {
       content: "";
       position: fixed;
       inset: 0;
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.54), rgba(244, 250, 255, 0.46));
       pointer-events: none;
-      z-index: 0;
+      opacity: .26;
+      background-image:
+        linear-gradient(rgba(138, 196, 255, 0.09) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(138, 196, 255, 0.09) 1px, transparent 1px);
+      background-size: 56px 56px;
     }
 
-    .card {
-      width: min(920px, 100%);
-      min-height: 560px;
+    .stage {
       position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      border-radius: 4px;
+      width: min(1860px, 100vw);
+      height: min(960px, 100vh);
+      border-radius: 28px;
+      border: 1px solid rgba(153, 215, 255, 0.45);
       overflow: hidden;
-      background: var(--white);
-      box-shadow: 0 20px 40px rgba(28, 40, 68, 0.12);
-      border: 1px solid #e5e9f2;
+      box-shadow:
+        0 38px 86px rgba(0, 17, 58, 0.55),
+        0 0 0 1px rgba(147, 210, 255, 0.34),
+        0 0 54px rgba(106, 188, 255, 0.32);
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      isolation: isolate;
+      backdrop-filter: blur(6px);
+      animation: panelEnter .7s ease both;
+    }
+
+    .ambient {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 70% 12%, rgba(255, 175, 134, 0.42), transparent 28%),
+        radial-gradient(circle at 38% 56%, rgba(98, 228, 255, 0.3), transparent 36%);
+      animation: hueShift 12s ease-in-out infinite;
+    }
+
+    .ambient .ecg-wide {
+      position: absolute;
+      left: -10%;
+      right: -10%;
+      top: 52%;
+      height: 130px;
+      filter: drop-shadow(0 0 11px rgba(124, 224, 255, 0.85));
+      animation: driftX 6.8s linear infinite;
+      opacity: .92;
+    }
+
+    .ambient .ecg-wide svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .ambient .hud-grid {
+      position: absolute;
+      left: 58%;
+      right: 4%;
+      top: 8%;
+      bottom: 10%;
+      border: 1px solid rgba(144, 226, 255, 0.22);
+      border-radius: 18px;
+      box-shadow: inset 0 0 30px rgba(73, 204, 233, 0.18);
+    }
+
+    .ambient .hud-grid::before,
+    .ambient .hud-grid::after {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border: 1px solid rgba(150, 210, 255, 0.12);
+      border-radius: 14px;
+    }
+
+    .ambient .dna {
+      position: absolute;
+      right: 4%;
+      bottom: 8%;
+      width: 180px;
+      height: 74px;
+      opacity: .65;
+      filter: drop-shadow(0 0 8px rgba(255, 155, 92, 0.45));
+      animation: floatY 4s ease-in-out infinite;
+    }
+
+    .ambient .plus {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      clip-path: polygon(35% 0,65% 0,65% 35%,100% 35%,100% 65%,65% 65%,65% 100%,35% 100%,35% 65%,0 65%,0 35%,35% 35%);
+      background: linear-gradient(170deg, rgba(232, 252, 255, 0.84), rgba(120, 232, 225, 0.32));
+      box-shadow: 0 0 20px rgba(116, 236, 255, 0.5);
+      animation: pulse 3.8s ease-in-out infinite;
+    }
+
+    .ambient .p1 { left: 31%; top: 26%; }
+    .ambient .p2 { right: 8%; top: 30%; animation-delay: 1.2s; }
+    .ambient .p3 { right: 18%; bottom: 24%; animation-delay: 2s; }
+
+    .ambient .heart-wrap {
+      position: absolute;
+      right: 10%;
+      bottom: 11%;
+      width: 190px;
+      height: 160px;
+      display: grid;
+      place-items: center;
+      opacity: .93;
+    }
+
+    .ambient .ring {
+      position: absolute;
+      width: 130px;
+      height: 130px;
+      border: 2px solid rgba(255, 175, 114, 0.48);
+      border-radius: 50%;
+      animation: ringPulse 2.5s ease-out infinite;
+    }
+
+    .ambient .ring.r2 { animation-delay: 1.2s; }
+
+    .ambient .heart {
+      width: 108px;
+      height: 108px;
+      filter: drop-shadow(0 0 18px rgba(255, 151, 90, 0.8));
+      animation: heartBeat 2.05s ease-in-out infinite;
     }
 
     .left {
       position: relative;
-      background:
-        linear-gradient(180deg, rgba(40, 84, 131, 0.32), rgba(35, 130, 173, 0.58)),
-        url("https://images.pexels.com/photos/7089401/pexels-photo-7089401.jpeg?auto=compress&cs=tinysrgb&w=1200") center/cover no-repeat;
+      z-index: 2;
       display: flex;
       align-items: flex-end;
-      padding: 26px;
-      color: #eaf6ff;
+      padding: 20px 20px 32px;
+      background:
+        linear-gradient(180deg, rgba(8, 84, 110, 0.18), rgba(5, 58, 89, 0.62)),
+        url("https://images.pexels.com/photos/7089401/pexels-photo-7089401.jpeg?auto=compress&cs=tinysrgb&w=1800") center 42% / 88% auto no-repeat;
+      border-right: 1px solid rgba(165, 218, 255, 0.5);
+      overflow: hidden;
+      animation: leftSlide .8s ease .08s both;
     }
 
-    .brand h2 {
+    .left::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 24%, rgba(162, 239, 255, 0.26), transparent 34%),
+        linear-gradient(180deg, rgba(116, 228, 236, 0.12), rgba(6, 43, 76, 0.34));
+      pointer-events: none;
+    }
+
+    .left::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(140deg, rgba(240, 250, 255, 0.18), rgba(122, 188, 240, 0.06));
+      backdrop-filter: blur(1px);
+      pointer-events: none;
+    }
+
+    .left .overlay-ecg {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 58%;
+      height: 72px;
+      filter: drop-shadow(0 0 8px rgba(169, 232, 255, 0.84));
+      opacity: .88;
+      animation: driftX 5.4s linear infinite;
+    }
+
+    .left .overlay-ecg svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .tagline {
+      position: relative;
+      z-index: 3;
       margin: 0;
-      font-size: 1.05rem;
-      letter-spacing: 0.04em;
-    }
-
-    .brand p {
-      margin: 8px 0 0;
-      font-size: 0.86rem;
-      max-width: 260px;
-      line-height: 1.4;
-      opacity: 0.95;
+      display: none;
     }
 
     .right {
-      padding: 58px 56px;
-      display: flex;
-      align-items: center;
+      position: relative;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        linear-gradient(155deg, rgba(230, 252, 255, 0.12), rgba(255, 176, 141, 0.1) 46%, rgba(94, 202, 218, 0.14));
+      animation: rightSlide .8s ease .12s both;
     }
 
     .panel {
-      width: 100%;
-      max-width: 330px;
-      margin: 0 auto;
+      width: min(565px, 100%);
+      border-radius: 32px;
+      border: 1px solid rgba(172, 224, 255, 0.7);
+      padding: clamp(22px, 2.8vw, 34px);
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      box-shadow:
+        0 26px 70px rgba(6, 43, 88, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.86),
+        0 0 44px rgba(96, 223, 255, 0.35);
+      position: relative;
+      overflow: hidden;
+      transform-style: preserve-3d;
+      animation: cardFloat 6.4s ease-in-out 1.1s infinite;
     }
 
-    .badge {
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.07em;
-      color: #4f5a72;
-      text-transform: uppercase;
-      margin-bottom: 8px;
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: 32px;
+      padding: 1px;
+      background: linear-gradient(140deg, rgba(117, 231, 255, 0.8), rgba(255, 181, 148, 0.55), rgba(98, 246, 218, 0.65));
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: .85;
+    }
+    .panel::after {
+      content: "";
+      position: absolute;
+      width: 156px;
+      height: 156px;
+      right: -48px;
+      top: -58px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(96, 209, 255, 0.34), rgba(96, 209, 255, 0));
+      pointer-events: none;
+      animation: orbSpin 9s linear infinite;
     }
 
-    h1 {
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(1px);
+    }
+    .orb.one {
+      width: 110px;
+      height: 110px;
+      left: -32px;
+      bottom: -28px;
+      background: radial-gradient(circle, rgba(255, 177, 133, 0.36), rgba(255, 177, 133, 0));
+      animation: floatY 4.6s ease-in-out infinite;
+    }
+    .orb.two {
+      width: 84px;
+      height: 84px;
+      right: 38px;
+      bottom: 34px;
+      background: radial-gradient(circle, rgba(78, 199, 255, 0.24), rgba(78, 199, 255, 0));
+      animation: pulse 3.4s ease-in-out infinite;
+      animation-delay: .7s;
+    }
+
+    .brand {
       margin: 0;
-      font-size: 1.6rem;
-      letter-spacing: 0.01em;
+      font-size: clamp(2rem, 3.1vw, 3rem);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      text-shadow: 0 8px 24px rgba(25, 99, 150, 0.18);
     }
 
-    .hint {
-      margin: 8px 0 20px;
-      color: var(--muted);
-      font-size: 0.9rem;
+    .brand .exa { color: #1f5fbd; }
+    .brand .fluence { color: #d72635; }
+
+    .subtitle {
+      margin: 10px 0 20px;
+      color: #45617f;
+      font-size: clamp(0.94rem, 1.1vw, 1.25rem);
+      font-weight: 600;
+      letter-spacing: .02em;
+      border-top: 1px solid rgba(112, 153, 195, 0.36);
+      padding-top: 12px;
     }
 
     .btn {
-      display: block;
+      position: relative;
+      overflow: hidden;
       width: 100%;
-      text-align: center;
-      text-decoration: none;
-      padding: 11px 14px;
+      display: block;
       border-radius: 999px;
-      font-size: 0.93rem;
-      font-weight: 700;
-      transition: 160ms ease;
-    }
-
-    .btn-primary {
-      background: linear-gradient(180deg, var(--primary), var(--primary-dark));
-      color: #fff;
-      border: 1px solid #2b699f;
-      margin-bottom: 10px;
-    }
-
-    .btn-primary:hover { filter: brightness(1.04); }
-
-    .btn-outline {
-      background: #fff;
-      color: #2f3a4f;
-      border: 1px solid var(--line);
-      margin-bottom: 16px;
-    }
-
-    .btn-outline:hover { background: #f8fbff; }
-
-    .links {
-      display: grid;
-      gap: 8px;
-      font-size: 0.86rem;
-      color: var(--muted);
       text-align: center;
+      text-decoration: none;
+      font-size: 0.86rem;
+      font-weight: 700;
+      padding: 10px 14px;
+      transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+    }
+    .btn::before {
+      content: "";
+      position: absolute;
+      top: -20%;
+      left: -28%;
+      width: 22%;
+      height: 140%;
+      transform: rotate(16deg);
+      background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.35), rgba(255,255,255,0));
+      animation: btnSheen 4.6s ease-in-out infinite;
     }
 
-    .links a {
-      color: #2a6ba8;
-      text-decoration: none;
+    .btn + .btn { margin-top: 12px; }
+
+    .btn.primary {
+      color: #fff;
+      border: 1px solid rgba(22, 156, 205, 0.98);
+      background: linear-gradient(135deg, #20bfd8 0%, #0a78a8 52%, #0a4d86 100%);
+      box-shadow:
+        0 14px 32px rgba(9, 89, 140, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.26),
+        0 0 24px rgba(56, 207, 255, 0.42);
+    }
+
+    .btn.secondary {
+      color: #294967;
+      border: 1px solid rgba(136, 207, 232, 0.98);
+      background: linear-gradient(120deg, rgba(253, 255, 255, 0.9), rgba(243, 252, 255, 0.88));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+    }
+
+    .btn:hover {
+      transform: translateY(-3px) scale(1.01);
+      filter: brightness(1.06);
+    }
+
+    .btn:focus-visible {
+      outline: 3px solid rgba(86, 165, 255, 0.42);
+      outline-offset: 2px;
+    }
+
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(198, 244, 255, 0.96);
+      box-shadow: 0 0 14px rgba(160, 237, 255, 0.95);
+      animation: driftParticle linear infinite;
+    }
+
+    .right::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(120deg, rgba(255,255,255,0) 18%, rgba(170,242,255,.18) 46%, rgba(255,255,255,0) 72%);
+      transform: translateX(-120%);
+      animation: shimmerPass 6.8s ease-in-out infinite;
+    }
+
+    @keyframes pageFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes panelEnter {
+      from { opacity: 0; transform: translateY(12px) scale(.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes leftSlide {
+      from { opacity: 0; transform: translateX(-18px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes rightSlide {
+      from { opacity: 0; transform: translateX(18px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes textLift {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes cardFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    @keyframes orbSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes btnSheen {
+      0%, 74% { left: -28%; }
+      100% { left: 126%; }
+    }
+
+    @keyframes driftX {
+      0% { transform: translateX(-1.1%); }
+      50% { transform: translateX(1.1%); }
+      100% { transform: translateX(-1.1%); }
+    }
+
+    @keyframes floatY {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    @keyframes pulse {
+      0%,100% { transform: scale(.95); opacity: .55; }
+      50% { transform: scale(1.07); opacity: .9; }
+    }
+
+    @keyframes heartBeat {
+      0%,100% { transform: scale(.95); }
+      18% { transform: scale(1.03); }
+      32% { transform: scale(.98); }
+      46% { transform: scale(1.08); }
+      62% { transform: scale(1); }
+    }
+
+    @keyframes ringPulse {
+      0% { transform: scale(.72); opacity: .58; }
+      85% { transform: scale(1.36); opacity: 0; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes driftParticle {
+      0% { transform: translateY(0) translateX(0); opacity: 0; }
+      15% { opacity: .95; }
+      100% { transform: translateY(-180px) translateX(40px); opacity: 0; }
+    }
+
+    @keyframes shimmerPass {
+      0%, 68% { transform: translateX(-120%); opacity: 0; }
+      76% { opacity: .7; }
+      100% { transform: translateX(120%); opacity: 0; }
+    }
+
+    @keyframes hueShift {
+      0%, 100% { filter: saturate(1) hue-rotate(0deg); }
+      50% { filter: saturate(1.08) hue-rotate(-8deg); }
+    }
+
+    @media (max-width: 1020px) {
+      body { padding: 8px; }
+      .stage {
+        min-height: 100vh;
+        aspect-ratio: auto;
+        grid-template-columns: 1fr;
+        border-radius: 14px;
+      }
+
+      .left { min-height: 280px; }
+      .right { padding: 16px 12px 24px; }
+      .ambient .dna,
+      .ambient .heart-wrap,
+      .ambient .p3,
+      .ambient .hud-grid { display: none; }
+      .left { padding-bottom: 30px; }
+      .panel {
+        animation: none;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  
+    .global-page-footer {
+      position: absolute;
+      left: 50%;
+      bottom: 10px;
+      transform: translateX(-50%);
+      z-index: 5;
+      width: min(92%, 1260px);
+      margin: 0;
+      padding: 0.54rem 0.92rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(170, 188, 214, 0.85);
+      background: rgba(224, 232, 243, 0.86);
+      color: #607089;
+      text-align: center;
+      line-height: 1.2;
+      font-size: clamp(0.76rem, 0.95vw, 0.92rem);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      box-shadow: 0 6px 14px rgba(83, 97, 127, 0.08);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+
+    .global-page-footer-line {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+    }
+
+    .global-page-footer .sep {
+      opacity: 0.6;
       font-weight: 700;
     }
 
-    @media (max-width: 820px) {
-      .card { grid-template-columns: 1fr; }
-      .left { min-height: 260px; }
-      .right { padding: 30px 24px; }
+    @media (max-width: 840px) {
+      .global-page-footer {
+        position: static;
+        transform: none;
+        width: min(96vw, 980px);
+        margin: 0.25rem auto 0.2rem;
+        font-size: 0.76rem;
+        padding: 0.52rem 0.72rem;
+      }
+
+      .global-page-footer-line {
+        white-space: normal;
+        line-height: 1.35;
+      }
     }
   </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='page-animations.css') }}">
 </head>
 <body>
-  <main class="card">
-    <section class="left">
-      <div class="brand">
-        <h2>EXAFLUENCE HOSPITAL</h2>
-        <p>Empowering Healthcare, One Click at a Time: Your Health, Your Records, Your Control.</p>
+  <main class="stage">
+    <div class="ambient" aria-hidden="true">
+      <div class="ecg-wide">
+        <svg viewBox="0 0 1600 220" preserveAspectRatio="none">
+          <path d="M0 126 L130 126 L163 126 L188 80 L214 172 L242 101 L286 126 L441 126 L468 126 L493 84 L520 168 L545 102 L590 126 L746 126 L772 126 L798 81 L824 171 L850 104 L894 126 L1050 126 L1076 126 L1100 82 L1128 172 L1154 102 L1198 126 L1351 126 L1379 126 L1403 84 L1428 170 L1455 103 L1498 126 L1600 126" fill="none" stroke="rgba(158, 236, 255, .95)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </div>
+      <span class="plus p1"></span>
+      <span class="plus p2"></span>
+      <span class="plus p3"></span>
+      <span class="hud-grid"></span>
+      <div class="dna">
+        <svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <path d="M5 90 C65 10,125 10,185 90 S305 170,315 30" fill="none" stroke="rgba(255,163,101,.82)" stroke-width="5"/>
+          <path d="M5 30 C65 110,125 110,185 30 S305 -50,315 90" fill="none" stroke="rgba(255,132,73,.72)" stroke-width="5"/>
+          <path d="M44 52 L80 68 M87 40 L123 54 M130 65 L166 81 M173 44 L208 58 M216 69 L252 84 M259 48 L295 61" stroke="rgba(255,183,138,.8)" stroke-width="3"/>
+        </svg>
+      </div>
+      <div class="heart-wrap">
+        <span class="ring"></span>
+        <span class="ring r2"></span>
+        <svg class="heart" viewBox="0 0 128 128">
+          <defs>
+            <linearGradient id="heartGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#ffd18f"/>
+              <stop offset="52%" stop-color="#ff8b4a"/>
+              <stop offset="100%" stop-color="#f25a30"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#heartGrad)" d="M64 114c-3 0-6-1-8-4C33 88 12 68 12 44c0-15 12-27 27-27c10 0 18 5 25 14c7-9 15-14 25-14c15 0 27 12 27 27c0 24-21 44-44 66c-2 3-5 4-8 4z"/>
+          <path d="M21 73 L34 73 L40 56 L48 89 L58 66 L73 66 L83 43 L95 81 L104 62 L118 62" fill="none" stroke="rgba(255, 250, 240, .95)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <section class="left">
+      <div class="overlay-ecg" aria-hidden="true">
+        <svg viewBox="0 0 1000 120" preserveAspectRatio="none">
+          <path d="M0 66 L78 66 L98 30 L118 94 L137 50 L180 66 L336 66 L356 66 L378 28 L398 96 L418 49 L460 66 L620 66 L640 66 L662 30 L682 95 L703 51 L746 66 L1000 66" fill="none" stroke="rgba(196,241,255,.95)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <p class="tagline">Empowering Healthcare, One Click at a Time</p>
     </section>
 
     <section class="right">
-      <div class="panel">
-        <div class="badge">Portal Access</div>
-        <h1>Login</h1>
-        <a class="btn btn-primary" href="/patient/login">Patient</a>
-        <a class="btn btn-outline" href="/doctor/login">Doctor</a>
-      </div>
+      <article class="panel">
+        <span class="orb one" aria-hidden="true"></span>
+        <span class="orb two" aria-hidden="true"></span>
+        <h1 class="brand"><span style="color:#2f6fdb;">AI</span><span style="color:#d94343;">Health</span> <span style="color:#111111;">Hub</span></h1>
+        <p class="subtitle">Portal Access - Login</p>
+        <a class="btn primary" href="/patient/login">Patient Login</a>
+        <a class="btn secondary" href="/doctor/login">Doctor Login</a>
+        <a class="btn secondary" href="/nurse/login">Nurse Login</a>
+      </article>
     </section>
-  </main>
+
+    <footer class="global-page-footer">
+      <div class="global-page-footer-line">
+        <span>&copy; 2026 AIHealth Hub</span>
+        <span class="sep">|</span>
+        <span>Powered by AI Healthcare System</span>
+        <span class="sep">|</span>
+        <span>Contact: support@aihealthhub.com</span>
+      </div>
+    </footer>
+
+    <div class="particles" id="particles" aria-hidden="true"></div>
+</main>
+
+  <script>
+    (function createParticles() {
+      const host = document.getElementById("particles");
+      if (!host) return;
+      const count = 44;
+      for (let i = 0; i < count; i += 1) {
+        const p = document.createElement("span");
+        p.className = "particle";
+        const size = (Math.random() * 3.4 + 1.6).toFixed(2);
+        const left = (Math.random() * 100).toFixed(2);
+        const bottom = (Math.random() * 16).toFixed(2);
+        const duration = (Math.random() * 6 + 6).toFixed(2);
+        const delay = (Math.random() * -12).toFixed(2);
+        p.style.width = size + "px";
+        p.style.height = size + "px";
+        p.style.left = left + "%";
+        p.style.bottom = bottom + "%";
+        p.style.animationDuration = duration + "s";
+        p.style.animationDelay = delay + "s";
+        host.appendChild(p);
+      }
+    })();
+  </script>
+  <script src="{{ url_for('static', filename='page-animations.js') }}"></script>
 </body>
 </html>
+
+
+
+
+
 

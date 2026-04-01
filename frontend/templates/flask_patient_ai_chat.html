@@ -708,19 +708,7 @@
     </div>
   </main>
 
-  <script id="patientAiChatPageData" type="application/json">
-    {{ {"patientId": patient_id, "initialSnapshot": initial_snapshot}|tojson }}
-  </script>
-
   <script>
-    const patientAiChatPageDataEl = document.getElementById("patientAiChatPageData");
-    let patientAiChatPageData = {};
-    try {
-      patientAiChatPageData = JSON.parse(patientAiChatPageDataEl ? patientAiChatPageDataEl.textContent : "{}");
-    } catch (_) {
-      patientAiChatPageData = {};
-    }
-
     const chatStream = document.getElementById("chatStream");
     const chatForm = document.getElementById("chatForm");
     const chatInput = document.getElementById("chatInput");
@@ -738,9 +726,9 @@
     const snapshotRecommendedSlot = document.getElementById("snapshotRecommendedSlot");
     const snapshotSymptoms = document.getElementById("snapshotSymptoms");
     const snapshotSleepHours = document.getElementById("snapshotSleepHours");
-    const patientId = String(patientAiChatPageData.patientId || "");
+    const patientId = {{ patient_id|tojson }};
     const chatHistoryStorageKey = `patient_ai_chat_history_${patientId}`;
-    let currentSnapshot = patientAiChatPageData.initialSnapshot || {};
+    let currentSnapshot = {{ initial_snapshot|tojson }};
 
     function appendBubble(text, role) {
       if (!chatStream) return;

@@ -27,7 +27,7 @@
     }
     .layout {
       display: grid;
-      grid-template-columns: 260px minmax(0, 1fr);
+      grid-template-columns: 260px minmax(280px, 0.95fr) minmax(420px, 1.25fr);
       min-height: 100vh;
     }
     .sidebar {
@@ -57,7 +57,6 @@
     .menu a.active, .menu a:hover { background: #d8eef1; }
     .patients, .editor {
       padding: 18px;
-      min-height: 0;
     }
     .section {
       height: 100%;
@@ -68,38 +67,14 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      min-height: 0;
-    }
-    .patients .section {
-      max-height: calc(100vh - 36px);
     }
     .section-head {
       padding: 18px 18px 14px;
       border-bottom: 1px solid #deebed;
       background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(244,250,251,0.92));
     }
-    .section-head-row {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
     .section-head h1, .section-head h2 { margin: 0; }
     .section-head p { margin: 8px 0 0; color: var(--muted); line-height: 1.6; }
-    .section-link {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 14px;
-      border-radius: 12px;
-      border: 1px solid #cae3e7;
-      background: #f3fbfc;
-      color: #1f6068;
-      text-decoration: none;
-      font-weight: 800;
-      white-space: nowrap;
-    }
     .search {
       margin: 14px 18px 0;
       padding: 12px 14px;
@@ -109,25 +84,10 @@
       background: #fff;
     }
     .patient-list {
-      flex: 1;
-      min-height: 0;
       padding: 16px 18px 18px;
       display: grid;
       gap: 10px;
       overflow: auto;
-      overscroll-behavior: contain;
-      scrollbar-width: thin;
-      scrollbar-color: #9dc7cf transparent;
-    }
-    .patient-list::-webkit-scrollbar {
-      width: 10px;
-    }
-    .patient-list::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .patient-list::-webkit-scrollbar-thumb {
-      border-radius: 999px;
-      background: linear-gradient(180deg, #b6dce1, #84b8c1);
     }
     .patient-card {
       padding: 12px 14px;
@@ -169,18 +129,6 @@
     .editor-body {
       padding: 18px;
       overflow: auto;
-    }
-    .editor-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
-      gap: 18px;
-      align-items: start;
-    }
-    .editor-form-panel {
-      min-width: 0;
-    }
-    .risk-panel {
-      min-width: 0;
     }
     .grid {
       display: grid;
@@ -254,164 +202,6 @@
       color: var(--muted);
       line-height: 1.6;
     }
-    .risk-dashboard {
-      margin-top: 0;
-      padding: 18px;
-      border-radius: 22px;
-      border: 1px solid #d6e5ea;
-      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,248,250,0.95));
-      box-shadow: 0 20px 34px rgba(23, 63, 75, 0.1);
-      position: sticky;
-      top: 0;
-    }
-    .risk-head {
-      margin: 0;
-      font-size: 1.6rem;
-      color: #243b67;
-    }
-    .risk-sub {
-      margin: 10px 0 0;
-      color: #4f6d97;
-      line-height: 1.6;
-    }
-    .risk-overall {
-      margin-top: 18px;
-      padding: 16px 18px;
-      border-radius: 18px;
-      border: 1px solid #6fbf88;
-      background: #eefcf4;
-      color: #15803d;
-      font-size: 1.08rem;
-      font-weight: 800;
-    }
-    .triage-box {
-      margin-top: 16px;
-      padding: 16px;
-      border-radius: 18px;
-      border: 1px solid #d6e4ef;
-      background: linear-gradient(180deg, #ffffff, #f5f9fc);
-      display: flex;
-      justify-content: space-between;
-      gap: 14px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .triage-title {
-      font-size: 0.98rem;
-      font-weight: 800;
-      color: #2b406b;
-    }
-    .triage-meta {
-      margin-top: 6px;
-      color: #566a86;
-      font-weight: 700;
-    }
-    .triage-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 158px;
-      padding: 10px 14px;
-      border-radius: 999px;
-      color: #fff;
-      font-size: 0.84rem;
-      font-weight: 800;
-      letter-spacing: 0.03em;
-      background: #1f8a5b;
-    }
-    .triage-badge.orange { background: #d97706; }
-    .triage-badge.red { background: #c73636; }
-    .triage-badge.green { background: #1f8a5b; }
-    .report-summary-grid,
-    .risk-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-      margin-top: 16px;
-    }
-    .risk-grid {
-      grid-template-columns: 1fr;
-    }
-    .risk-item,
-    .report-item {
-      padding: 16px;
-      border-radius: 18px;
-      border: 1px solid #d6e4ef;
-      background: linear-gradient(180deg, #ffffff, #f7fbfc);
-    }
-    .risk-topline {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: center;
-      margin-top: 8px;
-      font-weight: 800;
-      color: #243b67;
-    }
-    .risk-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 74px;
-      padding: 7px 12px;
-      border-radius: 999px;
-      color: #fff;
-      font-size: 0.8rem;
-      font-weight: 800;
-      background: #1f8a5b;
-    }
-    .risk-value {
-      margin-top: 8px;
-      font-size: 1.15rem;
-      font-weight: 800;
-      color: #1a2538;
-    }
-    .risk-bar {
-      margin-top: 12px;
-      height: 12px;
-      border-radius: 999px;
-      overflow: hidden;
-      background: linear-gradient(90deg, rgba(31, 138, 91, 0.08), rgba(23, 63, 75, 0.12));
-    }
-    .risk-fill {
-      height: 100%;
-      width: 0;
-      border-radius: inherit;
-      background: #1f8a5b;
-      transition: width 240ms ease, background 180ms ease;
-    }
-    .risk-icon {
-      width: 38px;
-      height: 38px;
-    }
-    .risk-icon.cardio { color: #ef4444; }
-    .risk-icon.diabetes { color: #3b82f6; }
-    .risk-icon.hypertension { color: #f97316; }
-    .recommend-box,
-    .notice-box,
-    .sleep-notice-box {
-      margin-top: 16px;
-      padding: 16px;
-      border-radius: 18px;
-      border: 1px solid #d6e4ef;
-      background: linear-gradient(180deg, #ffffff, #f5fafc);
-      line-height: 1.7;
-      color: var(--muted);
-    }
-    .recommend-box h3 {
-      margin: 0 0 10px;
-      color: #243b67;
-      font-size: 1rem;
-    }
-    .recommend-box ul {
-      margin: 0;
-      padding-left: 18px;
-    }
-    .sleep-notice-box { display: none; }
-    .sleep-notice-box.show { display: block; }
-    .sleep-notice-box.good { border-color: #b9e2c6; background: #eefcf4; color: #1f6b43; }
-    .sleep-notice-box.warn { border-color: #f0d39a; background: #fff8eb; color: #9a5f00; }
-    .sleep-notice-box.risk { border-color: #efb0b0; background: #fff3f3; color: #a12f2f; }
     .report-card {
       margin-top: 16px;
       padding: 16px;
@@ -491,17 +281,15 @@
     }
     @media (max-width: 1180px) {
       .layout { grid-template-columns: 240px 1fr; }
+      .editor { grid-column: 1 / -1; }
+      .patients { grid-column: 2; }
     }
     @media (max-width: 840px) {
       .layout { grid-template-columns: 1fr; }
-      .editor-layout { grid-template-columns: 1fr; }
       .grid { grid-template-columns: 1fr; }
-      .report-grid,
-      .report-summary-grid,
-      .risk-grid { grid-template-columns: 1fr; }
+      .report-grid { grid-template-columns: 1fr; }
       .sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
       .patients, .editor { padding: 14px; }
-      .risk-dashboard { position: static; }
     }
   </style>
   <link rel="stylesheet" href="{{ url_for('static', filename='page-animations.css') }}">
@@ -522,242 +310,176 @@
       </ul>
     </aside>
 
+    <section class="patients">
+      <div class="section">
+        <div class="section-head">
+          <h2>Patient Queue</h2>
+          <p>Live appointment bookings appear here automatically, and older bookings stay first in the queue.</p>
+        </div>
+        <input id="patientSearch" class="search" type="search" placeholder="Search by patient ID, name, symptoms..." />
+        <div id="patientList" class="patient-list">
+          <div class="patient-card">Loading patients...</div>
+        </div>
+      </div>
+    </section>
+
     <section class="editor">
       <div class="section">
         <div class="section-head">
-          <div class="section-head-row">
-            <div>
-              <h1>Nurse Record Editor</h1>
-              <p>Open a patient from the appointment queue, then update vitals and generate the risk prediction on this separate page.</p>
-            </div>
-            <a class="section-link" href="{{ url_for('nurse_appointment_queue') }}">Back to Patient Queue</a>
-          </div>
+          <h1>Nurse Record Editor</h1>
+          <p>Update vitals, calculate the patient risk report, and save the verified nurse record before doctor review.</p>
         </div>
         <div class="editor-body">
           <form id="recordForm">
-            <div class="editor-layout">
-              <div class="editor-form-panel">
-                <div class="grid">
-                  <div class="field">
-                    <label for="patient_id">Patient ID</label>
-                    <input id="patient_id" name="patient_id" readonly />
-                  </div>
-                  <div class="field">
-                    <label for="patient_name">Patient Name</label>
-                    <input id="patient_name" name="patient_name" readonly />
-                  </div>
-                  <div class="field">
-                    <label for="age">Age</label>
-                    <input id="age" name="age" />
-                  </div>
-                  <div class="field">
-                    <label for="gender">Gender</label>
-                    <select id="gender" name="gender">
-                      <option value="">Select</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-                  <div class="field full">
-                    <label for="symptoms">Symptoms</label>
-                    <textarea id="symptoms" name="symptoms" placeholder="Example: fever, cough, dizziness"></textarea>
-                  </div>
-                  <div class="field">
-                    <label for="symptom_count">Symptom Count</label>
-                    <input id="symptom_count" name="symptom_count" />
-                  </div>
-                  <div class="field">
-                    <label for="glucose">Glucose</label>
-                    <input id="glucose" name="glucose" />
-                  </div>
-                  <div class="field">
-                    <label for="blood_pressure_systolic">BP Systolic</label>
-                    <input id="blood_pressure_systolic" name="blood_pressure_systolic" />
-                  </div>
-                  <div class="field">
-                    <label for="blood_pressure_diastolic">BP Diastolic</label>
-                    <input id="blood_pressure_diastolic" name="blood_pressure_diastolic" />
-                  </div>
-                  <div class="field">
-                    <label for="height_cm">Height (cm)</label>
-                    <input id="height_cm" name="height_cm" />
-                  </div>
-                  <div class="field">
-                    <label for="weight_kg">Weight (kg)</label>
-                    <input id="weight_kg" name="weight_kg" />
-                  </div>
-                  <div class="field">
-                    <label for="average_sleep_hours">Average Sleep Hours</label>
-                    <input id="average_sleep_hours" name="average_sleep_hours" />
-                  </div>
-                  <div class="field">
-                    <label for="smoking_habit">Smoking Habit</label>
-                    <select id="smoking_habit" name="smoking_habit">
-                      <option value="">Select</option>
-                      <option value="yes">Yes</option>
-                      <option value="no">No</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label for="alcohol_habit">Alcohol Habit</label>
-                    <select id="alcohol_habit" name="alcohol_habit">
-                      <option value="">Select</option>
-                      <option value="yes">Yes</option>
-                      <option value="no">No</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label for="family_history">Family History</label>
-                    <select id="family_history" name="family_history">
-                      <option value="">Select</option>
-                      <option value="yes">Yes</option>
-                      <option value="no">No</option>
-                    </select>
-                  </div>
-                  <div class="field full">
-                    <label for="medical_history">Medical History</label>
-                    <textarea id="medical_history" name="medical_history"></textarea>
-                  </div>
-                  <div class="field full">
-                    <label for="nurse_notes">Nurse Notes</label>
-                    <textarea id="nurse_notes" name="nurse_notes" placeholder="Add verified vitals note, triage note, or patient observation"></textarea>
-                  </div>
-                </div>
-                <div class="actions">
-                  <button class="secondary" type="button" id="predictBtn">Calculate Risk Report</button>
-                  <button class="primary" type="submit">Save Nurse Record</button>
-                  <button class="secondary" type="button" id="clearBtn">Clear</button>
-                </div>
-                <div id="formStatus" class="status"></div>
-                <div class="helper" id="recordMeta">Select a patient from the list to begin editing.</div>
+            <div class="grid">
+              <div class="field">
+                <label for="patient_id">Patient ID</label>
+                <input id="patient_id" name="patient_id" readonly />
               </div>
-              <div class="risk-panel">
-                <section class="risk-dashboard">
-                  <h2 class="risk-head">Patient Risk Assessment Results</h2>
-                  <p class="risk-sub">Based on the nurse-entered clinical details.</p>
-                  <div class="risk-overall" id="overallRisk">Overall Risk Level: Waiting</div>
-                  <div class="triage-box">
-                    <div>
-                      <div class="triage-title">Appointment Priority Recommendation</div>
-                      <div class="triage-meta" id="triageSlot">Recommended Slot: Waiting</div>
-                    </div>
-                    <span class="triage-badge green" id="triageBadge">Normal Appointment</span>
-                  </div>
-                  <div class="report-summary-grid">
-                    <div class="report-item">
-                      <span>Predicted Disease</span>
-                      <strong id="reportDisease">--</strong>
-                    </div>
-                    <div class="report-item">
-                      <span>Risk Probability</span>
-                      <strong id="reportProbability">--</strong>
-                    </div>
-                  </div>
-                  <div class="risk-grid">
-                    <div class="risk-item">
-                      <svg class="risk-icon cardio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M20.8 5.6a5.4 5.4 0 0 0-7.6 0l-1.2 1.2-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 22l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6z"/>
-                      </svg>
-                      <div class="risk-topline">
-                        <span>Cardiovascular Disease</span>
-                        <span class="risk-badge" id="cardioBadge">LOW</span>
-                      </div>
-                      <div class="risk-value"><span id="cardioValue">0.0%</span> risk</div>
-                      <div class="risk-bar"><div class="risk-fill" id="cardioFill"></div></div>
-                    </div>
-                    <div class="risk-item">
-                      <svg class="risk-icon diabetes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M12 3c1.4 3.4 5.8 5.4 5.8 10a5.8 5.8 0 0 1-11.6 0C6.2 8.4 10.6 6.4 12 3z"/>
-                      </svg>
-                      <div class="risk-topline">
-                        <span>Diabetes</span>
-                        <span class="risk-badge" id="diabetesBadge">LOW</span>
-                      </div>
-                      <div class="risk-value"><span id="diabetesValue">0.0%</span> risk</div>
-                      <div class="risk-bar"><div class="risk-fill" id="diabetesFill"></div></div>
-                    </div>
-                    <div class="risk-item">
-                      <svg class="risk-icon hypertension" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M2.5 12h4l2-5 3 10 2.5-7h7"/>
-                      </svg>
-                      <div class="risk-topline">
-                        <span>Hypertension</span>
-                        <span class="risk-badge" id="hypertensionBadge">LOW</span>
-                      </div>
-                      <div class="risk-value"><span id="hypertensionValue">0.0%</span> risk</div>
-                      <div class="risk-bar"><div class="risk-fill" id="hypertensionFill"></div></div>
-                    </div>
-                  </div>
-                  <div class="recommend-box" id="recommendBox">
-                    <h3>Clinical Recommendations</h3>
-                    <ul id="recommendList">
-                      <li>Risk recommendations will appear after prediction.</li>
-                    </ul>
-                  </div>
-                  <div class="sleep-notice-box" id="sleepNoticeBox">
-                    <strong>Sleep Notice</strong><br>
-                    <span id="sleepNoticeText"></span>
-                  </div>
-                  <div class="notice-box">
-                    <strong>Doctor Note</strong><br>
-                    <span id="reportDoctorNote">Calculate a report to see doctor notes and triage guidance.</span>
-                  </div>
-                  <div class="notice-box">
-                    <strong>Patient Guidance</strong><br>
-                    <span id="reportPatientGuidance">Patient guidance will appear here after prediction.</span>
-                  </div>
-                </section>
+              <div class="field">
+                <label for="patient_name">Patient Name</label>
+                <input id="patient_name" name="patient_name" readonly />
+              </div>
+              <div class="field">
+                <label for="age">Age</label>
+                <input id="age" name="age" />
+              </div>
+              <div class="field">
+                <label for="gender">Gender</label>
+                <select id="gender" name="gender">
+                  <option value="">Select</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="field full">
+                <label for="symptoms">Symptoms</label>
+                <textarea id="symptoms" name="symptoms" placeholder="Example: fever, cough, dizziness"></textarea>
+              </div>
+              <div class="field">
+                <label for="symptom_count">Symptom Count</label>
+                <input id="symptom_count" name="symptom_count" />
+              </div>
+              <div class="field">
+                <label for="glucose">Glucose</label>
+                <input id="glucose" name="glucose" />
+              </div>
+              <div class="field">
+                <label for="blood_pressure_systolic">BP Systolic</label>
+                <input id="blood_pressure_systolic" name="blood_pressure_systolic" />
+              </div>
+              <div class="field">
+                <label for="blood_pressure_diastolic">BP Diastolic</label>
+                <input id="blood_pressure_diastolic" name="blood_pressure_diastolic" />
+              </div>
+              <div class="field">
+                <label for="height_cm">Height (cm)</label>
+                <input id="height_cm" name="height_cm" />
+              </div>
+              <div class="field">
+                <label for="weight_kg">Weight (kg)</label>
+                <input id="weight_kg" name="weight_kg" />
+              </div>
+              <div class="field">
+                <label for="average_sleep_hours">Average Sleep Hours</label>
+                <input id="average_sleep_hours" name="average_sleep_hours" />
+              </div>
+              <div class="field">
+                <label for="smoking_habit">Smoking Habit</label>
+                <select id="smoking_habit" name="smoking_habit">
+                  <option value="">Select</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="alcohol_habit">Alcohol Habit</label>
+                <select id="alcohol_habit" name="alcohol_habit">
+                  <option value="">Select</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="family_history">Family History</label>
+                <select id="family_history" name="family_history">
+                  <option value="">Select</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+              <div class="field full">
+                <label for="medical_history">Medical History</label>
+                <textarea id="medical_history" name="medical_history"></textarea>
+              </div>
+              <div class="field full">
+                <label for="nurse_notes">Nurse Notes</label>
+                <textarea id="nurse_notes" name="nurse_notes" placeholder="Add verified vitals note, triage note, or patient observation"></textarea>
               </div>
             </div>
+            <div class="actions">
+              <button class="secondary" type="button" id="predictBtn">Calculate Risk Report</button>
+              <button class="primary" type="submit">Save Nurse Record</button>
+              <button class="secondary" type="button" id="clearBtn">Clear</button>
+            </div>
+            <div id="formStatus" class="status"></div>
+            <div class="helper" id="recordMeta">Select a patient from the list to begin editing.</div>
+            <section class="report-card">
+              <div class="report-head">
+                <h3>Risk Report</h3>
+                <div id="riskBadge" class="risk-badge">Waiting</div>
+              </div>
+              <div class="report-grid">
+                <div class="report-item">
+                  <span>Predicted Disease</span>
+                  <strong id="reportDisease">--</strong>
+                </div>
+                <div class="report-item">
+                  <span>Risk Probability</span>
+                  <strong id="reportProbability">--</strong>
+                </div>
+                <div class="report-item">
+                  <span>Appointment Priority</span>
+                  <strong id="reportPriority">--</strong>
+                </div>
+                <div class="report-item">
+                  <span>Recommended Slot</span>
+                  <strong id="reportSlot">--</strong>
+                </div>
+              </div>
+              <div id="reportDoctorNote" class="report-copy">Calculate a report to see doctor notes and triage guidance.</div>
+              <div id="reportPatientGuidance" class="report-copy">Patient guidance will appear here after prediction.</div>
+              <ul id="reportFactors" class="report-list">
+                <li>No contributing factors yet.</li>
+              </ul>
+            </section>
           </form>
         </div>
       </div>
     </section>
   </div>
 
-  <script id="nurseDashboardPageData" type="application/json">
-    {{ {"patientsApi": url_for("nurse_patient_records"), "saveApi": url_for("nurse_update_patient_record"), "predictApi": url_for("nurse_predict_risk"), "loginUrl": url_for("nurse_login"), "queueUrl": url_for("nurse_appointment_queue")}|tojson }}
-  </script>
-
   <script>
-    const nurseDashboardPageDataEl = document.getElementById("nurseDashboardPageData");
-    let nurseDashboardPageData = {};
-    try {
-      nurseDashboardPageData = JSON.parse(nurseDashboardPageDataEl ? nurseDashboardPageDataEl.textContent : "{}");
-    } catch (_) {
-      nurseDashboardPageData = {};
-    }
-
-    const patientsApi = String(nurseDashboardPageData.patientsApi || "");
-    const saveApi = String(nurseDashboardPageData.saveApi || "");
-    const predictApi = String(nurseDashboardPageData.predictApi || "");
-    const loginUrl = String(nurseDashboardPageData.loginUrl || "");
-    const queueUrl = String(nurseDashboardPageData.queueUrl || "");
+    const patientsApi = {{ url_for("nurse_patient_records")|tojson }};
+    const saveApi = {{ url_for("nurse_update_patient_record")|tojson }};
+    const predictApi = {{ url_for("nurse_predict_risk")|tojson }};
+    const loginUrl = {{ url_for("nurse_login")|tojson }};
+    const patientList = document.getElementById("patientList");
+    const patientSearch = document.getElementById("patientSearch");
     const recordForm = document.getElementById("recordForm");
     const formStatus = document.getElementById("formStatus");
     const recordMeta = document.getElementById("recordMeta");
     const clearBtn = document.getElementById("clearBtn");
     const predictBtn = document.getElementById("predictBtn");
-    const overallRisk = document.getElementById("overallRisk");
-    const triageSlot = document.getElementById("triageSlot");
-    const triageBadge = document.getElementById("triageBadge");
+    const riskBadge = document.getElementById("riskBadge");
     const reportDisease = document.getElementById("reportDisease");
     const reportProbability = document.getElementById("reportProbability");
-    const cardioValue = document.getElementById("cardioValue");
-    const cardioBadge = document.getElementById("cardioBadge");
-    const cardioFill = document.getElementById("cardioFill");
-    const diabetesValue = document.getElementById("diabetesValue");
-    const diabetesBadge = document.getElementById("diabetesBadge");
-    const diabetesFill = document.getElementById("diabetesFill");
-    const hypertensionValue = document.getElementById("hypertensionValue");
-    const hypertensionBadge = document.getElementById("hypertensionBadge");
-    const hypertensionFill = document.getElementById("hypertensionFill");
-    const recommendList = document.getElementById("recommendList");
-    const sleepNoticeBox = document.getElementById("sleepNoticeBox");
-    const sleepNoticeText = document.getElementById("sleepNoticeText");
+    const reportPriority = document.getElementById("reportPriority");
+    const reportSlot = document.getElementById("reportSlot");
     const reportDoctorNote = document.getElementById("reportDoctorNote");
     const reportPatientGuidance = document.getElementById("reportPatientGuidance");
+    const reportFactors = document.getElementById("reportFactors");
     const fields = Array.from(recordForm.querySelectorAll("input, select, textarea"));
     const requestedPatientId = new URLSearchParams(window.location.search).get("patient_id") || "";
     let records = [];
@@ -796,300 +518,42 @@
         .replace(/'/g, "&#39;");
     }
 
-    function clamp(value, min, max) {
-      return Math.min(Math.max(Number(value) || 0, min), max);
-    }
-
-    function toNumber(value, fallback = 0) {
-      const num = Number(value);
-      return Number.isFinite(num) ? num : fallback;
-    }
-
-    function normalizeSymptomToken(value) {
-      return String(value ?? "")
-        .trim()
-        .toLowerCase()
-        .replace(/[\s-]+/g, "_")
-        .replace(/[^a-z0-9_]+/g, "");
-    }
-
-    function parseBloodPressureValue(value) {
-      const raw = String(value ?? "").trim();
-      if (!raw) return { systolic: null, diastolic: null };
-      if (raw.includes("/")) {
-        const parts = raw.split("/");
-        return { systolic: toNumber(parts[0], null), diastolic: toNumber(parts[1], null) };
-      }
-      return { systolic: toNumber(raw, null), diastolic: null };
-    }
-
-    function resolveDiastolic(systolic, diastolic) {
-      if (diastolic != null) return diastolic;
-      if (systolic == null) return null;
-      if (systolic <= 120) return 80;
-      if (systolic <= 139) return 85;
-      return 95;
-    }
-
-    function symptomTokens(value) {
-      return String(value ?? "")
-        .split(/[,;|]/)
-        .map((v) => normalizeSymptomToken(v))
-        .filter(Boolean);
-    }
-
-    function hasValue(value) {
-      if (value === null || value === undefined) return false;
-      return String(value).trim() !== "";
-    }
-
-    function isTruthyFeatureValue(value) {
-      const text = String(value ?? "").trim().toLowerCase();
-      return text === "1" || text === "true" || text === "yes" || text === "y";
-    }
-
-    function getSleepCategoryInfo(value) {
-      const hours = Number(value);
-      if (!Number.isInteger(hours)) return null;
-      if (hours < 5) return { title: "Poor Sleep", meaning: "High health risk", tone: "risk" };
-      if (hours <= 6) return { title: "Low Sleep", meaning: "Not enough rest", tone: "warn" };
-      if (hours <= 9) return { title: "Healthy Sleep", meaning: "Recommended", tone: "good" };
-      return { title: "Excess Sleep", meaning: "Possible fatigue", tone: "warn" };
-    }
-
-    function scoreLevel(percent) {
-      if (percent >= 90) return "VERY HIGH";
-      if (percent >= 60) return "HIGH";
-      if (percent >= 30) return "MEDIUM";
-      return "LOW";
-    }
-
-    function levelColor(level) {
-      if (level === "VERY HIGH") return "#b91c1c";
-      if (level === "HIGH") return "#dc2626";
-      if (level === "MEDIUM") return "#d97706";
-      return "#15803d";
-    }
-
-    function setRiskCard(valueEl, badgeEl, fillEl, percent) {
-      const level = scoreLevel(percent);
-      const color = levelColor(level);
-      valueEl.textContent = `${percent.toFixed(1)}%`;
-      badgeEl.textContent = level;
-      badgeEl.style.background = color;
-      fillEl.style.width = `${clamp(percent, 0, 100)}%`;
-      fillEl.style.background = color;
-      return level;
-    }
-
-    function setOverallBanner(overall) {
-      if (overall === "WAITING") {
-        overallRisk.style.borderColor = "#9aa8b6";
-        overallRisk.style.color = "#4b5d72";
-        overallRisk.style.background = "#f4f7fa";
-        overallRisk.textContent = "Overall Risk Level: Waiting";
-        return;
-      }
-      const overallColor = levelColor(overall);
-      const bg = overall === "HIGH" || overall === "VERY HIGH"
-        ? "#fff1f2"
-        : overall === "MEDIUM"
-          ? "#fff7ed"
-          : "#eefcf4";
-      overallRisk.style.borderColor = overallColor;
-      overallRisk.style.color = overallColor;
-      overallRisk.style.background = bg;
-      overallRisk.textContent = `Overall Risk Level: ${overall}`;
-    }
-
-    function setTriageBanner(priorityText, slotText, badgeColor) {
-      triageBadge.classList.remove("red", "orange", "green");
-      triageBadge.classList.add(badgeColor || "green");
-      triageBadge.textContent = priorityText || "Normal Appointment";
-      triageSlot.textContent = `Recommended Slot: ${slotText || "Next Available Date"}`;
-    }
-
-    function triageFromRiskClass(riskText) {
-      const text = String(riskText || "").toLowerCase();
-      if (text.includes("high")) {
-        return { badge: "Immediate Attention Required", slot: "Within 1 hour", color: "red" };
-      }
-      if (text.includes("medium")) {
-        return { badge: "Same Day Appointment", slot: "Today", color: "orange" };
-      }
-      return { badge: "Normal Appointment", slot: "Next Available Date", color: "green" };
-    }
-
-    function buildRiskFeaturesFromForm() {
-      const height = toNumber(fieldValue("height_cm"), null);
-      const weight = toNumber(fieldValue("weight_kg"), null);
-      const bmi = height && weight ? weight / Math.pow(height / 100, 2) : null;
-      return {
-        Age: toNumber(fieldValue("age"), null),
-        Gender: fieldValue("gender"),
-        Symptoms: fieldValue("symptoms"),
-        Symptom_Count: toNumber(fieldValue("symptom_count"), 0),
-        Glucose: toNumber(fieldValue("glucose"), null),
-        BloodPressure: fieldValue("blood_pressure_systolic"),
-        BP_Diastolic: toNumber(fieldValue("blood_pressure_diastolic"), null),
-        Height_cm: height,
-        Weight_kg: weight,
-        BMI: bmi,
-        Smoking_Habit: fieldValue("smoking_habit"),
-        Alcohol_Habit: fieldValue("alcohol_habit"),
-        Average_Sleep_Hours: toNumber(fieldValue("average_sleep_hours"), null),
-        Family_History: fieldValue("family_history"),
-        Medical_History: fieldValue("medical_history")
-      };
-    }
-
-    function renderRecommendations(overallLevel, features, report) {
-      const factors = Array.isArray(report && report.contributing_factors)
-        ? report.contributing_factors.filter(Boolean)
-        : [];
-      const items = factors.length ? factors : (
-        overallLevel === "HIGH" || overallLevel === "VERY HIGH"
-          ? [
-              "Consult a doctor soon for detailed clinical evaluation.",
-              "Track blood pressure and glucose closely.",
-              "Review symptoms and vitals for urgent escalation."
-            ]
-          : overallLevel === "MEDIUM"
-            ? [
-                "Continue monitoring symptoms and vital trends.",
-                "Encourage hydration, rest, and regular follow-up.",
-                "Flag for same-day review if symptoms worsen."
-              ]
-            : [
-                "Continue routine observation and preventive care.",
-                "Reinforce healthy sleep, hydration, and balanced diet.",
-                "Maintain follow-up schedule as advised."
-              ]
-      );
-      recommendList.innerHTML = items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
-
-      sleepNoticeBox.classList.remove("show", "good", "warn", "risk");
-      const sleepInfo = getSleepCategoryInfo(features && features.Average_Sleep_Hours);
-      if (sleepInfo) {
-        sleepNoticeText.textContent = `${sleepInfo.title} - ${sleepInfo.meaning}`;
-        sleepNoticeBox.classList.add("show", sleepInfo.tone);
-      } else {
-        sleepNoticeText.textContent = "";
-      }
-    }
-
-    function updateRiskPanelFromModel(features, modelResult) {
-      const age = toNumber(features.Age, null);
-      const glucose = toNumber(features.Glucose, null);
-      const bpParts = parseBloodPressureValue(features.BloodPressure);
-      const systolic = bpParts.systolic;
-      const diastolic = resolveDiastolic(systolic, features.BP_Diastolic ?? bpParts.diastolic);
-      const bmi = toNumber(features.BMI, null);
-      const symptomCount = toNumber(features.Symptom_Count, 0);
-      const symptoms = symptomTokens(features.Symptoms);
-      const smoking = String(features.Smoking_Habit ?? "").toLowerCase().trim() === "yes" ? 1 : 0;
-      const alcohol = String(features.Alcohol_Habit ?? "").toLowerCase().trim() === "yes" ? 1 : 0;
-      const rawSymptoms = String(features.Symptoms ?? "").toLowerCase();
-      const hasLowBpSymptom =
-        /\blow[\s_-]*bp\b/.test(rawSymptoms) ||
-        /\bhypotension\b/.test(rawSymptoms) ||
-        symptoms.some((s) => ["low_bp", "lowbp", "hypotension"].includes(s)) ||
-        isTruthyFeatureValue(features.SYM_low_bp) ||
-        isTruthyFeatureValue(features.SYM_hypotension);
-
-      const ruleHighAgeSymptoms = age != null && age > 50 && symptomCount > 0;
-      const ruleHighBp = (systolic != null && systolic >= 140) || (diastolic != null && diastolic >= 100);
-      const ruleLowBpForHypertension = systolic != null && diastolic != null && systolic <= 120 && diastolic <= 85;
-      const ruleMediumBp =
-        !ruleHighBp &&
-        ((systolic != null && systolic >= 130 && systolic <= 139) || (diastolic != null && diastolic >= 90 && diastolic <= 99));
-
-      let cardio = 12;
-      if (age != null && age >= 45 && age <= 60) cardio += 10;
-      if (age != null && age > 60) cardio += 22;
-      if (ruleMediumBp) cardio += 12;
-      if (ruleHighBp) cardio += 24;
-      if (bmi != null && bmi >= 25 && bmi < 30) cardio += 8;
-      if (bmi != null && bmi >= 30) cardio += 15;
-      if (glucose != null && glucose >= 100 && glucose <= 125) cardio += 6;
-      if (glucose != null && glucose >= 126) cardio += 14;
-      if (String(features.Family_History ?? "").toLowerCase().trim() === "yes") cardio += 8;
-      if (symptomCount >= 2) cardio += 6;
-      if (symptoms.some((s) => ["chest_pain", "chestpain", "breathlessness", "shortness_of_breath", "dizziness"].includes(s))) cardio += 14;
-      if (smoking === 1) cardio += 10;
-      if (alcohol === 1) cardio += 4;
-      cardio = clamp(cardio, 8, 92);
-
-      let diabetes = 0;
-      if (glucose != null) {
-        if (glucose < 70) diabetes = 75;
-        else if (glucose <= 99) diabetes = 10;
-        else if (glucose <= 125) diabetes = 45;
-        else if (glucose <= 199) diabetes = 75;
-        else diabetes = 95;
-        if (ruleHighAgeSymptoms) diabetes = Math.max(diabetes, 55);
-        if (bmi != null && bmi > 30) diabetes = Math.min(95, diabetes + 5);
-      }
-
-      let hypertension = 0;
-      if (systolic != null || diastolic != null || hasLowBpSymptom) {
-        if (ruleLowBpForHypertension) hypertension = 10;
-        else if (ruleHighBp) hypertension = 85;
-        else if (ruleMediumBp) hypertension = 50;
-        else hypertension = 10;
-        if (hasLowBpSymptom) hypertension = Math.max(hypertension, 70);
-        hypertension = clamp(hypertension, 0, 95);
-      }
-
-      setRiskCard(cardioValue, cardioBadge, cardioFill, cardio);
-      setRiskCard(diabetesValue, diabetesBadge, diabetesFill, diabetes);
-      setRiskCard(hypertensionValue, hypertensionBadge, hypertensionFill, hypertension);
-
-      let overall = "LOW";
-      const maxCard = Math.max(cardio, diabetes, hypertension);
-      if (maxCard >= 90) overall = "VERY HIGH";
-      else if (maxCard >= 60) overall = "HIGH";
-      else if (maxCard >= 30) overall = "MEDIUM";
-
-      const modelClassText = String((modelResult && (modelResult.predicted_class || modelResult.risk_level)) || "").toLowerCase();
-      if (modelClassText.includes("high")) overall = "HIGH";
-      else if (modelClassText.includes("medium") && overall === "LOW") overall = "MEDIUM";
-
-      setOverallBanner(overall);
-      return overall;
+    function setRiskBadge(level) {
+      const text = safeText(level, "--");
+      const normalized = text.toLowerCase();
+      riskBadge.textContent = text || "--";
+      riskBadge.classList.remove("low", "medium", "high");
+      if (normalized.includes("high")) riskBadge.classList.add("high");
+      else if (normalized.includes("medium")) riskBadge.classList.add("medium");
+      else if (normalized.includes("low")) riskBadge.classList.add("low");
     }
 
     function clearRiskReport(message = "Calculate a report to see doctor notes and triage guidance.") {
-      setOverallBanner("WAITING");
-      setTriageBanner("Normal Appointment", "Waiting", "green");
+      setRiskBadge("Waiting");
       reportDisease.textContent = "--";
       reportProbability.textContent = "--";
-      setRiskCard(cardioValue, cardioBadge, cardioFill, 0);
-      setRiskCard(diabetesValue, diabetesBadge, diabetesFill, 0);
-      setRiskCard(hypertensionValue, hypertensionBadge, hypertensionFill, 0);
-      recommendList.innerHTML = "<li>Risk recommendations will appear after prediction.</li>";
-      sleepNoticeBox.classList.remove("show", "good", "warn", "risk");
-      sleepNoticeText.textContent = "";
+      reportPriority.textContent = "--";
+      reportSlot.textContent = "--";
       reportDoctorNote.textContent = message;
       reportPatientGuidance.textContent = "Patient guidance will appear here after prediction.";
+      reportFactors.innerHTML = "<li>No contributing factors yet.</li>";
     }
 
     function renderRiskReport(report) {
       const item = report || {};
       const probability = Number(item.risk_probability);
-      const features = buildRiskFeaturesFromForm();
-      const overall = updateRiskPanelFromModel(features, item);
-      const triage = triageFromRiskClass(item.predicted_class || item.risk_level || overall);
-      setTriageBanner(
-        safeText(item.appointment_priority || triage.badge),
-        safeText(item.recommended_slot || triage.slot),
-        triage.color
-      );
+      setRiskBadge(safeText(item.risk_level || "Unknown"));
       reportDisease.textContent = safeText(item.predicted_class || "--");
       reportProbability.textContent = Number.isFinite(probability) ? `${(probability * 100).toFixed(1)}%` : "--";
+      reportPriority.textContent = safeText(item.appointment_priority || "--");
+      reportSlot.textContent = safeText(item.recommended_slot || "--");
       reportDoctorNote.textContent = safeText(item.doctor_note || "No doctor note generated.");
       reportPatientGuidance.textContent = safeText(item.patient_guidance || "No patient guidance generated.");
-      renderRecommendations(overall, features, item);
+
+      const factors = Array.isArray(item.contributing_factors) ? item.contributing_factors.filter(Boolean) : [];
+      reportFactors.innerHTML = factors.length
+        ? factors.map((factor) => `<li>${escapeHtml(factor)}</li>`).join("")
+        : "<li>No contributing factors were returned for this record.</li>";
     }
 
     async function requestRiskReport() {
@@ -1126,12 +590,43 @@
       clearRiskReport("Calculate a report to see the latest risk summary for this patient.");
     }
 
-    function clearSelectionState() {
-      activePatientId = "";
-      fillForm({});
-      recordMeta.textContent = queueUrl
-        ? "Open a patient from the Appointment Queue page to update values and calculate risk prediction."
-        : "Open a patient from the queue to begin editing.";
+    function renderPatients(searchText = "") {
+      const query = safeText(searchText).toLowerCase();
+      const filtered = !query ? records : records.filter((item) =>
+        [item.patient_id, item.patient_name, item.symptoms, item.medical_history]
+          .map(safeText)
+          .join(" ")
+          .toLowerCase()
+          .includes(query)
+      );
+
+      if (!filtered.length) {
+        patientList.innerHTML = '<div class="patient-card">No patient found.</div>';
+        return;
+      }
+
+      patientList.innerHTML = filtered.map((item) => `
+        <article class="patient-card ${item.patient_id === activePatientId ? "active" : ""}" data-patient-id="${safeText(item.patient_id)}">
+          <strong>${safeText(item.patient_name || "Unnamed Patient")}</strong>
+          <div class="meta">
+            <span class="queue-pill ${queueClass(item)}">${safeText(item.queue_status || "No Appointment")}</span><br>
+            Patient ${safeText(item.patient_id)}<br>
+            Booked: ${formatDateTime(item.booked_at)}<br>
+            Appointment: ${formatDateTime(item.appointment_time)}<br>
+            Symptoms: ${safeText(item.symptoms || "Not recorded")}<br>
+            Glucose: ${safeText(item.glucose || "--")} | BP: ${safeText(item.blood_pressure_systolic || "--")}/${safeText(item.blood_pressure_diastolic || "--")}
+          </div>
+        </article>
+      `).join("");
+
+      patientList.querySelectorAll("[data-patient-id]").forEach((card) => {
+        card.addEventListener("click", () => {
+          activePatientId = card.getAttribute("data-patient-id") || "";
+          const record = records.find((item) => safeText(item.patient_id) === activePatientId);
+          fillForm(record);
+          renderPatients(patientSearch.value);
+        });
+      });
     }
 
     async function loadPatients(options = {}) {
@@ -1158,23 +653,21 @@
           fillForm(requested);
         }
       }
-      if (activePatientId) {
-        const current = records.find((item) => safeText(item.patient_id) === activePatientId);
-        if (current) {
-          fillForm(current);
-        } else {
-          clearSelectionState();
-        }
-      } else {
-        clearSelectionState();
+      if (!activePatientId && records.length) {
+        activePatientId = safeText(records[0].patient_id);
+        fillForm(records[0]);
+      } else if (activePatientId && !records.some((item) => safeText(item.patient_id) === activePatientId)) {
+        activePatientId = records.length ? safeText(records[0].patient_id) : "";
+        if (records.length) fillForm(records[0]);
       }
+      renderPatients(patientSearch.value);
     }
 
+    patientSearch.addEventListener("input", (event) => {
+      renderPatients(event.target.value);
+    });
+
     clearBtn.addEventListener("click", () => {
-      if (!activePatientId) {
-        clearSelectionState();
-        return;
-      }
       fillForm({ patient_id: activePatientId, patient_name: fieldValue("patient_name") });
       formStatus.textContent = "";
       formStatus.classList.remove("error");
@@ -1183,11 +676,6 @@
     predictBtn.addEventListener("click", async () => {
       formStatus.textContent = "";
       formStatus.classList.remove("error");
-      if (!fieldValue("patient_id")) {
-        formStatus.textContent = "Select a patient from the Appointment Queue page first.";
-        formStatus.classList.add("error");
-        return;
-      }
       predictBtn.disabled = true;
       try {
         const report = await requestRiskReport();
@@ -1206,11 +694,6 @@
       event.preventDefault();
       formStatus.textContent = "";
       formStatus.classList.remove("error");
-      if (!fieldValue("patient_id")) {
-        formStatus.textContent = "Select a patient from the Appointment Queue page first.";
-        formStatus.classList.add("error");
-        return;
-      }
       const payload = Object.fromEntries(fields.map((field) => [field.name, field.value]));
       try {
         const res = await fetch(saveApi, {
@@ -1231,6 +714,7 @@
         }
         fillForm(saved);
         if (riskReport) renderRiskReport(riskReport);
+        renderPatients(patientSearch.value);
       } catch (error) {
         formStatus.textContent = error.message || "Save failed.";
         formStatus.classList.add("error");
@@ -1238,14 +722,12 @@
     });
 
     clearRiskReport();
-    clearSelectionState();
     loadPatients({ preserveSelection: true }).then(() => {
       queueRefreshTimer = window.setInterval(() => {
         loadPatients({ preserveSelection: true }).catch(() => {});
       }, 5000);
     }).catch((error) => {
-      clearSelectionState();
-      recordMeta.textContent = safeText(error.message || "Failed to load patients.");
+      patientList.innerHTML = `<div class="patient-card">${safeText(error.message || "Failed to load patients.")}</div>`;
     });
   </script>
   <script src="{{ url_for('static', filename='page-animations.js') }}"></script>

@@ -2343,25 +2343,13 @@
     </div>
   </div>
 
-  <script id="doctorDashboardData" type="application/json">
-    {{ {"doctorAppointmentsApi": url_for("doctor_appointments"), "doctorPatientDatabaseApi": url_for("doctor_patient_database"), "roleLoginUrl": url_for("role_login"), "doctorAvailabilityStatusApi": url_for("doctor_availability_status")}|tojson }}
-  </script>
-
   <script>
-    const doctorDashboardDataEl = document.getElementById("doctorDashboardData");
-    let doctorDashboardData = {};
-    try {
-      doctorDashboardData = JSON.parse(doctorDashboardDataEl ? doctorDashboardDataEl.textContent : "{}");
-    } catch (_) {
-      doctorDashboardData = {};
-    }
-
     const sidebarToggle = document.getElementById("sidebarToggle");
     const sidebarLinks = document.querySelectorAll(".sidebar-link");
-    const doctorAppointmentsApi = String(doctorDashboardData.doctorAppointmentsApi || "");
-    const doctorPatientDatabaseApi = String(doctorDashboardData.doctorPatientDatabaseApi || "");
-    const roleLoginUrl = String(doctorDashboardData.roleLoginUrl || "");
-    const doctorAvailabilityStatusApi = String(doctorDashboardData.doctorAvailabilityStatusApi || "");
+    const doctorAppointmentsApi = {{ url_for("doctor_appointments")|tojson }};
+    const doctorPatientDatabaseApi = {{ url_for("doctor_patient_database")|tojson }};
+    const roleLoginUrl = {{ url_for("role_login")|tojson }};
+    const doctorAvailabilityStatusApi = {{ url_for("doctor_availability_status")|tojson }};
     const appDialog = document.getElementById("appDialog");
     const appDialogTitle = document.getElementById("appDialogTitle");
     const appDialogMessage = document.getElementById("appDialogMessage");

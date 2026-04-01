@@ -21,8 +21,8 @@
       bottom: 0;
       width: 252px;
       background: #fbfdff;
-      border-right: 1px solid #d7e7e7;
-      box-shadow: 10px 0 26px rgba(44, 109, 109, 0.14);
+      border-right: 1px solid #d8e3f3;
+      box-shadow: 10px 0 28px rgba(22, 56, 96, 0.12);
       padding: 12px 10px;
       z-index: 70;
       transition: width 0.28s ease, box-shadow 0.28s ease;
@@ -45,7 +45,7 @@
       margin: 0;
       font-size: 0.7rem;
       letter-spacing: 0.16em;
-      color: #4f6f7a;
+      color: #557198;
       font-weight: 800;
       text-transform: uppercase;
       white-space: nowrap;
@@ -54,12 +54,12 @@
       display: grid;
       place-items: center;
       line-height: 1;
-      border: 1px solid #cde4e4;
+      border: 1px solid #d3e0f2;
       background: #ffffff;
       width: 32px;
       height: 32px;
       border-radius: 10px;
-      color: #2b7f86;
+      color: #204f85;
       font-size: 1rem;
       font-weight: 700;
       cursor: pointer;
@@ -67,36 +67,34 @@
     }
     .sidebar-toggle:hover {
       transform: translateY(-1px);
-      background: #f0f9f9;
+      background: #f2f7ff;
     }
     .sidebar-brand {
       display: flex;
       align-items: center;
       gap: 10px;
       padding: 9px 10px;
-      border: 1px solid #cee6e6;
+      border: 1px solid #dbe7f6;
       border-radius: 14px;
-      background: linear-gradient(135deg, #dff3f5, #ecf8f8);
+      background: linear-gradient(145deg, #ffffff, #f3f8ff);
       white-space: nowrap;
     }
     .brand-icon {
       width: 34px;
       height: 34px;
       border-radius: 10px;
-      border: 1px solid #bde0e0;
-      background: #f3fbfb;
+      border: 1px solid #cde0f7;
+      background: #eef5ff;
       display: grid;
       place-items: center;
-      color: #2f8f95;
+      color: #2f65a4;
       flex: 0 0 auto;
     }
-    .brand-icon svg,
-    .sidebar-icon svg,
-    .chip svg {
-      width: 16px;
-      height: 16px;
+    .brand-icon svg {
+      width: 18px;
+      height: 18px;
       stroke: currentColor;
-      stroke-width: 2;
+      stroke-width: 2.2;
       fill: none;
       stroke-linecap: round;
       stroke-linejoin: round;
@@ -109,16 +107,137 @@
     }
     .brand-title {
       font-size: 0.8rem;
-      color: #1f878d;
+      color: #173760;
       font-weight: 800;
       line-height: 1.1;
     }
     .brand-sub {
       font-size: 0.62rem;
-      color: #67939a;
+      color: #5b799f;
       font-weight: 700;
       letter-spacing: 0.03em;
       text-transform: uppercase;
+    }
+    .sidebar-menu {
+      list-style: none;
+      margin: 4px 0 0;
+      padding: 0 0 8px;
+      display: grid;
+      gap: 4px;
+    }
+    .sidebar-link {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: #24476f;
+      font-weight: 700;
+      font-size: 0.84rem;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+      white-space: nowrap;
+    }
+    .sidebar-link:hover {
+      background: #eff5ff;
+      color: #143a6a;
+      transform: translateX(1px);
+    }
+    .sidebar-link.active {
+      background: #ece8ff;
+      color: #4a2a96;
+      box-shadow: inset 0 0 0 1px #d8ceff;
+    }
+    .sidebar-link.active::before {
+      content: "";
+      position: absolute;
+      left: -12px;
+      top: 8px;
+      bottom: 8px;
+      width: 4px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #88a7ff, #a186ff);
+    }
+    .sidebar-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #f0f6ff;
+      border: 1px solid #d9e7f9;
+      color: #356ca8;
+      flex: 0 0 auto;
+    }
+    .sidebar-icon svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .sidebar-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    body.sidebar-collapsed .app-sidebar {
+      width: 86px;
+    }
+    body.sidebar-collapsed .menu-title,
+    body.sidebar-collapsed .brand-text,
+    body.sidebar-collapsed .sidebar-label {
+      opacity: 0;
+      visibility: hidden;
+      width: 0;
+    }
+    body.sidebar-collapsed .sidebar-headline {
+      justify-content: center;
+    }
+    body.sidebar-collapsed .sidebar-brand {
+      justify-content: center;
+      padding: 8px;
+    }
+    body.sidebar-collapsed .sidebar-link {
+      justify-content: center;
+      padding: 10px 8px;
+    }
+    body.sidebar-collapsed .sidebar-link.active::before {
+      left: 0;
+    }
+    .app-sidebar.patient-theme {
+      background: linear-gradient(180deg, #f7fcff 0%, #eef8f8 100%);
+      border-right-color: #d7e7e7;
+      box-shadow: 10px 0 26px rgba(44, 109, 109, 0.14);
+    }
+    .app-sidebar.patient-theme .menu-title {
+      color: #4f6f7a;
+    }
+    .app-sidebar.patient-theme .sidebar-toggle {
+      border-color: #cde4e4;
+      background: #ffffff;
+      color: #2b7f86;
+    }
+    .app-sidebar.patient-theme .sidebar-toggle:hover {
+      background: #f0f9f9;
+    }
+    .app-sidebar.patient-theme .sidebar-brand {
+      border-color: #cee6e6;
+      background: linear-gradient(135deg, #dff3f5, #ecf8f8);
+    }
+    .app-sidebar.patient-theme .brand-icon {
+      border-color: #bde0e0;
+      background: #f3fbfb;
+      color: #2f8f95;
+    }
+    .app-sidebar.patient-theme .brand-title {
+      color: #1f878d;
+    }
+    .app-sidebar.patient-theme .brand-sub {
+      color: #67939a;
     }
     .sidebar-profile {
       margin: 8px 0 6px;
@@ -163,12 +282,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .sidebar-chips {
-      display: flex;
-      gap: 6px;
-      margin: 1px 0 6px;
-      padding: 0 2px;
-    }
+    .sidebar-chips { display: flex; gap: 6px; margin: 1px 0 6px; padding: 0 2px; }
     .chip {
       width: 26px;
       height: 26px;
@@ -180,96 +294,46 @@
       place-items: center;
       box-shadow: 0 4px 10px rgba(59, 132, 147, 0.12);
     }
-    .sidebar-menu {
-      list-style: none;
-      margin: 4px 0 0;
-      padding: 0 0 8px;
-      display: grid;
-      gap: 4px;
+    .chip svg {
+      width: 13px;
+      height: 13px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
-    .sidebar-link {
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 12px;
-      text-decoration: none;
+    .app-sidebar.patient-theme .sidebar-link {
       color: #215d66;
-      font-weight: 700;
-      font-size: 0.84rem;
-      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
-      white-space: nowrap;
     }
-    .sidebar-link:hover {
+    .app-sidebar.patient-theme .sidebar-link:hover {
       background: #e8f5f6;
       color: #1d646d;
-      transform: translateX(1px);
     }
-    .sidebar-link.active {
+    .app-sidebar.patient-theme .sidebar-link.active {
       background: linear-gradient(120deg, #d6eff2, #cfeaed);
       color: #1a7880;
       box-shadow: inset 0 0 0 1px #b9dfe4;
     }
-    .sidebar-link.active::before {
-      content: "";
-      position: absolute;
-      left: -12px;
-      top: 8px;
-      bottom: 8px;
-      width: 4px;
-      border-radius: 8px;
+    .app-sidebar.patient-theme .sidebar-link.active::before {
       background: linear-gradient(180deg, #63bfc6, #55aeb6);
     }
-    .sidebar-icon {
-      width: 22px;
-      height: 22px;
-      border-radius: 8px;
-      display: grid;
-      place-items: center;
+    .app-sidebar.patient-theme .sidebar-icon {
       background: #eef9fa;
-      border: 1px solid #c8e6e8;
+      border-color: #c8e6e8;
       color: #2e9198;
-      flex: 0 0 auto;
-    }
-    .sidebar-label {
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    body.sidebar-collapsed .app-sidebar {
-      width: 86px;
-    }
-    body.sidebar-collapsed .menu-title,
-    body.sidebar-collapsed .brand-text,
-    body.sidebar-collapsed .sidebar-label {
-      opacity: 0;
-      visibility: hidden;
-      width: 0;
-    }
-    body.sidebar-collapsed .sidebar-headline {
-      justify-content: center;
-    }
-    body.sidebar-collapsed .sidebar-brand {
-      justify-content: center;
-      padding: 8px;
-    }
-    body.sidebar-collapsed .sidebar-link {
-      justify-content: center;
-      padding: 10px 8px;
-    }
-    body.sidebar-collapsed .sidebar-link.active::before {
-      left: 0;
     }
     body.sidebar-collapsed .sidebar-profile,
-    body.sidebar-collapsed .profile-meta-mini,
+    body.sidebar-collapsed .profile-meta-mini {
+      display: none;
+    }
     body.sidebar-collapsed .sidebar-chips {
       display: none;
     }
     .page {
       max-width: 1460px;
       margin: 0 auto;
-      padding: 20px 20px 28px calc(20px + 252px);
+      padding: 16px 18px 22px calc(18px + 252px);
       transition: padding-left 0.28s ease;
     }
     body.sidebar-collapsed .page {
@@ -277,24 +341,41 @@
     }
     .dashboard-shell {
       display: grid;
-      grid-template-columns: 0.9fr 1.1fr;
-      gap: 26px;
+      grid-template-columns: minmax(520px, 1.06fr) minmax(500px, 0.94fr);
+      gap: 18px;
       align-items: start;
-      background: linear-gradient(155deg, #f3f7fd 0%, #eaf1fb 100%);
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 14px 34px rgba(21, 46, 88, 0.12);
+      border-radius: 22px;
+      padding: 18px;
+      border: 1px solid rgba(146, 170, 208, 0.45);
+      background:
+        radial-gradient(circle at 90% 8%, rgba(64, 124, 215, 0.08), transparent 38%),
+        linear-gradient(160deg, rgba(246, 250, 255, 0.97) 0%, rgba(237, 245, 255, 0.96) 100%);
+      box-shadow: 0 16px 34px rgba(24, 53, 96, 0.12);
+      animation: shellRise 520ms ease both;
     }
     .left-panel {
       min-height: 100%;
-      padding: 0 6px 0 0;
-      border-right: 1px solid rgba(34, 64, 110, 0.16);
+      padding: 2px 2px 2px 0;
+      border-right: 1px solid rgba(132, 159, 203, 0.28);
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 10px;
     }
-    .left-title { margin: 0; font-size: 2rem; color: #12305b; font-weight: 800; letter-spacing: 0.02em; }
-    .left-sub { margin: 0; color: #345178; font-size: 1rem; font-weight: 700; }
+    .left-title {
+      margin: 2px 0 0;
+      font-size: clamp(1.7rem, 2.4vw, 2.5rem);
+      color: #12305b;
+      font-weight: 900;
+      letter-spacing: 0.01em;
+      line-height: 1.04;
+    }
+    .left-sub {
+      margin: 2px 0 0;
+      color: #355780;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
     .left-welcome {
       margin: 2px 0 0;
       color: #12305b;
@@ -318,11 +399,16 @@
       display: block;
     }
     .patient-card {
-      padding: 14px;
-      border-radius: 14px;
-      border: 1px solid rgba(136, 156, 194, 0.45);
-      background: rgba(238, 244, 252, 0.88);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      padding: 15px;
+      border-radius: 16px;
+      border: 1px solid rgba(136, 156, 194, 0.4);
+      background: linear-gradient(155deg, rgba(247, 252, 255, 0.95), rgba(237, 245, 255, 0.94));
+      box-shadow: 0 10px 22px rgba(20, 49, 88, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.76);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+    .patient-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 26px rgba(20, 49, 88, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.76);
     }
     .patient-card h3 {
       margin: 0 0 8px;
@@ -336,6 +422,24 @@
       font-size: 0.96rem;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       font-weight: 600;
+    }
+    .patient-card-meta {
+      margin: 0 0 12px;
+      display: grid;
+      gap: 2px;
+      color: #355780;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .patient-card-meta-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .patient-card-meta-value {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #12305b;
     }
     .patient-card label {
       margin-top: 0;
@@ -377,7 +481,7 @@
     .feature-fields {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 8px 12px;
     }
     .feature-row {
       display: flex;
@@ -389,18 +493,20 @@
     }
     .feature-row label {
       margin: 0;
-      font-size: 0.78rem;
-      color: #35527a;
+      font-size: 0.76rem;
+      color: #32557f;
       text-transform: uppercase;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.07em;
+      font-weight: 800;
     }
     .feature-row input,
     .feature-row select,
     .feature-row textarea {
-      background: #f3f6fb;
-      font-size: 0.9rem;
-      padding: 9px 10px;
-      border-radius: 10px;
+      background: #f7faff;
+      font-size: 0.92rem;
+      padding: 8px 10px;
+      border-radius: 11px;
+      border: 1px solid #ccdaef;
     }
     .feature-row textarea {
       min-height: 72px;
@@ -496,11 +602,33 @@
       border-radius: 0;
     }
     .risk-dashboard {
-      margin: 0 0 14px;
+      margin: 0 0 12px;
       padding: 14px;
-      border-radius: 14px;
+      border-radius: 16px;
       border: 1px solid rgba(136, 156, 194, 0.45);
-      background: rgba(246, 250, 255, 0.92);
+      background: linear-gradient(152deg, rgba(248, 252, 255, 0.96), rgba(240, 247, 255, 0.94));
+      box-shadow: 0 10px 22px rgba(19, 47, 89, 0.08);
+      position: relative;
+      overflow: hidden;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+      animation: panelReveal 560ms ease both;
+      animation-delay: 70ms;
+    }
+    .risk-dashboard::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -38%;
+      width: 28%;
+      height: 100%;
+      transform: skewX(-20deg);
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.48), transparent);
+      pointer-events: none;
+      animation: sheenSweep 7s ease-in-out infinite;
+    }
+    .risk-dashboard:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 26px rgba(19, 47, 89, 0.12);
     }
     .risk-head {
       margin: 0 0 10px;
@@ -523,6 +651,42 @@
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       font-weight: 700;
     }
+    .triage-box {
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .triage-title {
+      color: #1e3358;
+      font-weight: 700;
+    }
+    .triage-meta {
+      color: #334155;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+    .triage-badge {
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 0.78rem;
+      color: #fff;
+      font-weight: 800;
+      background: #15803d;
+      white-space: nowrap;
+    }
+    .triage-badge.red { background: #dc2626; }
+    .triage-badge.orange { background: #ea580c; }
+    .triage-badge.green { background: #15803d; }
+    .triage-badge.red {
+      animation: dangerPulse 1.4s ease-in-out infinite;
+    }
     .risk-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -534,6 +698,15 @@
       border-radius: 12px;
       background: #ffffff;
       padding: 10px 12px;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+      animation: panelReveal 500ms ease both;
+    }
+    .risk-item:nth-child(1) { animation-delay: 120ms; }
+    .risk-item:nth-child(2) { animation-delay: 180ms; }
+    .risk-item:nth-child(3) { animation-delay: 240ms; }
+    .risk-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 18px rgba(17, 52, 100, 0.12);
     }
     .risk-icon {
       width: 34px;
@@ -544,6 +717,9 @@
     .risk-icon.cardio { color: #ef4444; }
     .risk-icon.diabetes { color: #3b82f6; }
     .risk-icon.hypertension { color: #f97316; }
+    .risk-icon {
+      animation: iconFloat 3s ease-in-out infinite;
+    }
     .risk-topline {
       display: flex;
       align-items: center;
@@ -577,6 +753,14 @@
       width: 0%;
       background: #15803d;
       transition: width 260ms ease;
+      position: relative;
+    }
+    .risk-fill::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+      animation: barGlow 2.6s linear infinite;
     }
     .recommend-box {
       border: 1px solid rgba(168, 186, 216, 0.55);
@@ -584,6 +768,9 @@
       background: #ffffff;
       padding: 10px 12px;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      animation: panelReveal 520ms ease both;
+      animation-delay: 320ms;
+      overflow: hidden;
     }
     .recommend-box h3 {
       margin: 0 0 6px;
@@ -595,7 +782,17 @@
       padding-left: 18px;
       color: #334c72;
     }
-    .recommend-box li { margin: 4px 0; }
+    .recommend-box li {
+      margin: 4px 0;
+      opacity: 0;
+      transform: translateX(-10px);
+      animation: recommendationEnter 420ms ease forwards;
+    }
+    .recommend-box li:nth-child(1) { animation-delay: 80ms; }
+    .recommend-box li:nth-child(2) { animation-delay: 140ms; }
+    .recommend-box li:nth-child(3) { animation-delay: 200ms; }
+    .recommend-box li:nth-child(4) { animation-delay: 260ms; }
+    .recommend-box li:nth-child(5) { animation-delay: 320ms; }
     .notice-box {
       margin-top: 10px;
       border: 1px solid rgba(168, 186, 216, 0.55);
@@ -605,15 +802,47 @@
       color: #334c72;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     }
+    .sleep-notice-box {
+      margin-top: 10px;
+      border: 1px solid rgba(230, 181, 116, 0.55);
+      border-radius: 12px;
+      background: linear-gradient(135deg, #fffaf0, #fff4df);
+      padding: 10px 12px;
+      color: #8a4b08;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      display: none;
+      transform-origin: top center;
+    }
+    .sleep-notice-box.show {
+      display: block;
+      animation: sleepNoticeEnter 460ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+    .sleep-notice-box.good {
+      border-color: rgba(80, 166, 109, 0.45);
+      background: linear-gradient(135deg, #f2fff6, #ebf9ef);
+      color: #1f6b39;
+    }
+    .sleep-notice-box.warn {
+      border-color: rgba(230, 181, 116, 0.55);
+      background: linear-gradient(135deg, #fffaf0, #fff4df);
+      color: #8a4b08;
+    }
+    .sleep-notice-box.risk {
+      border-color: rgba(226, 97, 97, 0.45);
+      background: linear-gradient(135deg, #fff4f4, #ffe8e8);
+      color: #9b1c1c;
+    }
     .book-meta {
-      margin: 0 0 14px;
+      margin: 0 0 12px;
       padding: 16px;
       border-radius: 16px;
-      border: 1px solid rgba(130, 164, 210, 0.45);
+      border: 1px solid rgba(130, 164, 210, 0.42);
       background:
-        radial-gradient(circle at 86% 14%, rgba(54, 131, 236, 0.12), transparent 34%),
-        linear-gradient(135deg, #fbfdff, #f2f8ff 55%, #edf5ff);
-      box-shadow: 0 12px 24px rgba(19, 55, 101, 0.1);
+        radial-gradient(circle at 84% 12%, rgba(54, 131, 236, 0.14), transparent 34%),
+        linear-gradient(135deg, #fcfeff, #f3f8ff 55%, #eef6ff);
+      box-shadow: 0 10px 24px rgba(19, 55, 101, 0.1);
+      animation: panelReveal 560ms ease both;
+      animation-delay: 140ms;
     }
     .book-meta-tag {
       display: inline-flex;
@@ -642,6 +871,7 @@
       font-weight: 700;
       color: #112c56;
       letter-spacing: 0.01em;
+      animation: titleDrift 3.2s ease-in-out infinite;
     }
     .book-meta-sub {
       margin: 8px 0 0;
@@ -651,8 +881,8 @@
       line-height: 1.45;
     }
     label { display: block; margin: 12px 0 8px; font-size: 0.95rem; font-weight: 700; }
-    input, select, textarea, button { width: 100%; border-radius: 14px; font-family: inherit; border: 1px solid #c7d1e7; box-sizing: border-box; }
-    input, select, textarea { padding: 12px 14px; background: #e9eef7; color: #0f1b33; font-size: 0.95rem; }
+    input, select, textarea, button { width: 100%; border-radius: 13px; font-family: inherit; border: 1px solid #c7d1e7; box-sizing: border-box; }
+    input, select, textarea { padding: 11px 13px; background: #eef3fb; color: #0f1b33; font-size: 0.94rem; }
     textarea { min-height: 220px; resize: vertical; background: #f3f6fb; }
     .patient-card textarea {
       min-height: 72px;
@@ -680,7 +910,24 @@
       cursor: pointer;
       white-space: nowrap;
     }
-    button { margin-top: 10px; border: 0; padding: 12px 14px; font-size: 1rem; font-weight: 700; color: #fff; background: linear-gradient(110deg, #0f7f78, #1e6bb9); cursor: pointer; }
+    button {
+      margin-top: 8px;
+      border: 0;
+      padding: 11px 14px;
+      font-size: 0.98rem;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      color: #fff;
+      background: linear-gradient(112deg, #0c8f89, #2d70d1);
+      box-shadow: 0 12px 22px rgba(24, 84, 167, 0.24);
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+    }
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 24px rgba(24, 84, 167, 0.3);
+      filter: brightness(1.03);
+    }
     .output {
       margin-top: 12px;
       padding: 12px;
@@ -693,7 +940,153 @@
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
     }
     .error { color: #9f1239; }
-    .toplink { display: inline-block; margin-bottom: 8px; color: #0f6ba8; text-decoration: none; font-size: 0.95rem; font-weight: 700; }
+    .toplink {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+      color: #0f6ba8;
+      text-decoration: none;
+      font-size: 0.84rem;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+    .toplink::before {
+      content: "←";
+      font-weight: 900;
+    }
+    .toplink:hover::before {
+      animation: arrowNudge 700ms ease-in-out infinite;
+    }
+    .quick-controls {
+      position: fixed;
+      top: 10px;
+      right: 12px;
+      z-index: 2200;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .mode-select {
+      min-width: 142px;
+      color: #0e4f85;
+      border-radius: 16px;
+      border: 1px solid #8cb7e6;
+      background: linear-gradient(180deg, #f2f8ff, #deecff);
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .logout-quick {
+      text-decoration: none;
+      color: #8f2f21;
+      font-weight: 700;
+      border-radius: 16px;
+      border: 1px solid #e8b1a1;
+      background: linear-gradient(180deg, #ffefe9, #ffd9ce);
+      padding: 10px 16px;
+      display: inline-flex;
+      align-items: center;
+    }
+    body.mode-dark {
+      color: #dfe9fb;
+      background: linear-gradient(112deg, #08121f 0%, #0e1e35 52%, #15294a 100%) !important;
+    }
+    body.mode-dark .dashboard-shell,
+    body.mode-dark .patient-card,
+    body.mode-dark .risk-dashboard,
+    body.mode-dark .risk-item,
+    body.mode-dark .snapshot-card,
+    body.mode-dark .care-track,
+    body.mode-dark .triage-box,
+    body.mode-dark .right-panel,
+    body.mode-dark .output,
+    body.mode-dark .confirm-modal {
+      background: linear-gradient(155deg, rgba(19, 33, 56, 0.96), rgba(15, 28, 49, 0.96)) !important;
+      border-color: rgba(84, 110, 150, 0.66) !important;
+      color: #e7efff !important;
+      box-shadow: 0 14px 30px rgba(4, 10, 20, 0.4) !important;
+    }
+    body.mode-dark .left-title,
+    body.mode-dark .risk-head,
+    body.mode-dark .snapshot-title,
+    body.mode-dark .feature-card-head label,
+    body.mode-dark .patient-card h3,
+    body.mode-dark strong {
+      color: #f3f7ff !important;
+    }
+    body.mode-dark .left-sub,
+    body.mode-dark .left-welcome,
+    body.mode-dark .patient-card-id,
+    body.mode-dark .snapshot-key,
+    body.mode-dark .triage-meta,
+    body.mode-dark .risk-sub,
+    body.mode-dark label {
+      color: #b8c9e4 !important;
+    }
+    body.mode-dark .mode-select {
+      color: #f0f7ff;
+      border-color: rgba(145, 184, 233, 0.56);
+      background: linear-gradient(180deg, rgba(46, 83, 135, 0.92), rgba(31, 62, 103, 0.96));
+    }
+    body.mode-dark .logout-quick {
+      border-color: rgba(243, 182, 170, 0.7);
+      color: #ffdcd1;
+      background: linear-gradient(180deg, rgba(127, 42, 33, 0.94), rgba(94, 30, 23, 0.98));
+    }
+    body,
+    .dashboard-shell,
+    .patient-card,
+    .risk-dashboard,
+    .risk-item,
+    .snapshot-card,
+    .care-track,
+    .triage-box,
+    .right-panel,
+    .output,
+    .confirm-modal,
+    .mode-select,
+    .logout-quick {
+      transition: background 420ms cubic-bezier(0.22, 1, 0.36, 1), color 380ms ease, border-color 380ms ease, box-shadow 420ms ease;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      background: linear-gradient(112deg, rgba(160, 194, 240, 0) 0%, rgba(160, 194, 240, 0.22) 48%, rgba(160, 194, 240, 0) 100%);
+      transform: translateX(-18%);
+      z-index: 9999;
+    }
+    @keyframes modeSwitchLift {
+      0% { transform: translateY(8px) scale(0.992); opacity: 0.72; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    @keyframes modeSwitchGlow {
+      0% { box-shadow: 0 0 0 0 rgba(103, 156, 233, 0.32); transform: scale(0.985); }
+      100% { box-shadow: 0 0 0 14px rgba(103, 156, 233, 0); transform: scale(1); }
+    }
+    @keyframes modeSwitchSweep {
+      0% { opacity: 0; transform: translateX(-18%); }
+      20% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(18%); }
+    }
+    body.mode-transition::after {
+      animation: modeSwitchSweep 560ms ease-out both;
+    }
+    body.mode-transition .dashboard-shell,
+    body.mode-transition .patient-card,
+    body.mode-transition .risk-dashboard,
+    body.mode-transition .risk-item {
+      animation: modeSwitchLift 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+    body.mode-transition .mode-select,
+    body.mode-transition .logout-quick {
+      animation: modeSwitchGlow 520ms ease both;
+    }
     .modal-backdrop { position: fixed; inset: 0; background: rgba(10, 20, 40, 0.5); display: none; align-items: center; justify-content: center; padding: 18px; z-index: 1000; }
     .modal-backdrop.active { display: flex; }
     .confirm-modal { width: min(420px, 100%); border-radius: 16px; border: 1px solid #8fd8ef; background: #fff; box-shadow: 0 24px 44px rgba(5, 30, 68, 0.3); overflow: hidden; }
@@ -702,37 +1095,56 @@
     .confirm-title { margin: 0 0 8px; font-family: "Palatino Linotype", "Book Antiqua", serif; font-size: 1.5rem; color: #0f766e; }
     .confirm-text { margin: 0; color: #41516f; }
     .confirm-close { margin-top: 12px; border: 0; border-radius: 10px; padding: 10px 12px; min-width: 130px; color: #fff; font-weight: 700; background: linear-gradient(120deg, #148a82, #2477d0); cursor: pointer; }
+    .alt-suggest-title { margin: 0 0 8px; color: #123c72; font-weight: 800; font-size: 1.1rem; text-align: left; }
+    .alt-suggest-text { margin: 0 0 10px; color: #41516f; text-align: left; }
+    .alt-card {
+      border: 1px solid #c8dcf7;
+      border-radius: 10px;
+      padding: 10px;
+      background: #f4f9ff;
+      text-align: left;
+      color: #28496f;
+      font-size: 0.92rem;
+      display: grid;
+      gap: 4px;
+    }
+    .alt-list {
+      margin-top: 10px;
+      text-align: left;
+      border: 1px solid #d1dff4;
+      border-radius: 10px;
+      background: #fbfdff;
+      padding: 8px 10px;
+      max-height: 140px;
+      overflow: auto;
+    }
+    .alt-list strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #1f4a7f;
+    }
+    .alt-list ul {
+      margin: 0;
+      padding-left: 16px;
+      color: #35557b;
+      font-size: 0.88rem;
+    }
+    .alt-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .confirm-close.alt-secondary {
+      background: linear-gradient(120deg, #6f86a8, #4a6386);
+    }
     @media (max-width: 980px) {
-      .app-sidebar {
-        width: 86px;
-      }
-      .menu-title,
-      .brand-text,
-      .sidebar-label,
-      .profile-meta-mini,
-      .sidebar-chips {
-        opacity: 0;
-        visibility: hidden;
-        width: 0;
-      }
-      .sidebar-headline,
-      .sidebar-brand,
-      .sidebar-link {
-        justify-content: center;
-      }
-      .sidebar-profile {
-        justify-content: center;
-      }
-      .page {
-        padding: 12px 8px 18px calc(8px + 86px);
-      }
-      body.sidebar-collapsed .page {
-        padding-left: calc(8px + 86px);
-      }
       .dashboard-shell {
         grid-template-columns: 1fr;
         gap: 20px;
       }
+      .sidebar-chips { display: none; }
       .left-panel {
         border-right: 0;
         border-bottom: 1px solid rgba(34, 64, 110, 0.16);
@@ -743,16 +1155,200 @@
       }
     }
     @media (max-width: 760px) {
+      .quick-controls {
+        top: 8px;
+        right: 8px;
+        gap: 8px;
+      }
+      .mode-select {
+        min-width: 120px;
+        font-size: 0.86rem;
+        padding: 8px 10px;
+      }
+      .logout-quick {
+        font-size: 0.86rem;
+        padding: 8px 12px;
+      }
       .grid { grid-template-columns: 1fr; }
       .feature-fields { grid-template-columns: 1fr; }
+      .app-sidebar {
+        width: 86px;
+      }
+      .menu-title,
+      .brand-text,
+      .sidebar-label {
+        opacity: 0;
+        visibility: hidden;
+        width: 0;
+      }
+      .sidebar-headline,
+      .sidebar-brand,
+      .sidebar-link {
+        justify-content: center;
+      }
+      .page {
+        padding: 12px 8px 18px calc(8px + 86px);
+      }
+      body.sidebar-collapsed .page {
+        padding-left: calc(8px + 86px);
+      }
     }
-  </style>
+    @keyframes shellRise {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes panelReveal {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes dangerPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.32); }
+      50% { box-shadow: 0 0 0 7px rgba(220, 38, 38, 0); }
+    }
+    @keyframes iconFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+    @keyframes sheenSweep {
+      0% { left: -38%; }
+      65%, 100% { left: 122%; }
+    }
+    @keyframes barGlow {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    @keyframes titleDrift {
+      0%, 100% { letter-spacing: 0.01em; }
+      50% { letter-spacing: 0.03em; }
+    }
+    @keyframes arrowNudge {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(-2px); }
+    }
+    @keyframes recommendationEnter {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes sleepNoticeEnter {
+      0% { opacity: 0; transform: translateY(-10px) scale(0.98); }
+      65% { opacity: 1; transform: translateY(2px) scale(1.01); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+                          /* Shared app background theme */
+    body {
+      background: linear-gradient(160deg, #FFE3E1 0%, #9CD5FF 100%) !important;
+      background-color: #FFE3E1 !important;
+    }
+    .chatbot-float {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 2400;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+    .chatbot-popup {
+      width: min(290px, calc(100vw - 28px));
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid #b9dfe4;
+      background: rgba(250, 255, 255, 0.96);
+      color: #1e4f58;
+      box-shadow: 0 18px 30px rgba(29, 86, 95, 0.18);
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    .chatbot-popup.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .chatbot-popup h4 {
+      margin: 0 0 6px;
+      font-size: 0.98rem;
+      color: #156972;
+    }
+    .chatbot-popup p {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      color: #355e66;
+    }
+    .chatbot-popup-actions {
+      margin-top: 12px;
+    }
+    .chatbot-open-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      background: linear-gradient(135deg, #249aa4, #1e7480);
+      color: #fff;
+      box-sizing: border-box;
+    }
+    .chatbot-launcher {
+      min-height: 58px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid #a9d7dd;
+      background: linear-gradient(135deg, #e6fbfd, #c8eef2);
+      color: #14717a;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 16px 28px rgba(23, 90, 99, 0.22);
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.95rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .chatbot-launcher svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+    .chatbot-launcher span {
+      line-height: 1;
+    }</style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='page-animations.css') }}">
 </head>
 <body data-nav-active="Book Appointment">
-  <aside class="app-sidebar" id="appSidebar" aria-label="Patient portal navigation">
+  <div class="quick-controls" aria-label="Theme and session controls">
+    <select id="modeSelect" class="mode-select" aria-label="Theme mode">
+      <option value="light">Light Mode</option>
+      <option value="dark">Dark Mode</option>
+    </select>
+    <a href="{{ url_for('patient_logout') }}" class="logout-quick">Logout</a>
+  </div>
+  <aside class="app-sidebar patient-theme" id="appSidebar" aria-label="Main navigation">
     <div class="sidebar-top">
       <div class="sidebar-headline">
-        <p class="menu-title">Menu</p>
+        <p class="menu-title">MENU</p>
         <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Collapse sidebar" aria-expanded="true">&lsaquo;</button>
       </div>
       <div class="sidebar-brand">
@@ -764,8 +1360,8 @@
           <span class="brand-sub">Healthcare System</span>
         </span>
       </div>
-      <div class="sidebar-profile">
-        <span class="profile-avatar-mini">{{ (patient_name or "PT")[:2]|upper }}</span>
+      <div class="sidebar-profile" id="sidebarProfile">
+        <span class="profile-avatar-mini">PT</span>
         <div class="profile-meta-mini">
           <div class="profile-name-mini">{{ patient_name or "Patient" }}</div>
           <div class="profile-role-mini">Patient Portal</div>
@@ -779,23 +1375,32 @@
     </div>
     <ul class="sidebar-menu">
       <li><a class="sidebar-link" data-nav="About" href="/about"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7h.01"/></svg></span><span class="sidebar-label">About</span></a></li>
+      {% if session.get('doctor_authenticated') %}
+      <li><a class="sidebar-link" data-nav="Dashboard" href="/doctor/dashboard"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8v8H3zM13 3h8v8h-8zM13 13h8v8h-8zM3 3h8v8H3z"/></svg></span><span class="sidebar-label">Dashboard</span></a></li>
+      <li><a class="sidebar-link" data-nav="Logout" href="{{ url_for('doctor_logout') }}"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><span class="sidebar-label">Logout</span></a></li>
+      {% elif session.get('patient_authenticated') %}
       <li><a class="sidebar-link" data-nav="Book Appointment" href="/patient/book-appointment"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 9h18M5 5h14v16H5z"/></svg></span><span class="sidebar-label">Book Appointment</span></a></li>
       <li><a class="sidebar-link" data-nav="Health Details" href="/patient/health-details"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 5.6-7 10-7 10Z"/></svg></span><span class="sidebar-label">Health Details</span></a></li>
       <li><a class="sidebar-link" data-nav="AI Chat" href="/patient/ai-chat"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M8 10h8"/><path d="M8 14h5"/><path d="M5 19l1.2-3.2A8 8 0 1 1 20 12a8 8 0 0 1-8 8H5z"/></svg></span><span class="sidebar-label">AI Chat</span></a></li>
       <li><a class="sidebar-link" data-nav="AI Risk Prediction" href="/patient/book-appointment#overallRisk"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg></span><span class="sidebar-label">AI Risk Prediction</span></a></li>
       <li><a class="sidebar-link" data-nav="Profile" href="/patient/booking-confirmation"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg></span><span class="sidebar-label">Profile</span></a></li>
       <li><a class="sidebar-link" data-nav="Logout" href="/patient/logout"><span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><span class="sidebar-label">Logout</span></a></li>
+      {% endif %}
     </ul>
   </aside>
   <main class="page">
     <div class="dashboard-shell">
       <aside class="left-panel">
-        <a class="toplink" href="/login">Back</a>
-        <h2 class="left-title">Exafluence Hospital</h2>
-        <p class="left-sub">hi: {{ patient_name or "Patient" }} welcome</p>
+        <a class="toplink" href="/patient/booking-confirmation">Back to Appointments</a>
+        <h2 class="left-title"><span style="color:#2f6fdb;">AI</span><span style="color:#d94343;">Health</span> <span style="color:#111111;">Hub</span></h2>
+        <p class="left-sub">Hi {{ patient_name or "Patient" }}, welcome</p>
         <div class="left-extra-wrap patient-card">
           <h3>Patient Details Card</h3>
           <p class="patient-card-id">Patient ID: <strong>{{ patient_id }}</strong></p>
+          <div class="patient-card-meta">
+            <span class="patient-card-meta-label">Health Data Submitted On</span>
+            <span class="patient-card-meta-value" id="healthDataSubmittedOn">--</span>
+          </div>
           <div class="feature-card-head">
             <label for="featureAge">Patient Features</label>
             <div class="feature-actions">
@@ -819,7 +1424,7 @@
             </div>
             <div class="feature-row full">
               <label for="featureSymptoms">Symptoms</label>
-              <textarea id="featureSymptoms" placeholder="e.g. chest pain, dizziness"></textarea>
+              <textarea id="featureSymptoms" placeholder="e.g. chest pain, fever"></textarea>
             </div>
             <div class="feature-row">
               <label for="featureSymptomCount">Symptoms Count</label>
@@ -870,6 +1475,10 @@
               </select>
             </div>
             <div class="feature-row">
+              <label for="featureAverageSleepHours">Average Sleep Hours</label>
+              <input id="featureAverageSleepHours" type="number" step="1" min="3" max="12" inputmode="numeric" />
+            </div>
+            <div class="feature-row">
               <label for="featureFamilyHistory">Family History</label>
               <select id="featureFamilyHistory">
                 <option value="">Select</option>
@@ -911,6 +1520,10 @@
               <span class="snapshot-key">Symptom Count</span>
               <span class="snapshot-val" id="snapSymCount">--</span>
             </div>
+            <div class="snapshot-item">
+              <span class="snapshot-key">Sleep Hours</span>
+              <span class="snapshot-val" id="snapSleepHours">--</span>
+            </div>
           </div>
           <div class="care-track">
             <h4>Appointment Flow</h4>
@@ -942,6 +1555,13 @@
           <h2 class="risk-head">Your Risk Assessment Results</h2>
           <p class="risk-sub">Based on your health metrics</p>
           <div class="risk-overall" id="overallRisk">Overall Risk Level: Assessing...</div>
+          <div class="triage-box">
+            <div>
+              <div class="triage-title">Appointment Priority Recommendation</div>
+              <div class="triage-meta" id="triageSlot">Recommended Slot: Assessing...</div>
+            </div>
+            <span class="triage-badge green" id="triageBadge">Normal Appointment</span>
+          </div>
 
           <div class="risk-grid">
             <div class="risk-item">
@@ -984,6 +1604,10 @@
             <ul id="recommendList">
               <li>Risk recommendations will appear after loading your details.</li>
             </ul>
+          </div>
+          <div class="sleep-notice-box" id="sleepNoticeBox">
+            <strong>Sleep Notice</strong><br>
+            <span id="sleepNoticeText"></span>
           </div>
           <div class="notice-box">
             <strong>Important Notice</strong><br>
@@ -1056,7 +1680,13 @@
         </div>
       </div>
 
+      <div id="emergencyDoctorInlineCard" class="alt-list" style="display:none; margin-top:10px;">
+        <strong>Available Emergency Doctors (19:00 to 24:00)</strong>
+        <ul id="emergencyDoctorInlineList"></ul>
+      </div>
+
         <button id="bookBtn" type="button">Book Appointment</button>
+        <div id="bookOutput" class="output" style="margin-top:12px;">Patient details loaded.</div>
       </section>
     </div>
   </main>
@@ -1072,11 +1702,182 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="loginSuccessModal" aria-hidden="true">
+    <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="loginSuccessTitle">
+      <div class="confirm-top">Login</div>
+      <div class="confirm-body">
+        <h2 class="confirm-title" id="loginSuccessTitle">Login Successful</h2>
+        <p class="confirm-text">Login successful.</p>
+        <button type="button" class="confirm-close" id="loginSuccessContinueBtn">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="doctorUnavailableModal" aria-hidden="true">
+    <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="doctorUnavailableTitle">
+      <div class="confirm-top">Doctor Availability</div>
+      <div class="confirm-body">
+        <h2 class="confirm-title" id="doctorUnavailableTitle">Doctor Not Available</h2>
+        <p class="alt-suggest-text" id="doctorUnavailableText"></p>
+        <div class="alt-card" id="alternativeDoctorCard" style="display:none;">
+          <div><strong>Doctor:</strong> <span id="altDoctorName">-</span></div>
+          <div><strong>Specialization:</strong> <span id="altDoctorSpec">-</span></div>
+          <div><strong>Available Time:</strong> <span id="altDoctorTime">-</span></div>
+        </div>
+        <div class="alt-list" id="emergencyDoctorListWrap" style="display:none;">
+          <strong>Available Emergency Doctors</strong>
+          <ul id="emergencyDoctorList"></ul>
+        </div>
+        <div class="alt-actions">
+          <button type="button" class="confirm-close" id="bookAlternativeBtn" style="display:none;">Book Alternative Doctor</button>
+          <button type="button" class="confirm-close alt-secondary" id="closeDoctorUnavailableBtn">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chatbot-float" aria-label="AI chat shortcut">
+    <div class="chatbot-popup" id="chatbotPopup">
+      <h4>AI Chat Assistant</h4>
+      <p>Ask about patient details, risk level, upcoming appointment, and doctor precautions.</p>
+      <div class="chatbot-popup-actions">
+        <a class="chatbot-open-link" href="/patient/ai-chat">Open Chat</a>
+      </div>
+    </div>
+    <button class="chatbot-launcher" id="chatbotLauncher" type="button" aria-label="Open AI chat popup">
+      <span>Need Help</span>
+      <svg viewBox="0 0 24 24"><path d="M8 10h8"/><path d="M8 14h5"/><path d="M5 19l1.2-3.2A8 8 0 1 1 20 12a8 8 0 0 1-8 8H5z"/></svg>
+    </button>
+  </div>
+
   <script>
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const sidebarLinks = document.querySelectorAll(".sidebar-link");
+
+    function applySidebarState(collapsed) {
+      document.body.classList.toggle("sidebar-collapsed", collapsed);
+      if (sidebarToggle) {
+        sidebarToggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+        sidebarToggle.innerHTML = collapsed ? "&rsaquo;" : "&lsaquo;";
+      }
+    }
+
+    function initSidebar() {
+      const saved = localStorage.getItem("aihealth_sidebar_collapsed");
+      if (saved === "1") {
+        applySidebarState(true);
+      } else if (saved === "0") {
+        applySidebarState(false);
+      } else {
+        applySidebarState(window.matchMedia("(max-width: 900px)").matches);
+      }
+
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener("click", () => {
+          const collapsed = !document.body.classList.contains("sidebar-collapsed");
+          applySidebarState(collapsed);
+          localStorage.setItem("aihealth_sidebar_collapsed", collapsed ? "1" : "0");
+        });
+      }
+
+      const activeName = document.body.dataset.navActive || "";
+      sidebarLinks.forEach((link) => {
+        if (link.dataset.nav === activeName) {
+          link.classList.add("active");
+        }
+      });
+    }
+
+    initSidebar();
+    const modeSelect = document.getElementById("modeSelect");
+    const loginSuccessModal = document.getElementById("loginSuccessModal");
+    const loginSuccessContinueBtn = document.getElementById("loginSuccessContinueBtn");
+
+    function closeLoginSuccessPopup() {
+      if (!loginSuccessModal) return;
+      loginSuccessModal.classList.remove("active");
+      loginSuccessModal.setAttribute("aria-hidden", "true");
+    }
+
+    if (sessionStorage.getItem("patient_login_success_popup") === "1" && loginSuccessModal) {
+      sessionStorage.removeItem("patient_login_success_popup");
+      loginSuccessModal.classList.add("active");
+      loginSuccessModal.setAttribute("aria-hidden", "false");
+      if (loginSuccessContinueBtn) loginSuccessContinueBtn.focus();
+    }
+
+    if (loginSuccessContinueBtn) {
+      loginSuccessContinueBtn.addEventListener("click", closeLoginSuccessPopup);
+    }
+
+    if (loginSuccessModal) {
+      loginSuccessModal.addEventListener("click", (event) => {
+        if (event.target === loginSuccessModal) closeLoginSuccessPopup();
+      });
+    }
+    const modeStorageKey = "patient_book_mode";
+    let modeAnimationTimer = null;
+
+    function applyPageMode(mode) {
+      const useDark = mode === "dark";
+      document.body.classList.toggle("mode-dark", useDark);
+      document.body.classList.toggle("mode-light", !useDark);
+      if (modeSelect) {
+        modeSelect.value = useDark ? "dark" : "light";
+      }
+      document.body.classList.remove("mode-transition");
+      void document.body.offsetWidth;
+      document.body.classList.add("mode-transition");
+      if (modeAnimationTimer) clearTimeout(modeAnimationTimer);
+      modeAnimationTimer = setTimeout(() => {
+        document.body.classList.remove("mode-transition");
+      }, 580);
+    }
+
+    if (modeSelect) {
+      let savedMode = "light";
+      try {
+        savedMode = localStorage.getItem(modeStorageKey) || "light";
+      } catch (_) {
+        savedMode = "light";
+      }
+      const urlMode = new URLSearchParams(window.location.search).get("mode");
+      if (urlMode === "light" || urlMode === "dark") {
+        savedMode = urlMode;
+      }
+      applyPageMode(savedMode);
+      modeSelect.addEventListener("change", () => {
+        const selectedMode = modeSelect.value === "dark" ? "dark" : "light";
+        applyPageMode(selectedMode);
+        try {
+          localStorage.setItem(modeStorageKey, selectedMode);
+        } catch (_) {
+          // localStorage may be unavailable in strict browser contexts.
+        }
+      });
+    }
+
     let bookingRedirectTimer = null;
     let loadedPatientFeatures = null;
+    const initialPatientFeatures = {{ (patient_features or {})|tojson }};
     let riskPanelTimer = null;
     let riskPanelRequestId = 0;
+    let appointmentTimeTouched = false;
+    const emergencyDoctorsApi = {{ url_for("patient_emergency_doctors")|tojson }};
+    let pendingBookingPayload = null;
+
+    const doctorUnavailableModal = document.getElementById("doctorUnavailableModal");
+    const doctorUnavailableText = document.getElementById("doctorUnavailableText");
+    const alternativeDoctorCard = document.getElementById("alternativeDoctorCard");
+    const altDoctorName = document.getElementById("altDoctorName");
+    const altDoctorSpec = document.getElementById("altDoctorSpec");
+    const altDoctorTime = document.getElementById("altDoctorTime");
+    const emergencyDoctorListWrap = document.getElementById("emergencyDoctorListWrap");
+    const emergencyDoctorList = document.getElementById("emergencyDoctorList");
+    const emergencyDoctorInlineCard = document.getElementById("emergencyDoctorInlineCard");
+    const emergencyDoctorInlineList = document.getElementById("emergencyDoctorInlineList");
+    const bookAlternativeBtn = document.getElementById("bookAlternativeBtn");
+    const closeDoctorUnavailableBtn = document.getElementById("closeDoctorUnavailableBtn");
 
     async function postJson(url, payload) {
       const res = await fetch(url, {
@@ -1105,6 +1906,64 @@
       el.className = isError ? "output error" : "output";
     }
 
+    function closeDoctorUnavailablePopup() {
+      if (!doctorUnavailableModal) return;
+      doctorUnavailableModal.classList.remove("active");
+      doctorUnavailableModal.setAttribute("aria-hidden", "true");
+      pendingBookingPayload = null;
+    }
+
+    function openDoctorUnavailablePopup(data, basePayload) {
+      if (!doctorUnavailableModal || !doctorUnavailableText) return;
+      const message = String(
+        (data && data.message) ||
+        "Selected doctor is on leave. Please choose another date or another doctor."
+      );
+      doctorUnavailableText.textContent = message;
+
+      const alt = data && data.alternative_doctor ? data.alternative_doctor : null;
+      const emergencyList = Array.isArray(data && data.emergency_doctors_available)
+        ? data.emergency_doctors_available
+        : [];
+      if (emergencyDoctorListWrap && emergencyDoctorList) {
+        if (emergencyList.length > 0) {
+          emergencyDoctorListWrap.style.display = "block";
+          emergencyDoctorList.innerHTML = emergencyList
+            .map((doc) => {
+              const name = escapeHtml(doc.doctor_name || doc.doctor_id || "-");
+              const spec = escapeHtml(doc.specialization || "-");
+              const time = escapeHtml(doc.available_time || "-");
+              return `<li>${name} (${spec}) - ${time}</li>`;
+            })
+            .join("");
+        } else {
+          emergencyDoctorListWrap.style.display = "none";
+          emergencyDoctorList.innerHTML = "";
+        }
+      }
+
+      if (alt && data && data.can_book_alternative) {
+        alternativeDoctorCard.style.display = "grid";
+        bookAlternativeBtn.style.display = "inline-block";
+        altDoctorName.textContent = String(alt.doctor_name || alt.doctor_id || "-");
+        altDoctorSpec.textContent = String(alt.specialization || "-");
+        altDoctorTime.textContent = String(alt.available_time || "-");
+        pendingBookingPayload = { ...(basePayload || {}), doctor_id: String(alt.doctor_id || "") };
+      } else {
+        alternativeDoctorCard.style.display = "none";
+        bookAlternativeBtn.style.display = "none";
+        pendingBookingPayload = null;
+      }
+
+      doctorUnavailableModal.classList.add("active");
+      doctorUnavailableModal.setAttribute("aria-hidden", "false");
+      if (pendingBookingPayload) {
+        bookAlternativeBtn.focus();
+      } else {
+        closeDoctorUnavailableBtn.focus();
+      }
+    }
+
     function escapeHtml(value) {
       return String(value ?? "")
         .replace(/&/g, "&amp;")
@@ -1124,6 +1983,117 @@
     function setInputValue(id, value) {
       const el = document.getElementById(id);
       if (el) el.value = value == null ? "" : String(value);
+    }
+
+    function toInputDateValue(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function toInputTimeValue(date) {
+      const hh = String(date.getHours()).padStart(2, "0");
+      const mm = String(date.getMinutes()).padStart(2, "0");
+      return `${hh}:${mm}`;
+    }
+
+    function parseTimeMinutes(value) {
+      const text = String(value || "").trim();
+      if (!text || !text.includes(":")) return null;
+      const [h, m] = text.split(":");
+      const hh = Number(h);
+      const mm = Number(m);
+      if (!Number.isFinite(hh) || !Number.isFinite(mm)) return null;
+      return hh * 60 + mm;
+    }
+
+    function isNightEmergencyWindowFromMinutes(totalMinutes) {
+      if (totalMinutes == null) return false;
+      return totalMinutes >= 19 * 60 || totalMinutes < 7 * 60;
+    }
+
+    async function updateEmergencyDoctorInlineList() {
+      if (!emergencyDoctorInlineCard || !emergencyDoctorInlineList) return;
+      const dateValue = document.getElementById("appointmentDate").value;
+      const timeValue = document.getElementById("appointmentTimeOnly").value;
+      const timeMinutes = parseTimeMinutes(timeValue);
+
+      if (!dateValue || !isNightEmergencyWindowFromMinutes(timeMinutes)) {
+        emergencyDoctorInlineCard.style.display = "none";
+        emergencyDoctorInlineList.innerHTML = "";
+        return;
+      }
+
+      try {
+        const query = `?date=${encodeURIComponent(dateValue)}&time=${encodeURIComponent(timeValue)}`;
+        const res = await fetch(`${emergencyDoctorsApi}${query}`, {
+          method: "GET",
+          credentials: "same-origin",
+          headers: { "Accept": "application/json" },
+        });
+        if (!res.ok) {
+          emergencyDoctorInlineCard.style.display = "none";
+          emergencyDoctorInlineList.innerHTML = "";
+          return;
+        }
+        const data = await res.json();
+        const list = Array.isArray(data && data.emergency_doctors) ? data.emergency_doctors : [];
+        if (!list.length) {
+          emergencyDoctorInlineCard.style.display = "block";
+          emergencyDoctorInlineList.innerHTML = "<li>No emergency doctors currently available for this date/time.</li>";
+          return;
+        }
+        emergencyDoctorInlineCard.style.display = "block";
+        emergencyDoctorInlineList.innerHTML = list
+          .map((doc) => {
+            const name = escapeHtml(doc.doctor_name || doc.doctor_id || "-");
+            const spec = escapeHtml(doc.specialization || "-");
+            const time = escapeHtml(doc.available_time || "-");
+            return `<li>${name} (${spec}) - ${time}</li>`;
+          })
+          .join("");
+      } catch (_) {
+        emergencyDoctorInlineCard.style.display = "none";
+        emergencyDoctorInlineList.innerHTML = "";
+      }
+    }
+
+    function roundUpToNextMinutes(date, minutesStep) {
+      const d = new Date(date.getTime());
+      d.setSeconds(0, 0);
+      const minute = d.getMinutes();
+      const offset = (minutesStep - (minute % minutesStep)) % minutesStep;
+      d.setMinutes(minute + offset);
+      return d;
+    }
+
+    function applyRecommendedSlotToAppointmentInputs(slotText) {
+      const dateInput = document.getElementById("appointmentDate");
+      const timeInput = document.getElementById("appointmentTimeOnly");
+      if (!dateInput || !timeInput) return;
+
+      if (appointmentTimeTouched && dateInput.value && timeInput.value) {
+        return;
+      }
+
+      const slot = String(slotText || "").toLowerCase();
+      const now = new Date();
+      let target = new Date(now.getTime() + 60 * 60 * 1000);
+
+      if (slot.includes("next available")) {
+        target = new Date(now.getTime());
+        target.setDate(target.getDate() + 1);
+        target.setHours(10, 0, 0, 0);
+      } else if (slot.includes("today")) {
+        target = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+      } else if (slot.includes("within 1 hour")) {
+        target = new Date(now.getTime() + 60 * 60 * 1000);
+      }
+
+      target = roundUpToNextMinutes(target, 5);
+      dateInput.value = toInputDateValue(target);
+      timeInput.value = toInputTimeValue(target);
     }
 
     function calculateBmiMetrics(heightCmValue, weightKgValue) {
@@ -1155,7 +2125,9 @@
       const normalizedGender = hasValue(f.Gender) ? formatGender(f.Gender) : "";
       const smokingHabit = hasValue(f.Smoking_Habit) ? String(f.Smoking_Habit).toLowerCase() : "";
       const alcoholHabit = hasValue(f.Alcohol_Habit) ? String(f.Alcohol_Habit).toLowerCase() : "";
+      const averageSleepHours = f.Average_Sleep_Hours ?? "";
       const familyHistory = hasValue(f.Family_History) ? String(f.Family_History).toLowerCase() : "";
+      const submissionTimestamp = f.Health_Data_Submitted_At ?? f.health_data_submitted_at ?? "";
       const weightCategory = hasValue(f.Weight_Category)
         ? f.Weight_Category
         : hasValue(f.BMI_Category)
@@ -1175,8 +2147,11 @@
       setInputValue("featureBpDiastolic", bpDiastolic);
       setInputValue("featureSmokingHabit", smokingHabit);
       setInputValue("featureAlcoholHabit", alcoholHabit);
+      setInputValue("featureAverageSleepHours", averageSleepHours);
       setInputValue("featureFamilyHistory", familyHistory);
       setInputValue("featureMedicalHistory", f.Medical_History);
+      setHealthDataSubmittedOn(submissionTimestamp);
+      syncFeatureSleepValidation();
     }
 
     function setFeatureEditMode(canEdit) {
@@ -1210,11 +2185,16 @@
       const bmi = features.BMI ?? "";
       const smokingHabit = features.Smoking_Habit ?? "";
       const alcoholHabit = features.Alcohol_Habit ?? "";
+      const averageSleepHours = features.Average_Sleep_Hours ?? "";
       const familyHistory = features.Family_History ?? "";
       const medicalHistory = features.Medical_History ?? "";
+      const submittedAt = formatSubmissionTimestamp(
+        features.Health_Data_Submitted_At ?? features.health_data_submitted_at ?? ""
+      );
       return [
         "<strong>Patient Details</strong>",
         `patient id: ${escapeHtml(patientId || "-")}`,
+        `health data submitted on: ${escapeHtml(submittedAt)}`,
         `age: ${escapeHtml(features.Age ?? "")}`,
         `gender: ${escapeHtml(formatGender(features.Gender))}`,
         `symptoms: ${escapeHtml(features.Symptoms ?? "")}`,
@@ -1224,6 +2204,7 @@
         `bmi: ${escapeHtml(bmi)}`,
         `smoking habit: ${escapeHtml(smokingHabit)}`,
         `alcohol habit: ${escapeHtml(alcoholHabit)}`,
+        `average sleep hours: ${escapeHtml(averageSleepHours)}`,
         `family history: ${escapeHtml(familyHistory)}`,
         `medical history: ${escapeHtml(medicalHistory)}`
       ].join("<br>");
@@ -1270,6 +2251,77 @@
         .replace(/[^a-z0-9_]+/g, "");
     }
 
+    function sanitizeSymptomsText(value) {
+      return String(value ?? "")
+        .replace(/[^A-Za-z0-9,\s./()+:&'-]/g, "")
+        .replace(/\s*,\s*/g, ", ")
+        .replace(/,\s*,+/g, ", ")
+        .replace(/\s{2,}/g, " ")
+        .replace(/^,\s*|\s*,\s*$/g, "");
+    }
+
+    function normalizeSleepHoursInput(value) {
+      return String(value ?? "").replace(/[^\d]/g, "");
+    }
+
+    function getSleepCategoryInfo(value) {
+      const hours = Number(value);
+      if (!Number.isInteger(hours)) {
+        return null;
+      }
+      if (hours < 5) {
+        return {
+          title: "Poor Sleep",
+          meaning: "High health risk",
+          tone: "risk",
+          detail: "Poor Sleep: High health risk."
+        };
+      }
+      if (hours <= 6) {
+        return {
+          title: "Low Sleep",
+          meaning: "Not enough rest",
+          tone: "warn",
+          detail: "Low Sleep: Not enough rest."
+        };
+      }
+      if (hours <= 9) {
+        return {
+          title: "Healthy Sleep",
+          meaning: "Recommended",
+          tone: "good",
+          detail: "Healthy Sleep: Recommended."
+        };
+      }
+      return {
+        title: "Excess Sleep",
+        meaning: "Possible fatigue",
+        tone: "warn",
+        detail: "Excess Sleep: Possible fatigue."
+      };
+    }
+
+    function syncFeatureSleepValidation() {
+      const sleepInput = document.getElementById("featureAverageSleepHours");
+      if (!sleepInput) return true;
+      const cleaned = normalizeSleepHoursInput(sleepInput.value);
+      if (sleepInput.value !== cleaned) {
+        sleepInput.value = cleaned;
+      }
+      const raw = sleepInput.value.trim();
+      if (!raw) {
+        sleepInput.setCustomValidity("");
+        return true;
+      }
+      const parsed = Number(raw);
+      if (!Number.isInteger(parsed) || parsed < 3 || parsed > 12) {
+        sleepInput.setCustomValidity("Average Sleep Hours must be a whole number between 3 and 12.");
+        return false;
+      }
+      sleepInput.setCustomValidity("");
+      return true;
+    }
+
     function syncSymptomFlags(features) {
       const synced = { ...(features || {}) };
       if (!Object.prototype.hasOwnProperty.call(synced, "Symptoms")) {
@@ -1299,7 +2351,12 @@
       if (!hasValue(base.Family_History)) base.Family_History = "no";
       const age = document.getElementById("featureAge").value.trim();
       const gender = document.getElementById("featureGender").value.trim();
-      const symptoms = document.getElementById("featureSymptoms").value.trim();
+      const symptomsInput = document.getElementById("featureSymptoms");
+      const cleanedSymptoms = sanitizeSymptomsText(symptomsInput.value);
+      if (symptomsInput.value !== cleanedSymptoms) {
+        symptomsInput.value = cleanedSymptoms;
+      }
+      const symptoms = cleanedSymptoms.trim();
       const symptomCount = document.getElementById("featureSymptomCount").value.trim();
       const glucose = document.getElementById("featureGlucose").value.trim();
       const heightCm = document.getElementById("featureHeightCm").value.trim();
@@ -1308,6 +2365,7 @@
       const diastolic = document.getElementById("featureBpDiastolic").value.trim();
       const smokingHabit = document.getElementById("featureSmokingHabit").value.trim();
       const alcoholHabit = document.getElementById("featureAlcoholHabit").value.trim();
+      const averageSleepHours = document.getElementById("featureAverageSleepHours").value.trim();
       const familyHistory = document.getElementById("featureFamilyHistory").value.trim();
       const medicalHistory = document.getElementById("featureMedicalHistory").value.trim();
       const hasHeightInput = heightCm !== "";
@@ -1316,6 +2374,10 @@
       const computedCategory = hasHeightInput || hasWeightInput
         ? bmiMetrics.category
         : (base.Weight_Category ?? base.BMI_Category ?? "");
+
+      if (averageSleepHours !== "" && !syncFeatureSleepValidation()) {
+        throw new Error("Average Sleep Hours must be a whole number between 3 and 12.");
+      }
 
       base.Age = age === "" ? null : toNumber(age, null);
       base.Gender = gender === "" ? null : gender;
@@ -1333,6 +2395,7 @@
       base.BP_Diastolic = diastolic === "" ? null : toNumber(diastolic, null);
       base.Smoking_Habit = smokingHabit === "" ? null : smokingHabit.toLowerCase();
       base.Alcohol_Habit = alcoholHabit === "" ? null : alcoholHabit.toLowerCase();
+      base.Average_Sleep_Hours = averageSleepHours === "" ? null : toNumber(averageSleepHours, null);
       base.Family_History = familyHistory === "" ? null : familyHistory.toLowerCase();
       base.Medical_History = medicalHistory === "" ? null : medicalHistory;
       setInputValue("featureWeightCategory", computedCategory);
@@ -1375,6 +2438,11 @@
       return text !== "";
     }
 
+    function isTruthyFeatureValue(value) {
+      const text = String(value ?? "").trim().toLowerCase();
+      return text === "1" || text === "true" || text === "yes" || text === "y";
+    }
+
     function normalizeFeaturePayload(features) {
       const payload = {};
       Object.entries(features || {}).forEach(([key, value]) => {
@@ -1404,6 +2472,7 @@
         f.Weight_kg ?? f.WeightKg ?? f.Weight
       );
       const bmi = bmiMetrics.bmi ?? (f.BMI ?? "--");
+      const sleepHours = f.Average_Sleep_Hours ?? "--";
       const gender = f.Gender == null ? "--" : formatGender(f.Gender);
 
       const set = (id, val) => {
@@ -1416,6 +2485,31 @@
       set("snapBp", bp);
       set("snapBmi", bmi);
       set("snapSymCount", symptomCount);
+      set("snapSleepHours", sleepHours);
+    }
+
+    function formatSubmissionTimestamp(value) {
+      const raw = String(value ?? "").trim();
+      if (!raw) return "--";
+      const parsed = new Date(raw);
+      if (Number.isNaN(parsed.getTime())) return "--";
+      const dateText = new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+      }).format(parsed);
+      const timeText = new Intl.DateTimeFormat("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true
+      }).format(parsed);
+      return `${dateText} — ${timeText}`;
+    }
+
+    function setHealthDataSubmittedOn(value) {
+      const el = document.getElementById("healthDataSubmittedOn");
+      if (el) el.textContent = formatSubmissionTimestamp(value);
     }
 
     function scoreLevel(percent) {
@@ -1446,30 +2540,52 @@
       return level;
     }
 
-    function renderRecommendations(overallLevel) {
+    function renderRecommendations(overallLevel, features) {
       const el = document.getElementById("recommendList");
       if (!el) return;
+      const items = [];
       if (overallLevel === "HIGH") {
-        el.innerHTML = [
-          "<li>Consult a doctor soon for a detailed clinical evaluation.</li>",
-          "<li>Follow a low-sodium, balanced diet and reduce sugar intake.</li>",
-          "<li>Track blood pressure and glucose regularly at home.</li>",
-          "<li>Start light daily activity and avoid smoking/alcohol.</li>"
-        ].join("");
+        items.push(
+          "Consult a doctor soon for a detailed clinical evaluation.",
+          "Follow a low-sodium, balanced diet and reduce sugar intake.",
+          "Track blood pressure and glucose regularly at home.",
+          "Start light daily activity and avoid smoking/alcohol."
+        );
       } else if (overallLevel === "MEDIUM") {
-        el.innerHTML = [
-          "<li>Maintain regular physical activity (at least 150 minutes/week).</li>",
-          "<li>Prefer whole foods, vegetables, and controlled carbohydrate intake.</li>",
-          "<li>Monitor BP and glucose periodically and review trends.</li>",
-          "<li>Keep stress levels manageable through rest and relaxation.</li>"
-        ].join("");
+        items.push(
+          "Maintain regular physical activity (at least 150 minutes/week).",
+          "Prefer whole foods, vegetables, and controlled carbohydrate intake.",
+          "Monitor BP and glucose periodically and review trends.",
+          "Keep stress levels manageable through rest and relaxation."
+        );
       } else {
-        el.innerHTML = [
-          "<li>Continue a heart-healthy balanced diet.</li>",
-          "<li>Stay physically active with regular exercise.</li>",
-          "<li>Maintain healthy sleep and hydration routines.</li>",
-          "<li>Attend preventive check-ups as scheduled.</li>"
-        ].join("");
+        items.push(
+          "Continue a heart-healthy balanced diet.",
+          "Stay physically active with regular exercise.",
+          "Maintain healthy sleep and hydration routines.",
+          "Attend preventive check-ups as scheduled."
+        );
+      }
+
+      const sleepValue = Number(
+        (features && features.Average_Sleep_Hours) ?? document.getElementById("featureAverageSleepHours")?.value ?? NaN
+      );
+      el.innerHTML = items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+
+      const sleepNoticeBox = document.getElementById("sleepNoticeBox");
+      const sleepNoticeText = document.getElementById("sleepNoticeText");
+      if (!sleepNoticeBox || !sleepNoticeText) return;
+
+      sleepNoticeBox.classList.remove("good", "warn", "risk");
+      const sleepInfo = getSleepCategoryInfo(sleepValue);
+      if (sleepInfo) {
+        sleepNoticeText.textContent = `${sleepInfo.title} - ${sleepInfo.meaning}`;
+        sleepNoticeBox.classList.remove("show");
+        void sleepNoticeBox.offsetWidth;
+        sleepNoticeBox.classList.add("show", sleepInfo.tone);
+      } else {
+        sleepNoticeText.textContent = "";
+        sleepNoticeBox.classList.remove("show");
       }
     }
 
@@ -1481,6 +2597,33 @@
       overallEl.style.color = overallColor;
       overallEl.style.background = bg;
       overallEl.textContent = `Overall Risk Level: ${overall}`;
+    }
+
+    function setTriageBanner(priorityText, slotText, badgeColor) {
+      const badgeEl = document.getElementById("triageBadge");
+      const slotEl = document.getElementById("triageSlot");
+      if (!badgeEl || !slotEl) return;
+
+      badgeEl.classList.remove("red", "orange", "green");
+      if (badgeColor === "red" || badgeColor === "orange" || badgeColor === "green") {
+        badgeEl.classList.add(badgeColor);
+      } else {
+        badgeEl.classList.add("green");
+      }
+      badgeEl.textContent = priorityText || "Normal Appointment";
+      slotEl.textContent = `Recommended Slot: ${slotText || "Next Available Date"}`;
+      applyRecommendedSlotToAppointmentInputs(slotText || "Next Available Date");
+    }
+
+    function triageFromRiskClass(riskText) {
+      const text = String(riskText || "").toLowerCase();
+      if (text.includes("high")) {
+        return { badge: "Immediate Attention Required", slot: "Within 1 hour", color: "red" };
+      }
+      if (text.includes("medium")) {
+        return { badge: "Same Day Appointment", slot: "Today", color: "orange" };
+      }
+      return { badge: "Normal Appointment", slot: "Next Available Date", color: "green" };
     }
 
     function updateRiskPanelFromModel(features, modelResult) {
@@ -1495,6 +2638,23 @@
       diastolic = resolveDiastolic(systolic, diastolic);
       const bmi = toNumber(features.BMI, null);
       const symptomCount = toNumber(features.Symptom_Count ?? features.Sympton_Count, 0);
+      const symptoms = symptomTokens(features.Symptoms);
+      const rawSymptoms = String(features.Symptoms ?? "").toLowerCase();
+      const normalizedSymptomTokens = String(features.Symptoms ?? "")
+        .split(/[,;|]/)
+        .map((v) => normalizeSymptomToken(v))
+        .filter(Boolean);
+      const hasLowBpSymptomText =
+        /\blow[\s_-]*bp\b/.test(rawSymptoms) ||
+        /\bhypotension\b/.test(rawSymptoms) ||
+        normalizedSymptomTokens.some((s) => s === "low_bp" || s === "lowbp" || s === "hypotension");
+      const hasLowBpSymptomFlag =
+        isTruthyFeatureValue(features.SYM_low_bp) ||
+        isTruthyFeatureValue(features.SYM_hypotension);
+      const hasLowBpSymptom =
+        hasLowBpSymptomText ||
+        hasLowBpSymptomFlag ||
+        symptoms.some((s) => ["low bp", "low_bp", "lowbp", "hypotension"].includes(s));
       const smokingText = String(features.Smoking_Habit ?? "").toLowerCase().trim();
       const alcoholText = String(features.Alcohol_Habit ?? "").toLowerCase().trim();
       const smoking = smokingText === "yes" ? 1 : 0;
@@ -1503,7 +2663,7 @@
       const hasBpInput = systolic != null || diastolic != null;
       const hasCardioInputs = age != null && hasBpInput && bmi != null && glucose != null;
       const hasDiabetesInputs = age != null && glucose != null && bmi != null;
-      const hasHypertensionInputs = hasBpInput;
+      const hasHypertensionInputs = hasBpInput || hasLowBpSymptom;
 
       const baseRisk = clamp(toNumber(modelResult && modelResult.risk_probability, 0) * 100, 0, 100);
 
@@ -1519,14 +2679,13 @@
         !ruleLowBp &&
         ((systolic != null && systolic >= 130 && systolic <= 139) || (diastolic != null && diastolic >= 90 && diastolic <= 99));
 
-      let cardio = 0;
-      if (hasCardioInputs) {
-        // Cardiovascular card: stable rule-based scoring that maps entered vitals
-        // to normal-looking chart ranges and avoids false 0% when inputs exist.
-        const symptoms = symptomTokens(features.Symptoms);
-        const hasMajorSymptoms = symptoms.some((s) =>
-          [
-            "chest pain",
+        let cardio = 0;
+        if (hasCardioInputs) {
+          // Cardiovascular card: stable rule-based scoring that maps entered vitals
+          // to normal-looking chart ranges and avoids false 0% when inputs exist.
+          const hasMajorSymptoms = symptoms.some((s) =>
+            [
+              "chest pain",
             "chest_pain",
             "chestpain",
             "diarrhea",
@@ -1569,9 +2728,14 @@
         if (smoking === 1) cardio += 10;
         if (alcohol === 1) cardio += 4;
 
-        // Requested behavior: chest pain + symptom_count >= 1 => High
-        if (hasChestPain && symptomCount >= 1) {
+        // Chest pain should raise risk, but only force HIGH when reinforced by
+        // additional cardiometabolic risk signals.
+        const hasStrongCardioContext =
+          ruleHighBp || glucose >= 126 || age >= 45 || smoking === 1 || hasFamilyHistory || bmi >= 30;
+        if (hasChestPain && symptomCount >= 1 && hasStrongCardioContext) {
           cardio = Math.max(cardio, 82);
+        } else if (hasChestPain) {
+          cardio = Math.max(cardio, 38);
         }
 
         // Keep 120/80 profile in low range when no strong high-risk factors.
@@ -1607,6 +2771,9 @@
         else if (ruleHighBp) hypertension = 85;
         else if (ruleMediumBp) hypertension = 50;
         else hypertension = 10;
+        if (hasLowBpSymptom) {
+          hypertension = Math.max(hypertension, 70);
+        }
 
         hypertension = clamp(hypertension, 0, 95);
       }
@@ -1634,7 +2801,15 @@
         overall = "LOW";
       }
       setOverallBanner(overall);
-      renderRecommendations(overall);
+      const triage = triageFromRiskClass(
+        (modelResult && (modelResult.risk_level || modelResult.predicted_class)) || overall
+      );
+      setTriageBanner(
+        modelResult && modelResult.priority_badge_text ? modelResult.priority_badge_text : triage.badge,
+        modelResult && modelResult.recommended_slot ? modelResult.recommended_slot : triage.slot,
+        modelResult && modelResult.priority_badge_color ? modelResult.priority_badge_color : triage.color
+      );
+      renderRecommendations(overall, features);
     }
 
     async function updateRiskPanel(features) {
@@ -1647,7 +2822,8 @@
         setRiskCard("diabetes", 0);
         setRiskCard("hypertension", 0);
         setOverallBanner("LOW");
-        renderRecommendations("LOW");
+        setTriageBanner("Normal Appointment", "Next Available Date", "green");
+        renderRecommendations("LOW", features);
         return;
       }
 
@@ -1663,8 +2839,17 @@
         setRiskCard("diabetes", 0);
         setRiskCard("hypertension", 0);
         setOverallBanner("LOW");
-        renderRecommendations("LOW");
+        setTriageBanner("Normal Appointment", "Next Available Date", "green");
+        renderRecommendations("LOW", features);
       }
+    }
+
+    async function applyLoadedPatientFeatures(patientId, features) {
+      loadedPatientFeatures = features || null;
+      setFeatureFormValues(loadedPatientFeatures || {});
+      setFeatureEditMode(false);
+      await updateRiskPanel(loadedPatientFeatures || {});
+      renderOutput(formatPatientSummaryHtml(patientId, loadedPatientFeatures || {}), false, true);
     }
 
     async function loadPatientFeatures() {
@@ -1674,15 +2859,49 @@
       const res = await fetch(`/patient/features/${encodeURIComponent(patientId)}`);
       const data = await res.json();
       if (!res.ok) {
+        const fallbackFeatures = initialPatientFeatures && Object.keys(initialPatientFeatures).length > 0
+          ? initialPatientFeatures
+          : null;
+        if (fallbackFeatures) {
+          await applyLoadedPatientFeatures(patientId, fallbackFeatures);
+          return;
+        }
         loadedPatientFeatures = null;
         setFeatureFormValues({});
         throw new Error("Patient ID data not found");
       }
-      loadedPatientFeatures = data.patient_features || null;
-      setFeatureFormValues(loadedPatientFeatures || {});
-      setFeatureEditMode(false);
-      await updateRiskPanel(loadedPatientFeatures || {});
-      renderOutput(formatPatientSummaryHtml(data.patient_id, loadedPatientFeatures || {}), false, true);
+      await applyLoadedPatientFeatures(data.patient_id, data.patient_features || null);
+    }
+
+    async function savePatientFeatures() {
+      const patientId = document.getElementById("patientId").value.trim();
+      if (!patientId) throw new Error("Enter Patient ID first.");
+      const patientFeatures = normalizeFeaturePayload(parseEditableFeatures());
+      const data = await postJson(`/patient/features/${encodeURIComponent(patientId)}`, {
+        patient_features: patientFeatures
+      });
+      await applyLoadedPatientFeatures(data.patient_id, data.patient_features || patientFeatures);
+    }
+
+    async function submitAppointmentPayload(payload, sourcePayloadForSuggestion) {
+      renderOutput("Submitting...", false);
+      const data = await postJson("/patient/book-appointment-submit", payload);
+      const bookingStatus = String(data && data.booking_status ? data.booking_status : "").toLowerCase();
+
+      if (bookingStatus === "confirmed") {
+        renderOutput(data, false);
+        const redirectUrl = String(data && data.redirect_url ? data.redirect_url : "/patient/booking-confirmation");
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      if (bookingStatus === "doctor_unavailable") {
+        renderOutput(String(data && data.message ? data.message : "Selected doctor is not available."), true);
+        openDoctorUnavailablePopup(data, sourcePayloadForSuggestion || payload);
+        return;
+      }
+
+      renderOutput(data, false);
     }
 
     document.getElementById("bookBtn").addEventListener("click", async () => {
@@ -1702,9 +2921,7 @@
         const appointment_time = `${appointmentDate}T${appointmentTimeOnly}`;
 
         const patient_features = normalizeFeaturePayload(parseEditableFeatures());
-
-        renderOutput("Submitting...", false);
-        const data = await postJson("/patient/book-appointment-submit", {
+        const payload = {
           patient_id,
           patient_name,
           contact_info,
@@ -1712,9 +2929,8 @@
           appointment_type,
           appointment_time,
           patient_features
-        });
-        renderOutput(data, false);
-        showBookingPopup();
+        };
+        await submitAppointmentPayload(payload, payload);
       } catch (err) {
         renderOutput(err.message, true);
       }
@@ -1724,6 +2940,29 @@
     document.getElementById("bookingConfirmModal").addEventListener("click", (event) => {
       if (event.target.id === "bookingConfirmModal") closeBookingPopup();
     });
+    if (closeDoctorUnavailableBtn) {
+      closeDoctorUnavailableBtn.addEventListener("click", closeDoctorUnavailablePopup);
+    }
+    if (doctorUnavailableModal) {
+      doctorUnavailableModal.addEventListener("click", (event) => {
+        if (event.target === doctorUnavailableModal) closeDoctorUnavailablePopup();
+      });
+    }
+    if (bookAlternativeBtn) {
+      bookAlternativeBtn.addEventListener("click", async () => {
+        if (!pendingBookingPayload || !pendingBookingPayload.doctor_id) {
+          closeDoctorUnavailablePopup();
+          return;
+        }
+        try {
+          const altPayload = { ...pendingBookingPayload };
+          closeDoctorUnavailablePopup();
+          await submitAppointmentPayload(altPayload, altPayload);
+        } catch (err) {
+          renderOutput(err.message || "Failed to book alternative doctor.", true);
+        }
+      });
+    }
 
     document.getElementById("editPatientNameBtn").addEventListener("click", () => {
       const nameInput = document.getElementById("patientName");
@@ -1735,44 +2974,121 @@
     document.getElementById("featureFields").addEventListener("input", () => {
       if (riskPanelTimer) clearTimeout(riskPanelTimer);
       riskPanelTimer = setTimeout(() => {
-        updateRiskPanel(parseEditableFeatures());
+        try {
+          updateRiskPanel(parseEditableFeatures());
+        } catch (_) {
+          // Skip recalculation while the sleep-hours field is invalid.
+        }
       }, 280);
     });
+
+    const appointmentDateInput = document.getElementById("appointmentDate");
+    const appointmentTimeInput = document.getElementById("appointmentTimeOnly");
+    const today = toInputDateValue(new Date());
+    if (appointmentDateInput) {
+      appointmentDateInput.min = today;
+      appointmentDateInput.addEventListener("input", () => {
+        appointmentTimeTouched = true;
+        updateEmergencyDoctorInlineList();
+      });
+    }
+    if (appointmentTimeInput) {
+      appointmentTimeInput.addEventListener("input", () => {
+        appointmentTimeTouched = true;
+        updateEmergencyDoctorInlineList();
+      });
+    }
+
+    const symptomsInput = document.getElementById("featureSymptoms");
+    symptomsInput.addEventListener("input", () => {
+      const cleaned = sanitizeSymptomsText(symptomsInput.value);
+      if (symptomsInput.value !== cleaned) {
+        symptomsInput.value = cleaned;
+      }
+    });
+
+    const featureSleepInput = document.getElementById("featureAverageSleepHours");
+    if (featureSleepInput) {
+      featureSleepInput.addEventListener("keydown", (event) => {
+        if (["e", "E", "+", "-", "."].includes(event.key)) {
+          event.preventDefault();
+        }
+      });
+      featureSleepInput.addEventListener("input", syncFeatureSleepValidation);
+      syncFeatureSleepValidation();
+    }
 
     document.getElementById("editFeaturesBtn").addEventListener("click", () => {
       setFeatureEditMode(true);
     });
 
-    document.getElementById("lockFeaturesBtn").addEventListener("click", () => {
-      setFeatureEditMode(false);
-      updateRiskPanel(parseEditableFeatures());
+    document.getElementById("lockFeaturesBtn").addEventListener("click", async () => {
+      const doneBtn = document.getElementById("lockFeaturesBtn");
+      const editBtn = document.getElementById("editFeaturesBtn");
+      try {
+        if (doneBtn) {
+          doneBtn.disabled = true;
+          doneBtn.textContent = "Saving...";
+        }
+        await savePatientFeatures();
+        setFeatureEditMode(false);
+      } catch (err) {
+        renderOutput(err.message || "Could not save patient details.", true);
+      } finally {
+        if (doneBtn) {
+          doneBtn.disabled = false;
+          doneBtn.textContent = "Done";
+        }
+        if (editBtn) {
+          editBtn.textContent = "Edit";
+        }
+      }
     });
 
-    const sidebarToggle = document.getElementById("sidebarToggle");
-    if (sidebarToggle) {
-      sidebarToggle.addEventListener("click", () => {
-        document.body.classList.toggle("sidebar-collapsed");
-        const expanded = !document.body.classList.contains("sidebar-collapsed");
-        sidebarToggle.setAttribute("aria-expanded", expanded ? "true" : "false");
-        sidebarToggle.innerHTML = expanded ? "&lsaquo;" : "&rsaquo;";
-      });
-    }
-
-    const activeNav = document.body.dataset.navActive;
-    if (activeNav) {
-      document.querySelectorAll(".sidebar-link[data-nav]").forEach((link) => {
-        link.classList.toggle("active", link.dataset.nav === activeNav);
-      });
-    }
-
     setFeatureEditMode(false);
+    if (initialPatientFeatures && Object.keys(initialPatientFeatures).length > 0) {
+      applyLoadedPatientFeatures(document.getElementById("patientId").value.trim(), initialPatientFeatures).catch(() => {});
+    }
+
+    const chatbotPopup = document.getElementById("chatbotPopup");
+    const chatbotLauncher = document.getElementById("chatbotLauncher");
+    if (chatbotPopup && chatbotLauncher) {
+      const hideChatPopup = () => chatbotPopup.classList.remove("show");
+      chatbotLauncher.addEventListener("click", () => {
+        chatbotPopup.classList.toggle("show");
+      });
+      document.addEventListener("click", (event) => {
+        if (!chatbotPopup.contains(event.target) && !chatbotLauncher.contains(event.target)) {
+          hideChatPopup();
+        }
+      });
+    }
 
     loadPatientFeatures().catch((err) => {
       renderOutput(err.message, true);
     });
+    updateEmergencyDoctorInlineList();
   </script>
+  <script src="{{ url_for('static', filename='page-animations.js') }}"></script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
