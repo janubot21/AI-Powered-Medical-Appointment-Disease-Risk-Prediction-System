@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Book appointment</title>
-    <link rel="stylesheet" href="/static/app.css?v=20260403_2" />
-    <script defer src="/static/app.js?v=20260403_10"></script>
+    <link rel="stylesheet" href="/static/app.css?v=20260403_12" />
+    <script defer src="/static/app.js?v=20260403_12"></script>
   </head>
   <body>
     <main class="pdb">
@@ -82,6 +82,7 @@
                     <option value="">Select doctor</option>
                   </select>
                   <div id="leaveMsg" class="leave-msg" style="display:none"></div>
+                  <div id="emergencyMsg" class="leave-msg" style="display:none"></div>
                 </div>
 
                 <div style="margin-top: 14px">
@@ -200,11 +201,82 @@
           window.location.href = "/health-details";
         });
 
-        async function loadDoctors() {
+        function describeLeave(leave) {
+          if (!leave) return "";
+          const start = leave.start_at || "";
+          const end = leave.end_at || "";
+          if (start && end) {
+            const startText = App.formatLocal ? App.formatLocal(start) : start;
+            const endText = App.formatLocal ? App.formatLocal(end) : end;
+            return ` (leave: ${startText} to ${endText})`;
+          }
+          if (start) return ` (leave from: ${App.formatLocal ? App.formatLocal(start) : start})`;
+          if (end) return ` (leave until: ${App.formatLocal ? App.formatLocal(end) : end})`;
+          return "";
+        }
+
+        const EMERGENCY_ONLY_START_TIME = "22:00"; // 10:00 PM
+        const EMERGENCY_ONLY_END_TIME = "06:00";   // 6:00 AM (overnight window)
+        let lastEmergencyOnlyKey = "";
+
+        function showPopup(message, title, tone) {
+          const msg = String(message || "").trim();
+          if (!msg) return;
+          if (window.App && typeof App.confirmPopup === "function") {
+            App.confirmPopup(msg, {
+              title: title || "Message",
+              tone: tone || "info",
+              confirmText: "OK",
+              showCancel: false,
+            });
+          } else {
+            window.alert(msg);
+          }
+        }
+
+        function isEmergencyOnlyTime(timeValue) {
+          const t = String(timeValue || "").trim();
+          if (!t) return false;
+          // Handles overnight windows (e.g. 22:00 -> 06:00).
+          if (EMERGENCY_ONLY_START_TIME <= EMERGENCY_ONLY_END_TIME) {
+            return t >= EMERGENCY_ONLY_START_TIME && t < EMERGENCY_ONLY_END_TIME;
+          }
+          return t >= EMERGENCY_ONLY_START_TIME || t < EMERGENCY_ONLY_END_TIME;
+        }
+
+        function updateEmergencyOnlyNotice() {
+          const dateValue = document.getElementById("appt_date").value;
+          const timeValue = document.getElementById("appt_time").value;
+          const emEl = document.getElementById("emergencyMsg");
+          const emergencyOnly = isEmergencyOnlyTime(timeValue);
+
+          emEl.style.display = "none";
+          emEl.textContent = "";
+
+          if (!emergencyOnly) return false;
+
+          emEl.textContent = "Between 10:00 PM and 6:00 AM, only emergency doctors are available.";
+          emEl.style.display = "block";
+
+          const key = `${dateValue || ""}|${timeValue || ""}`;
+          if (key.trim() && key !== lastEmergencyOnlyKey) {
+            lastEmergencyOnlyKey = key;
+            showPopup(emEl.textContent, "Emergency Doctors", "info");
+          }
+          return true;
+        }
+
+        async function loadDoctors(scheduledForIso, emergencyOnly) {
           try {
-            const directory = await App.apiFetch("/portal/directory");
-            const doctors = (directory && directory.doctors) || [];
+            const url = scheduledForIso
+              ? `/portal/directory?scheduled_for=${encodeURIComponent(scheduledForIso)}`
+              : "/portal/directory";
+            const directory = await App.apiFetch(url);
+            const doctorsAll = (directory && directory.doctors) || [];
+            const doctors = emergencyOnly ? doctorsAll.filter((d) => !!d.emergency_doctor) : doctorsAll;
             const select = document.getElementById("doctor_email");
+            const current = select.value || "";
+            select.innerHTML = '<option value="">Select doctor</option>';
             doctors.sort((a, b) => {
               const ae = a.emergency_doctor ? 1 : 0;
               const be = b.emergency_doctor ? 1 : 0;
@@ -216,12 +288,34 @@
               opt.value = d.email;
               const emergency = d.emergency_doctor ? " • Emergency" : "";
               const spec = d.specialization ? ` • ${d.specialization}` : "";
-              opt.textContent = `${d.full_name} (${d.email})${spec}${emergency}`;
+              const onLeave = !!d.on_leave;
+              const leaveText = onLeave ? ` • ON LEAVE${describeLeave(d.leave)}` : "";
+              opt.textContent = `${d.full_name} (${d.email})${spec}${emergency}${leaveText}`;
+              if (onLeave) opt.disabled = true;
               select.appendChild(opt);
             });
+
+            if (current) {
+              select.value = current;
+              if (select.selectedOptions && select.selectedOptions[0] && select.selectedOptions[0].disabled) {
+                select.value = "";
+              }
+            }
           } catch {}
         }
-        loadDoctors();
+        loadDoctors(null, false);
+
+        async function refreshDoctorsForDateTime() {
+          const dateValue = document.getElementById("appt_date").value;
+          const timeValue = document.getElementById("appt_time").value;
+          const emergencyOnly = updateEmergencyOnlyNotice();
+          if (!dateValue || !timeValue) {
+            await loadDoctors(null, emergencyOnly);
+            return;
+          }
+          const scheduledForIso = toIsoZ(dateValue, timeValue);
+          await loadDoctors(scheduledForIso || null, emergencyOnly);
+        }
 
         async function loadPatientDetails() {
           const el = document.getElementById("patient_details");
@@ -305,17 +399,20 @@
               `/api/doctor/leave/check?doctor_email=${encodeURIComponent(doctorEmail)}&scheduled_for=${encodeURIComponent(scheduledForIso)}`
             );
             if (res && res.on_leave) {
-              const day = (res.leave && res.leave.leave_date) ? res.leave.leave_date : "";
+              const leaveExtra = res.leave ? describeLeave(res.leave) : "";
               const em = Array.isArray(res.emergency_doctors) ? res.emergency_doctors : [];
               const emergencyText = em.length
-                ? ` Emergency doctors: ${em.slice(0, 3).map((d) => d.doctor_name || d.full_name || d.email).join(", ")}.`
+                ? ` Emergency doctors: ${em
+                    .slice(0, 3)
+                    .map((d) => d.doctor_name || d.full_name || d.email || d.doctor_id)
+                    .join(", ")}.`
                 : "";
-              msgEl.textContent = `Doctor is on leave${day ? ` on ${day}` : ""}. Please pick another doctor or time.${emergencyText}`;
+              msgEl.textContent = `Doctor is on leave${leaveExtra}. Please select an alternate doctor or time.${emergencyText}`;
               msgEl.style.display = "block";
-              const key = `${doctorEmail}|${day}`;
+              const key = `${doctorEmail}|${scheduledForIso}`;
               if (key && key !== lastLeaveAlertKey) {
                 lastLeaveAlertKey = key;
-                window.alert(msgEl.textContent);
+                showPopup(msgEl.textContent, "Doctor On Leave", "info");
               }
             }
             return res || { on_leave: false };
@@ -325,8 +422,14 @@
         }
 
         document.getElementById("doctor_email").addEventListener("change", checkDoctorLeave);
-        document.getElementById("appt_date").addEventListener("change", checkDoctorLeave);
-        document.getElementById("appt_time").addEventListener("change", checkDoctorLeave);
+        document.getElementById("appt_date").addEventListener("change", async () => {
+          await refreshDoctorsForDateTime();
+          await checkDoctorLeave();
+        });
+        document.getElementById("appt_time").addEventListener("change", async () => {
+          await refreshDoctorsForDateTime();
+          await checkDoctorLeave();
+        });
 
         document.getElementById("bookForm").addEventListener("submit", async (e) => {
           e.preventDefault();
@@ -352,6 +455,14 @@
             const phone = String(payload.contact_info || "").trim();
             if (phone.replace(/[^\d+]/g, "").length < 7) throw new Error("Please enter a valid phone number.");
 
+            const timeValue = document.getElementById("appt_time").value;
+            if (isEmergencyOnlyTime(timeValue)) {
+              updateEmergencyOnlyNotice();
+              if (!payload.doctor_email) {
+                throw new Error("Between 10:00 PM and 6:00 AM, please select an emergency doctor.");
+              }
+            }
+
             // Check twice: front-end warning + backend enforcement.
             const leaveStatus = await checkDoctorLeave();
             if (leaveStatus && leaveStatus.on_leave) {
@@ -362,9 +473,22 @@
             await App.apiFetch("/appointments/book", { method: "POST", body: JSON.stringify(payload) });
             msg.textContent = "Booked successfully.";
             document.getElementById("bookForm").reset();
+            document.getElementById("leaveMsg").style.display = "none";
+            document.getElementById("leaveMsg").textContent = "";
+            document.getElementById("emergencyMsg").style.display = "none";
+            document.getElementById("emergencyMsg").textContent = "";
             const u2 = App.getAuthUser ? App.getAuthUser() : user;
             document.getElementById("contact_info").value = u2 && u2.phone ? String(u2.phone).trim() : "";
             document.getElementById("patient_name").value = user.full_name || user.email;
+
+            if (App.confirmPopup) {
+              App.confirmPopup("Appointment booked successfully.", {
+                title: "Booked",
+                tone: "success",
+                confirmText: "OK",
+                showCancel: false,
+              });
+            }
           } catch (err) {
             msg.textContent = err && err.message ? err.message : "Booking failed.";
           }

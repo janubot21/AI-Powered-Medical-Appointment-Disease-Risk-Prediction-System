@@ -2149,9 +2149,17 @@ def update_patient_health_details(request: Request, payload: PatientRecordUpdate
 
 
 @app.get("/portal/directory")
-def portal_directory(request: Request) -> dict[str, Any]:
+def portal_directory(
+    request: Request,
+    scheduled_for: str | None = Query(default=None, min_length=10, max_length=64),
+) -> dict[str, Any]:
     session_user = require_session(request)
     role = str(session_user.get("role") or "")
+
+    when: datetime | None = None
+    if scheduled_for and str(scheduled_for).strip():
+        when = parse_iso_datetime(str(scheduled_for).strip())
+
     users = get_all_users()
     patients = [user_directory_payload(user) for user in users if user.get("role") == "patient"]
     nurses = [user_directory_payload(user) for user in users if user.get("role") == "nurse"]
@@ -2164,6 +2172,9 @@ def portal_directory(request: Request) -> dict[str, Any]:
         if not key or key in seen:
             continue
         seen.add(key)
+        if when is not None:
+            leave = doctor_leave_for(key, when)
+            doc = {**doc, "on_leave": bool(leave), "leave": leave, "available": not bool(leave)}
         doctors.append(doc)
 
     # If there are no doctor accounts yet, fall back to datasets/doctors.csv (doctor_id list).
@@ -2172,6 +2183,7 @@ def portal_directory(request: Request) -> dict[str, Any]:
         if not key or key in seen:
             continue
         seen.add(key)
+        leave = doctor_leave_for(key, when) if when is not None else None
         doctors.append(
             {
                 "full_name": d.get("doctor_name") or key,
@@ -2182,10 +2194,14 @@ def portal_directory(request: Request) -> dict[str, Any]:
                 "specialization": d.get("specialization") or "",
                 "available_time": d.get("available_time") or "",
                 "emergency_doctor": bool(d.get("emergency_doctor")),
+                "on_leave": bool(leave) if when is not None else False,
+                "leave": leave,
+                "available": (not bool(leave)) if when is not None else True,
             }
         )
 
     return {
+        "scheduled_for": when.isoformat() if when is not None else None,
         "patients": patients if role in {"nurse", "doctor"} else [],
         "nurses": nurses if role in {"nurse", "doctor"} else [],
         "doctors": doctors,

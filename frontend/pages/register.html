@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Create account</title>
-    <link rel="stylesheet" href="/static/app.css?v=20260403_9" />
-    <script defer src="/static/app.js?v=20260403_10"></script>
+    <link rel="stylesheet" href="/static/app.css?v=20260403_12" />
+    <script defer src="/static/app.js?v=20260403_12"></script>
   </head>
   <body>
     <main class="auth">
@@ -88,20 +88,7 @@
         document.getElementById("heroPortal").textContent = `${roleTitle} Portal`;
         document.getElementById("cardPill").textContent = `${roleTitle} portal`;
 
-        const themes = {
-          patient: { a: "#1E6BFF", b: "#0EA5A4", c: "#FFCEE3", blob1: "rgba(255, 206, 227, .72)", blob2: "rgba(184, 219, 255, .88)" },
-          nurse: { a: "#2563EB", b: "#14B8A6", c: "#E9E2FF", blob1: "rgba(216, 255, 242, .72)", blob2: "rgba(233, 226, 255, .86)" },
-          doctor: { a: "#0B3B8C", b: "#22C55E", c: "#DFF4FF", blob1: "rgba(223, 244, 255, .85)", blob2: "rgba(255, 186, 150, .58)" },
-        };
-        const t = themes[role] || themes.patient;
-        document.documentElement.style.setProperty("--auth-a", t.a);
-        document.documentElement.style.setProperty("--auth-b", t.b);
-        document.documentElement.style.setProperty("--auth-c", t.c);
-        document.documentElement.style.setProperty("--auth-blob1", t.blob1);
-        document.documentElement.style.setProperty("--auth-blob2", t.blob2);
-        document.documentElement.style.setProperty("--auth-photo", "url('/static/img/clinic-photo.svg')");
-
-        // Role-specific icon removed (per UI request).
+        if (App.applyRoleTheme) App.applyRoleTheme(role);
 
         document.getElementById("f").addEventListener("submit", async (e) => {
           e.preventDefault();

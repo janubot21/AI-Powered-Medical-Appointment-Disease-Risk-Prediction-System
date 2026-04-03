@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Doctor • AI Health Hub</title>
-    <link rel="stylesheet" href="/static/app.css?v=20260403_2" />
-    <script defer src="/static/app.js?v=20260403_10"></script>
+    <link rel="stylesheet" href="/static/app.css?v=20260403_12" />
+    <script defer src="/static/app.js?v=20260403_12"></script>
   </head>
   <body>
     <div class="wrap">
@@ -88,8 +88,8 @@
               <table class="pdb-table">
                 <thead>
                   <tr>
-                    <th>Leave date</th>
-                    <th>Doctor id</th>
+                    <th>Leave period</th>
+                    <th>Doctor</th>
                   </tr>
                 </thead>
                 <tbody id="leaveBody">
@@ -140,9 +140,13 @@
           }
           body.innerHTML = rows
             .map((l) => {
-              const date = l.leave_date || "-";
-              const did = l.doctor_id || doctorId || "-";
-              return `<tr><td><b>${esc(date)}</b></td><td class="muted">${esc(did)}</td></tr>`;
+              const start = l.start_at || "";
+              const end = l.end_at || "";
+              const startText = start ? (App.formatLocal ? App.formatLocal(start) : start) : "-";
+              const endText = end ? (App.formatLocal ? App.formatLocal(end) : end) : "-";
+              const period = start || end ? `${startText} \u2192 ${endText}` : "-";
+              const did = l.doctor_email || doctorId || user.email || "-";
+              return `<tr><td><b>${esc(period)}</b></td><td class="muted">${esc(did)}</td></tr>`;
             })
             .join("");
         }
@@ -152,7 +156,7 @@
             const rows = await App.apiFetch(`/api/doctor/leaves?doctor_email=${encodeURIComponent(doctorId || user.email)}`);
             render(Array.isArray(rows) ? rows : []);
           } catch (e) {
-            body.innerHTML = `<tr><td colspan="3" class="muted">${esc(e && e.message ? e.message : "Failed to load.")}</td></tr>`;
+            body.innerHTML = `<tr><td colspan="2" class="muted">${esc(e && e.message ? e.message : "Failed to load.")}</td></tr>`;
           }
         }
 

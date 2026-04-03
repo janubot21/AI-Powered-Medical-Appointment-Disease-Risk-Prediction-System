@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AI Health Hub</title>
-    <link rel="stylesheet" href="/static/app.css?v=20260403_2" />
-    <script defer src="/static/app.js?v=20260403_10"></script>
+    <link rel="stylesheet" href="/static/app.css?v=20260403_12" />
+    <script defer src="/static/app.js?v=20260403_12"></script>
   </head>
   <body>
     <main class="portal portal-hub">
@@ -34,6 +34,8 @@
               </div>
             </div>
           </div>
+
+          <div class="portal-menu-backdrop" id="menuBackdrop" aria-hidden="true"></div>
         </div>
 
         <section class="portal-hero" aria-label="Quick access">
@@ -96,20 +98,25 @@
 
         const menuBtn = document.getElementById("menuBtn");
         const menuPanel = document.getElementById("menuPanel");
+        const menuBackdrop = document.getElementById("menuBackdrop");
+        const portal = document.querySelector(".portal");
 
         function closeMenu() {
           menuPanel.classList.remove("open");
           menuBtn.setAttribute("aria-expanded", "false");
+          if (portal) portal.classList.remove("menu-open");
         }
         function toggleMenu() {
           const open = menuPanel.classList.toggle("open");
           menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+          if (portal) portal.classList.toggle("menu-open", open);
         }
 
         menuBtn.addEventListener("click", (e) => {
           e.stopPropagation();
           toggleMenu();
         });
+        menuBackdrop.addEventListener("click", closeMenu);
 
         document.addEventListener("click", (e) => {
           if (!menuPanel.classList.contains("open")) return;
@@ -159,6 +166,31 @@
             },
             { passive: true }
           );
+        }
+
+        // Spotlight hover on role cards (CSS vars drive the glow).
+        const cards = document.querySelectorAll(".portal-card");
+        if (cards.length && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          cards.forEach((card) => {
+            let frame = 0;
+            function onMove(e) {
+              const rect = card.getBoundingClientRect();
+              const x = (e.clientX - rect.left) / rect.width;
+              const y = (e.clientY - rect.top) / rect.height;
+              if (frame) return;
+              frame = requestAnimationFrame(() => {
+                frame = 0;
+                card.style.setProperty("--cx", `${Math.max(0, Math.min(1, x)) * 100}%`);
+                card.style.setProperty("--cy", `${Math.max(0, Math.min(1, y)) * 100}%`);
+              });
+            }
+            function onLeave() {
+              card.style.setProperty("--cx", "50%");
+              card.style.setProperty("--cy", "18%");
+            }
+            card.addEventListener("mousemove", onMove, { passive: true });
+            card.addEventListener("mouseleave", onLeave);
+          });
         }
 
       })();

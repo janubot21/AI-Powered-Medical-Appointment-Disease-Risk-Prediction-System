@@ -8,28 +8,37 @@
 
   const ROLE_THEMES = {
     patient: {
-      a: "#1E6BFF",
-      b: "#0EA5A4",
-      c: "#FFCEE3",
-      blob1: "rgba(255, 206, 227, .72)",
-      blob2: "rgba(184, 219, 255, .88)",
+      // Purple + orange accent to keep patient pages visually distinct.
+      a: "#7C3AED",
+      b: "#F97316",
+      c: "#CFFAFE",
+      blob1: "rgba(207, 250, 254, .82)",
+      blob2: "rgba(251, 146, 60, .28)",
+      shadow: "rgba(124, 58, 237, .14)",
+      border: "rgba(124, 58, 237, .28)",
       photo: "url('/static/img/clinic-photo.svg')",
     },
     nurse: {
-      a: "#2563EB",
-      b: "#14B8A6",
-      c: "#E9E2FF",
-      blob1: "rgba(216, 255, 242, .72)",
-      blob2: "rgba(233, 226, 255, .86)",
+      // Cyan + violet accent.
+      a: "#0891B2",
+      b: "#A855F7",
+      c: "#E0E7FF",
+      blob1: "rgba(224, 231, 255, .78)",
+      blob2: "rgba(165, 243, 252, .62)",
+      shadow: "rgba(8, 145, 178, .14)",
+      border: "rgba(8, 145, 178, .28)",
       photo: "url('/static/img/clinic-photo.svg')",
     },
     doctor: {
+      // Deep blue + emerald accent.
       a: "#0B3B8C",
-      b: "#22C55E",
-      c: "#DFF4FF",
-      blob1: "rgba(223, 244, 255, .85)",
-      blob2: "rgba(255, 186, 150, .58)",
-      photo: "url('/static/img/clinic-photo.svg')",
+      b: "#10B981",
+      c: "#DCFCE7",
+      blob1: "rgba(220, 252, 231, .70)",
+      blob2: "rgba(191, 219, 255, .70)",
+      shadow: "rgba(16, 185, 129, .14)",
+      border: "rgba(16, 185, 129, .28)",
+      photo: "url('/static/img/auth-radiology.svg')",
     },
   };
 
@@ -78,8 +87,11 @@
     const r = String(role || "").trim().toLowerCase();
     const t = ROLE_THEMES[r] || ROLE_THEMES.patient;
     const root = document.documentElement;
+    root.dataset.role = r || "patient";
     root.style.setProperty("--primary", t.a);
     root.style.setProperty("--primary2", t.b);
+    root.style.setProperty("--role-shadow", t.shadow || "rgba(15, 40, 95, .12)");
+    root.style.setProperty("--role-border", t.border || "rgba(207,224,255,.95)");
 
     // Also keep auth variables in sync (used by login/register pages).
     root.style.setProperty("--auth-a", t.a);
@@ -184,6 +196,8 @@
     const confirmText = String(options.confirmText || "OK").trim();
     const cancelText = String(options.cancelText || "Cancel").trim();
     const onCancel = typeof options.onCancel === "function" ? options.onCancel : null;
+    const onConfirm = typeof options.onConfirm === "function" ? options.onConfirm : null;
+    const showCancel = options.showCancel !== false;
 
     // Remove any prior popup/toast.
     const oldToast = document.querySelector(".toast");
@@ -216,11 +230,6 @@
     const actions = document.createElement("div");
     actions.className = "popup-actions";
 
-    const btnCancel = document.createElement("button");
-    btnCancel.type = "button";
-    btnCancel.className = "popup-cancel";
-    btnCancel.textContent = cancelText || "Cancel";
-
     const btnOk = document.createElement("button");
     btnOk.type = "button";
     btnOk.className = "popup-ok";
@@ -235,14 +244,18 @@
     function onKey(e) {
       if (e.key === "Escape") {
         e.preventDefault();
-        btnCancel.click();
+        if (showCancel) {
+          const cancelBtn = backdrop.querySelector(".popup-cancel");
+          if (cancelBtn) cancelBtn.click();
+        } else {
+          btnOk.click();
+        }
       }
     }
 
-    btnOk.addEventListener("click", () => close());
-    btnCancel.addEventListener("click", () => {
+    btnOk.addEventListener("click", () => {
       close();
-      if (onCancel) onCancel();
+      if (onConfirm) onConfirm();
     });
 
     backdrop.addEventListener("click", (e) => {
@@ -250,7 +263,18 @@
     });
 
     actions.appendChild(btnOk);
-    actions.appendChild(btnCancel);
+
+    if (showCancel) {
+      const btnCancel = document.createElement("button");
+      btnCancel.type = "button";
+      btnCancel.className = "popup-cancel";
+      btnCancel.textContent = cancelText || "Cancel";
+      btnCancel.addEventListener("click", () => {
+        close();
+        if (onCancel) onCancel();
+      });
+      actions.appendChild(btnCancel);
+    }
 
     card.appendChild(badge);
     card.appendChild(h);

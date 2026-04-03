@@ -130,6 +130,83 @@ class SmokeTests(unittest.TestCase):
                 pass
             tmpdir.cleanup()
 
+    def test_directory_marks_doctor_leave(self):
+        client, tmpdir, backend_api = build_client()
+        try:
+            # Register a doctor and create a leave window.
+            token = uuid.uuid4().hex[:8]
+            doctor_email = f"doctor_{token}@example.com"
+            doctor_phone = f"+91{str(uuid.uuid4().int)[-10:]}"
+            doctor_password = "StrongPass1!"
+
+            res = client.post(
+                "/auth/register",
+                json={
+                    "full_name": "Smoke Doctor",
+                    "email": doctor_email,
+                    "phone": doctor_phone,
+                    "password": doctor_password,
+                    "role": "doctor",
+                },
+            )
+            self.assertEqual(res.status_code, 200, res.text)
+            csrf = res.json().get("csrf_token")
+            self.assertTrue(csrf)
+            headers = {"X-CSRF-Token": csrf}
+
+            start_at = (datetime.now(timezone.utc) + timedelta(days=1)).replace(microsecond=0)
+            end_at = start_at + timedelta(days=2)
+            res = client.post(
+                "/api/doctor/leaves",
+                headers=headers,
+                json={
+                    "doctor_email": doctor_email,
+                    "start_at": start_at.isoformat(),
+                    "end_at": end_at.isoformat(),
+                    "reason": "Test leave",
+                },
+            )
+            self.assertEqual(res.status_code, 200, res.text)
+
+            # Switch session to a patient (directory endpoint requires a session).
+            res = client.post("/auth/logout", headers=headers)
+            self.assertEqual(res.status_code, 200, res.text)
+
+            patient_email = f"patient_{token}@example.com"
+            patient_phone = f"+91{str(uuid.uuid4().int)[-10:]}"
+            patient_password = "StrongPass1!"
+            res = client.post(
+                "/auth/register",
+                json={
+                    "full_name": "Smoke Patient",
+                    "email": patient_email,
+                    "phone": patient_phone,
+                    "password": patient_password,
+                    "role": "patient",
+                },
+            )
+            self.assertEqual(res.status_code, 200, res.text)
+
+            scheduled_for = (start_at + timedelta(hours=1)).isoformat()
+            res = client.get("/portal/directory", params={"scheduled_for": scheduled_for})
+            self.assertEqual(res.status_code, 200, res.text)
+            data = res.json()
+            doctors = data.get("doctors") or []
+            match = next((d for d in doctors if (d.get("email") or "").lower() == doctor_email.lower()), None)
+            self.assertIsNotNone(match)
+            self.assertTrue(match.get("on_leave"))
+            self.assertFalse(match.get("available"))
+            self.assertIsInstance(match.get("leave"), dict)
+        finally:
+            # Ensure SQLite file handles are released on Windows.
+            try:
+                if getattr(backend_api, "DB_CONN", None) is not None:
+                    backend_api.DB_CONN.close()
+                    backend_api.DB_CONN = None
+            except Exception:
+                pass
+            tmpdir.cleanup()
+
 
 if __name__ == "__main__":
     unittest.main()
