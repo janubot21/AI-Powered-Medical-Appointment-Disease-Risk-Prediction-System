@@ -2045,14 +2045,58 @@ tr:last-child td{border-bottom:none}
 .auth-brandline{
   font-weight: 950;
   letter-spacing: 3px;
-  color: rgba(12, 55, 122, .92);
   font-family: var(--mono);
   text-transform: uppercase;
   font-size: 14px;
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(207,224,255,.75);
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.72), rgba(255,255,255,.35));
+  box-shadow: 0 12px 40px rgba(15, 40, 95, .10);
 }
-.auth-brandline .ai{
-  letter-spacing: 0;
+.auth-brandrow{ display:flex; align-items:center; gap: 12px; }
+
+.auth-brandline .brand-ai,
+.auth-brandline .brand-health,
+.auth-brandline .brand-hub{
   font-family: inherit;
+}
+
+@keyframes authBrandShimmer{
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+.auth-brandline .brand-ai{
+  letter-spacing: 0;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #ffffff;
+  background: linear-gradient(90deg, var(--auth-a), var(--auth-b), var(--hub-pink));
+  background-size: 240% 100%;
+  animation: authBrandShimmer 2.6s ease-in-out infinite alternate;
+  box-shadow: 0 10px 26px rgba(12, 27, 51, .16);
+}
+.auth-brandline .brand-health{ color: rgba(12, 55, 122, .92); }
+.auth-brandline .brand-hub{ color: rgba(12, 55, 122, .62); }
+
+@keyframes authIconFloat{
+  0% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-6px) rotate(2deg); }
+  100% { transform: translateY(0) rotate(-2deg); }
+}
+.auth-role-icon{
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(207,224,255,.75);
+  background: rgba(255,255,255,.62);
+  box-shadow: 0 14px 40px rgba(15, 40, 95, .12);
+  animation: authIconFloat 3.8s ease-in-out infinite;
 }
 .auth-portal-title{
   margin: 10px 0 0;
@@ -2353,6 +2397,11 @@ tr:last-child td{border-bottom:none}
   .auth{ padding-top: 26px; }
   .auth-grid{ grid-template-columns: 1fr; min-height: auto; }
   .auth-hero h1{ font-size: 38px; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .auth-brandline .brand-ai{ animation: none !important; }
+  .auth-role-icon{ animation: none !important; }
 }
 
 /* Patient dashboard */

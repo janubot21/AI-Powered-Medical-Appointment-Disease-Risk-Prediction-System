@@ -12,7 +12,14 @@
       <div class="center">
         <div class="auth-grid">
           <section class="auth-hero" aria-label="Create account">
-            <div class="auth-brandline"><span class="ai">AI</span>HEALTH HUB</div>
+            <div class="auth-brandrow">
+              <div class="auth-brandline" aria-label="AI Health Hub">
+                <span class="brand-ai">AI</span>
+                <span class="brand-health">HEALTH</span>
+                <span class="brand-hub">HUB</span>
+              </div>
+              <img id="roleIcon" class="auth-role-icon" alt="" aria-hidden="true" />
+            </div>
             <h1 class="auth-portal-title" id="heroPortal">Patient Portal</h1>
             <div class="auth-portal-sub" id="heroPortalSub">Secure access for your healthcare workflow</div>
             <p id="heroDesc">Create your account to continue with health details and appointment booking.</p>
@@ -89,6 +96,8 @@
         document.getElementById("cardPill").textContent = `${roleTitle} portal`;
 
         if (App.applyRoleTheme) App.applyRoleTheme(role);
+        const roleIcon = document.getElementById("roleIcon");
+        if (roleIcon) roleIcon.src = `/static/img/${role}.svg`;
 
         document.getElementById("f").addEventListener("submit", async (e) => {
           e.preventDefault();
