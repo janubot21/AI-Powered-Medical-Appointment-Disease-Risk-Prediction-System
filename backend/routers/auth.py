@@ -37,7 +37,7 @@ from backend.services.shared import (
     update_user_health_details,
     user_public_payload,
     validate_full_name,
-    validate_gmail,
+    validate_email,
     validate_password_strength,
     verify_password,
 )
@@ -49,7 +49,7 @@ router = APIRouter()
 def register_user(payload: RegisterRequest, request: Request) -> dict[str, Any]:
     rate_limit(request, "auth_register")
     full_name = validate_full_name(payload.full_name)
-    email = validate_gmail(payload.email)
+    email = validate_email(payload.email)
     phone = normalize_phone(payload.phone)
     role = normalize_role(payload.role)
     validate_password_strength(payload.password)
@@ -100,7 +100,7 @@ def login_user(payload: LoginRequest, request: Request) -> dict[str, Any]:
         phone = normalize_phone(payload.phone)
         user = get_user_by_phone(phone)
     elif payload.email and payload.email.strip():
-        email = validate_gmail(payload.email)
+        email = validate_email(payload.email)
         user = get_user_by_email(email)
     else:
         raise HTTPException(status_code=400, detail="Provide email or phone number to login.")
@@ -138,7 +138,7 @@ def logout_user(request: Request) -> dict[str, Any]:
 @router.post("/auth/password-reset/request")
 def password_reset_request(payload: PasswordResetRequest, request: Request) -> dict[str, Any]:
     rate_limit(request, "pw_reset_request")
-    email = validate_gmail(payload.email)
+    email = validate_email(payload.email)
     user = get_user_by_email(email)
     # Do not reveal whether the email exists.
     token = secrets.token_urlsafe(24)
@@ -160,7 +160,7 @@ def password_reset_request(payload: PasswordResetRequest, request: Request) -> d
 @router.post("/auth/password-reset/confirm")
 def password_reset_confirm(payload: PasswordResetConfirm, request: Request) -> dict[str, Any]:
     rate_limit(request, "pw_reset_confirm")
-    email = validate_gmail(payload.email)
+    email = validate_email(payload.email)
     validate_password_strength(payload.new_password)
 
     ok = dbmod.consume_password_reset(get_db(), email, payload.token)
@@ -176,7 +176,7 @@ def password_reset_confirm(payload: PasswordResetConfirm, request: Request) -> d
 @router.get("/auth/user")
 def get_user_public(request: Request, email: str = Query(..., min_length=5, max_length=254)) -> dict[str, Any]:
     session_user = require_session(request)
-    target = validate_gmail(email)
+    target = validate_email(email)
 
     if str(session_user.get("role") or "") == "patient":
         if normalize_email(str(session_user.get("email") or "")) != target:
@@ -197,7 +197,7 @@ def auth_me(request: Request) -> dict[str, Any]:
 @router.get("/auth/health-details")
 def get_health_details(request: Request, email: str = Query(..., min_length=5, max_length=254)) -> dict[str, Any]:
     session_user = require_session(request)
-    target = validate_gmail(email)
+    target = validate_email(email)
 
     if str(session_user.get("role") or "") == "patient":
         if normalize_email(str(session_user.get("email") or "")) != target:
@@ -217,10 +217,10 @@ def get_health_details(request: Request, email: str = Query(..., min_length=5, m
 @router.post("/auth/health-details")
 def save_health_details(request: Request, payload: HealthDetailsRequest) -> dict[str, Any]:
     session_user = require_role("patient")(require_session(request))
-    if normalize_email(str(session_user.get("email") or "")) != validate_gmail(payload.email):
+    if normalize_email(str(session_user.get("email") or "")) != validate_email(payload.email):
         raise HTTPException(status_code=403, detail="You can only update your own health details.")
 
-    user = get_user_by_email(validate_gmail(payload.email))
+    user = get_user_by_email(validate_email(payload.email))
 
     if not user:
         raise HTTPException(status_code=404, detail="User account not found.")
@@ -278,7 +278,7 @@ def patient_record_history(
     limit: int = Query(20, ge=1, le=200),
 ) -> dict[str, Any]:
     session_user = require_session(request)
-    normalized = validate_gmail(email)
+    normalized = validate_email(email)
 
     if str(session_user.get("role") or "") == "patient":
         if normalize_email(str(session_user.get("email") or "")) != normalized:
@@ -294,7 +294,7 @@ def patient_record_history(
 def update_patient_health_details(request: Request, payload: PatientRecordUpdateRequest) -> dict[str, Any]:
     session_user = require_role("nurse", "doctor")(require_session(request))
 
-    patient_email = validate_gmail(payload.patient_email)
+    patient_email = validate_email(payload.patient_email)
     updated_by_email = normalize_email(str(session_user.get("email") or ""))
     updated_by_role = safe_normalize_role(str(session_user.get("role") or "nurse"))
 

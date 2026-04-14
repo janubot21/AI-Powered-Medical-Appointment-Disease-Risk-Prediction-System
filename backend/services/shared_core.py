@@ -202,13 +202,6 @@ def validate_email(email: str) -> str:
     return normalized
 
 
-def validate_gmail(email: str) -> str:
-    normalized = validate_email(email)
-    if not normalized.endswith("@gmail.com"):
-        raise HTTPException(status_code=400, detail="Email must be a @gmail.com address.")
-    return normalized
-
-
 def validate_full_name(full_name: str) -> str:
     normalized = " ".join(str(full_name or "").strip().split())
     if len(normalized) < 2 or len(normalized) > 100:

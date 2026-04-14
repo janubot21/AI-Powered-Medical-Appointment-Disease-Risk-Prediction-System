@@ -44,7 +44,7 @@ class SmokeTests(unittest.TestCase):
 
             # Register a fresh patient user.
             token = uuid.uuid4().hex[:8]
-            email = f"smoke_{token}@gmail.com"
+            email = f"smoke_{token}@example.com"
             digits = str(uuid.uuid4().int)[-10:]
             phone = digits
             password = "StrongPass1!"
@@ -153,7 +153,7 @@ class SmokeTests(unittest.TestCase):
         try:
             # Register a doctor and create a leave window.
             token = uuid.uuid4().hex[:8]
-            doctor_email = f"doctor_{token}@gmail.com"
+            doctor_email = f"doctor_{token}@example.com"
             doctor_phone = str(uuid.uuid4().int)[-10:]
             doctor_password = "StrongPass1!"
 
@@ -190,7 +190,7 @@ class SmokeTests(unittest.TestCase):
             res = client.post("/auth/logout", headers=headers)
             self.assertEqual(res.status_code, 200, res.text)
 
-            patient_email = f"patient_{token}@gmail.com"
+            patient_email = f"patient_{token}@example.com"
             patient_phone = str(uuid.uuid4().int)[-10:]
             patient_password = "StrongPass1!"
             res = client.post(
@@ -235,8 +235,8 @@ class SmokeTests(unittest.TestCase):
         client, tmpdir, backend_api = build_client()
         try:
             token = uuid.uuid4().hex[:8]
-            doctor1_email = f"doctor1_{token}@gmail.com"
-            doctor2_email = f"doctor2_{token}@gmail.com"
+            doctor1_email = f"doctor1_{token}@example.com"
+            doctor2_email = f"doctor2_{token}@example.com"
             password = "StrongPass1!"
 
             # Create two doctors (logout between registrations to switch sessions).
@@ -273,7 +273,7 @@ class SmokeTests(unittest.TestCase):
             self.assertEqual(res.status_code, 200, res.text)
 
             # Create a patient session and book 3 appointments: assigned to doctor1, assigned to doctor2, unassigned.
-            patient_email = f"patient_{token}@gmail.com"
+            patient_email = f"patient_{token}@example.com"
             patient_phone = str(uuid.uuid4().int)[-10:]
             res = client.post(
                 "/auth/register",
@@ -376,7 +376,7 @@ class SmokeTests(unittest.TestCase):
             # Create a patient session (directory endpoint requires any authenticated user).
             token = uuid.uuid4().hex[:8]
             password = "StrongPass1!"
-            patient_email = f"patient_dir_{token}@gmail.com"
+            patient_email = f"patient_dir_{token}@example.com"
             patient_phone = str(uuid.uuid4().int)[-10:]
             res = client.post(
                 "/auth/register",
@@ -396,7 +396,7 @@ class SmokeTests(unittest.TestCase):
             res = client.post("/auth/logout", headers={"X-CSRF-Token": csrf})
             self.assertEqual(res.status_code, 200, res.text)
 
-            doctor_email = f"doctor_dir_{token}@gmail.com"
+            doctor_email = f"doctor_dir_{token}@example.com"
             res = client.post(
                 "/auth/register",
                 json={

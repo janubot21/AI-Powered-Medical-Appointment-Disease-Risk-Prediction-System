@@ -28,7 +28,7 @@ from backend.services.shared import (
     require_session,
     safe_normalize_role,
     user_directory_payload,
-    validate_gmail,
+    validate_email,
 )
 
 router = APIRouter()
@@ -105,7 +105,7 @@ def doctor_leave_check(
 ) -> dict[str, Any]:
     require_role("patient", "nurse", "doctor")(require_session(request))
     when = parse_iso_datetime(scheduled_for)
-    doctor_id = validate_gmail(doctor_email)
+    doctor_id = validate_email(doctor_email)
     leave = doctor_leave_for(doctor_id, when)
     emergency = emergency_doctors_available(when)
     if not leave:
@@ -122,7 +122,7 @@ def doctor_leave_check(
 @router.get("/api/doctor/leaves")
 def doctor_leaves(request: Request, doctor_email: str = Query(..., min_length=5, max_length=254)) -> list[dict[str, Any]]:
     session_user = require_role("doctor")(require_session(request))
-    if normalize_email(str(session_user.get("email") or "")) != validate_gmail(doctor_email):
+    if normalize_email(str(session_user.get("email") or "")) != validate_email(doctor_email):
         raise HTTPException(status_code=403, detail="Doctors can only access their own leave calendar.")
     leaves = dbmod.list_doctor_leaves(get_db(), normalize_email(doctor_email))
     leaves.sort(key=lambda l: l.get("start_at") or "", reverse=True)
@@ -132,9 +132,9 @@ def doctor_leaves(request: Request, doctor_email: str = Query(..., min_length=5,
 @router.post("/api/doctor/leaves")
 def upsert_doctor_leave(request: Request, payload: DoctorLeaveRequest) -> dict[str, Any]:
     session_user = require_role("doctor")(require_session(request))
-    if normalize_email(str(session_user.get("email") or "")) != validate_gmail(payload.doctor_email):
+    if normalize_email(str(session_user.get("email") or "")) != validate_email(payload.doctor_email):
         raise HTTPException(status_code=403, detail="Doctors can only update their own leave calendar.")
-    doctor_id = validate_gmail(payload.doctor_email)
+    doctor_id = validate_email(payload.doctor_email)
     start_at = parse_iso_datetime(payload.start_at)
     end_at = parse_iso_datetime(payload.end_at)
     if end_at < start_at:
@@ -159,7 +159,7 @@ def upsert_doctor_leave(request: Request, payload: DoctorLeaveRequest) -> dict[s
 @router.post("/appointments/book", response_model=AppointmentResponse)
 def book_appointment(request: Request, payload: AppointmentCreateRequest) -> AppointmentResponse:
     session_user = require_role("patient")(require_session(request))
-    patient_email = validate_gmail(payload.patient_email)
+    patient_email = validate_email(payload.patient_email)
     if normalize_email(str(session_user.get("email") or "")) != patient_email:
         raise HTTPException(status_code=403, detail="You can only book appointments for your own account.")
     patient = get_user_by_email(patient_email)
@@ -171,7 +171,7 @@ def book_appointment(request: Request, payload: AppointmentCreateRequest) -> App
     reason = (payload.reason or payload.appointment_type).strip()
 
     if payload.doctor_email:
-        doctor_id = validate_gmail(payload.doctor_email)
+        doctor_id = validate_email(payload.doctor_email)
         if doctor_is_on_leave(doctor_id, scheduled_for_dt):
             emergency = emergency_doctors_available(scheduled_for_dt)
             emergency_text = ", ".join([d.get("doctor_name") or d.get("doctor_id") for d in emergency[:3]])
@@ -205,7 +205,7 @@ def list_appointments(
     patient_email: str = Query(..., min_length=5, max_length=254),
 ) -> list[AppointmentResponse]:
     session_user = require_role("patient")(require_session(request))
-    email = validate_gmail(patient_email)
+    email = validate_email(patient_email)
     if normalize_email(str(session_user.get("email") or "")) != email:
         raise HTTPException(status_code=403, detail="You can only view your own appointments.")
     patient = get_user_by_email(email)
@@ -219,7 +219,7 @@ def list_appointments(
 @router.post("/appointments/cancel", response_model=AppointmentResponse)
 def cancel_appointment(request: Request, payload: AppointmentCancelRequest) -> AppointmentResponse:
     session_user = require_role("patient")(require_session(request))
-    email = validate_gmail(payload.patient_email)
+    email = validate_email(payload.patient_email)
     if normalize_email(str(session_user.get("email") or "")) != email:
         raise HTTPException(status_code=403, detail="You can only cancel your own appointments.")
     patient = get_user_by_email(email)

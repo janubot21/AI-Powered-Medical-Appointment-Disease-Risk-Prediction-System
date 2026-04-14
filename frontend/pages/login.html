@@ -51,21 +51,7 @@
             <form id="f">
               <div class="auth-field">
                 <label class="label" for="identifier" id="identifierLabel">Email address</label>
-                <div class="email-row" id="emailRow" style="display:none">
-                  <input
-                    id="email_local"
-                    type="text"
-                    autocomplete="username"
-                    inputmode="email"
-                    pattern="[A-Za-z0-9._]{1,64}"
-                    minlength="1"
-                    maxlength="64"
-                    placeholder="name"
-                    aria-label="Gmail username"
-                  />
-                  <span class="email-suffix" aria-hidden="true">@gmail.com</span>
-                </div>
-                <input id="identifier" type="email" required autocomplete="email" />
+                <input id="identifier" type="email" required autocomplete="email" placeholder="name@example.com" />
               </div>
               <div class="auth-field">
                 <label class="label" for="password">Password</label>
@@ -96,8 +82,6 @@
         const roleEl = document.getElementById("role");
         const loginWithEl = document.getElementById("login_with");
         const identifierEl = document.getElementById("identifier");
-        const emailRowEl = document.getElementById("emailRow");
-        const emailLocalEl = document.getElementById("email_local");
         const identifierLabelEl = document.getElementById("identifierLabel");
         const savedRole = App.getSelectedRole ? App.getSelectedRole() : "";
         const role = (savedRole || "patient").trim().toLowerCase();
@@ -113,29 +97,6 @@
         const roleIcon = document.getElementById("roleIcon");
         if (roleIcon) roleIcon.src = `/static/img/${role}.svg`;
 
-        const cleanEmailLocal = (value) => {
-          let v = String(value || "").trim().toLowerCase();
-          // Allow pasting full emails like `user@gmail.com` into the local-part input.
-          if (v.includes("@")) v = v.split("@")[0] || "";
-          v = v.replace(/@?gmail\.com$/g, "");
-          v = v.replace(/gmail\.com$/g, "");
-          v = v.replace(/\.+$/g, "");
-          return v.replace(/[^a-z0-9._]/g, "");
-        };
-        const buildGmail = () => {
-          const local = cleanEmailLocal(emailLocalEl ? emailLocalEl.value : "");
-          return local ? `${local}@gmail.com` : "";
-        };
-        const syncEmailLocal = () => {
-          if (!emailLocalEl) return;
-          const cleaned = cleanEmailLocal(emailLocalEl.value);
-          if (cleaned !== emailLocalEl.value) emailLocalEl.value = cleaned;
-        };
-        if (emailLocalEl) {
-          emailLocalEl.addEventListener("input", syncEmailLocal);
-          emailLocalEl.addEventListener("blur", syncEmailLocal);
-        }
-
         function syncLoginIdentifierUI() {
           const mode = (loginWithEl.value || "email").toLowerCase();
           if (mode === "phone") {
@@ -148,26 +109,22 @@
             identifierEl.setAttribute("minlength", "10");
             identifierEl.setAttribute("maxlength", "10");
             identifierEl.required = true;
-            if (emailRowEl) emailRowEl.style.display = "none";
-            if (emailLocalEl) emailLocalEl.required = false;
             identifierEl.style.display = "";
           } else {
             identifierLabelEl.textContent = "Email address";
+            identifierEl.type = "email";
+            identifierEl.autocomplete = "email";
+            identifierEl.inputMode = "email";
+            identifierEl.placeholder = "name@example.com";
             identifierEl.removeAttribute("pattern");
             identifierEl.removeAttribute("minlength");
             identifierEl.removeAttribute("maxlength");
-            if (emailRowEl) emailRowEl.style.display = "";
-            if (emailLocalEl) {
-              emailLocalEl.required = true;
-              emailLocalEl.placeholder = "name";
-            }
-            identifierEl.required = false;
-            identifierEl.style.display = "none";
+            identifierEl.required = true;
+            identifierEl.style.display = "";
           }
           identifierEl.value = "";
-          if (emailLocalEl) emailLocalEl.value = "";
           msg.textContent = "";
-          (mode === "phone" ? identifierEl : emailLocalEl || identifierEl).focus();
+          identifierEl.focus();
         }
         loginWithEl.addEventListener("change", syncLoginIdentifierUI);
         syncLoginIdentifierUI();
@@ -178,14 +135,7 @@
           try {
             const loginWith = (loginWithEl.value || "email").toLowerCase();
             const identifier = identifierEl.value;
-            const email =
-              loginWith === "email"
-                ? (() => {
-                    const v = buildGmail();
-                    if (!/^[^@\s]+@gmail\.com$/.test(v)) throw new Error("Email must be a @gmail.com address.");
-                    return v || null;
-                  })()
-                : null;
+            const email = loginWith === "email" ? (identifier || "").trim() : null;
             const data = await App.apiFetch("/auth/login", {
               method: "POST",
               body: JSON.stringify({

@@ -57,22 +57,7 @@
               </div>
               <div class="auth-field">
                 <label class="label" for="email">Email address</label>
-                <div class="email-row" id="emailRow">
-                  <input
-                    id="email_local"
-                    type="text"
-                    required
-                    autocomplete="username"
-                    inputmode="email"
-                    pattern="[A-Za-z0-9._]{1,64}"
-                    minlength="1"
-                    maxlength="64"
-                    placeholder="name"
-                    aria-label="Gmail username"
-                  />
-                  <span class="email-suffix" aria-hidden="true">@gmail.com</span>
-                </div>
-                <input id="email" type="hidden" />
+                <input id="email" type="email" required autocomplete="email" placeholder="name@example.com" />
               </div>
               <div class="auth-field">
                 <label class="label" for="phone">Phone number</label>
@@ -174,32 +159,7 @@
           });
         }
 
-        const emailLocalEl = document.getElementById("email_local");
-        const emailHiddenEl = document.getElementById("email");
-        const cleanEmailLocal = (value) => {
-          let v = String(value || "").trim().toLowerCase();
-          // Allow pasting full emails like `user@gmail.com` into the local-part input.
-          if (v.includes("@")) v = v.split("@")[0] || "";
-          v = v.replace(/@?gmail\.com$/g, "");
-          v = v.replace(/gmail\.com$/g, "");
-          v = v.replace(/\.+$/g, "");
-          return v.replace(/[^a-z0-9._]/g, "");
-        };
-        const buildGmail = () => {
-          const local = cleanEmailLocal(emailLocalEl ? emailLocalEl.value : "");
-          return local ? `${local}@gmail.com` : "";
-        };
-        const syncEmailLocal = () => {
-          if (!emailLocalEl) return;
-          const cleaned = cleanEmailLocal(emailLocalEl.value);
-          if (cleaned !== emailLocalEl.value) emailLocalEl.value = cleaned;
-          if (emailHiddenEl) emailHiddenEl.value = buildGmail();
-        };
-        if (emailLocalEl) {
-          emailLocalEl.addEventListener("input", syncEmailLocal);
-          emailLocalEl.addEventListener("blur", syncEmailLocal);
-        }
-        syncEmailLocal();
+        const emailEl = document.getElementById("email");
 
         const pwEl = document.getElementById("password");
         const confirmEl = document.getElementById("confirm_password");
@@ -295,10 +255,13 @@
             return;
           }
 
-          const email = buildGmail();
-          if (emailHiddenEl) emailHiddenEl.value = email;
-          if (!/^[^@\s]+@gmail\.com$/.test(email)) {
-            msg.textContent = "Email must be a @gmail.com address.";
+          const email = String((emailEl && emailEl.value) || "").trim();
+          if (!email) {
+            msg.textContent = "Please enter your email address.";
+            return;
+          }
+          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+            msg.textContent = "Invalid email format.";
             return;
           }
 
