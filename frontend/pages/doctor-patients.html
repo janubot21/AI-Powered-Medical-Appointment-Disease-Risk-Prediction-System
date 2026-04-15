@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Doctor â€¢ AI Health Hub</title>
+    <title>Doctor - AI Health Hub</title>
     <link rel="stylesheet" href="/static/app.css?v=20260414_19" />
     <script defer src="/static/app.js?v=20260414_19"></script>
   </head>
@@ -29,12 +29,13 @@
         </div>
 
         <div class="nav" style="margin-top:14px">
-          <a href="/doctor">Upcoming <span>â†’</span></a>
-          <a href="/doctor/past">Past <span>â†’</span></a>
-          <a class="active" href="/doctor/patients">Patient database <span>â†’</span></a>
-          <a href="/doctor#ai-risk-analytics">AI risk analytics <span>â†’</span></a>
-          <a href="/doctor/leave">Leave <span>â†’</span></a>
-          <button type="button" data-logout>Logout <span>â†’</span></button>
+          <a href="/doctor">Upcoming <span>-></span></a>
+          <a href="/doctor/past">Past <span>-></span></a>
+          <a class="active" href="/doctor/patients">Patient database <span>-></span></a>
+          <a href="/doctor#ai-risk-analytics">AI risk analytics <span>-></span></a>
+          <a href="/doctor/leave">Leave <span>-></span></a>
+          <a href="/about">About <span>-></span></a>
+          <button type="button" data-logout>Logout <span>-></span></button>
         </div>
       </aside>
 
@@ -45,7 +46,7 @@
             <div class="sub">Search patients and view profile completion status.</div>
           </div>
           <div class="actions">
-            <input id="search" class="pdb-search" type="search" placeholder="Search name or emailâ€¦" />
+            <input id="search" class="pdb-search" type="search" placeholder="Search name or email..." />
             <button class="btn danger" type="button" data-logout>Logout</button>
           </div>
         </div>
@@ -64,7 +65,7 @@
               </thead>
               <tbody id="body">
                 <tr>
-                  <td colspan="5" class="muted">Loadingâ€¦</td>
+                  <td colspan="5" class="muted">Loading...</td>
                 </tr>
               </tbody>
             </table>
@@ -75,7 +76,7 @@
           <div class="ba-modal-card" role="dialog" aria-modal="true" aria-label="Patient change history">
             <div class="ba-modal-top">
               <b>Patient history</b>
-              <button type="button" class="ba-x" id="closeModal">âœ•</button>
+              <button type="button" class="ba-x" id="closeModal">X</button>
             </div>
             <pre class="ba-pre" id="modalPre" style="white-space:pre-wrap;margin:0"></pre>
           </div>
@@ -136,7 +137,7 @@
         async function openHistory(email, currentDetails) {
           const e = (email || "").toString().trim();
           if (!e) return;
-          openModal("Loading historyâ€¦");
+          openModal("Loading history...");
           try {
             const data = await App.apiFetch(`/api/patient/history?email=${encodeURIComponent(e)}&limit=30`);
             const events = (data && data.events) || [];
@@ -155,8 +156,8 @@
             lines.push("");
             events.slice(0, 10).forEach((ev, idx) => {
               const when = ev.changed_at ? (App.formatLocal ? App.formatLocal(ev.changed_at) : String(ev.changed_at)) : "-";
-              const who = `${ev.changed_by_role || "-"} â€¢ ${ev.changed_by_email || "-"}`;
-              lines.push(`${when} â€” ${who}`);
+              const who = `${ev.changed_by_role || "-"} - ${ev.changed_by_email || "-"}`;
+              lines.push(`${when} - ${who}`);
               const changes = Array.isArray(ev.changes) ? ev.changes : [];
               if (!changes.length) lines.push("  (no field changes recorded)");
               changes.slice(0, 20).forEach((c) => {

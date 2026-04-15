@@ -267,9 +267,8 @@
 
           const pw = document.getElementById("password").value;
           const confirm = document.getElementById("confirm_password").value;
-          const phoneRaw = document.getElementById("phone").value;
-          const phone = (phoneRaw || "").replace(/\D/g, "");
-          if (phone.length !== 10) {
+          const phone = String(document.getElementById("phone").value || "").trim();
+          if (!/^\d{10}$/.test(phone)) {
             msg.textContent = "Phone number must be exactly 10 digits.";
             return;
           }
@@ -308,6 +307,14 @@
             msg.textContent = err && err.message ? err.message : "Registration failed.";
           }
         });
+
+        const phoneEl = document.getElementById("phone");
+        if (phoneEl) {
+          phoneEl.addEventListener("input", () => {
+            const digits = String(phoneEl.value || "").replace(/\D/g, "").slice(0, 10);
+            if (phoneEl.value !== digits) phoneEl.value = digits;
+          });
+        }
       });
     </script>
   </body>

@@ -13,7 +13,7 @@
         <aside class="pdb-side" id="side">
           <div class="pdb-topline">
             <div class="pdb-menu">MENU</div>
-            <button class="pdb-collapse" id="collapse" type="button" title="Collapse">â€¹</button>
+            <button class="pdb-collapse" id="collapse" type="button" title="Collapse">&lt;</button>
           </div>
 
           <div class="pdb-brand">
@@ -39,6 +39,7 @@
             <a href="/patient/risk-analysis">Risk Analysis</a>
             <a href="/patient/appointments">Profile</a>
             <a href="/patient/history">Previous records</a>
+            <a href="/about">About</a>
           </nav>
 
           <div class="pdb-divider"></div>
@@ -296,7 +297,7 @@
           if (booking) nextSteps.push(booking);
 
           // Calm, non-alarming guidance (avoid listing the user's symptom back).
-          nextSteps.push("Drink water, rest, and avoid heavy activity while youâ€™re unwell.");
+          nextSteps.push("Drink water, rest, and avoid heavy activity while you're unwell.");
           nextSteps.push("If symptoms suddenly worsen, or you feel unsafe, reach out to a clinician for guidance.");
 
           const uniq = (arr) => Array.from(new Set(arr)).slice(0, 6);
@@ -315,7 +316,7 @@
           const help = [
             "If you have trouble breathing, fainting, severe dehydration, or symptoms worsen quickly.",
             "If fever lasts more than 3 days, or you cannot keep fluids down.",
-            "If youâ€™re pregnant, elderly, or have chronic conditionsâ€”get help sooner.",
+            "If you're pregnant, elderly, or have chronic conditions - get help sooner.",
           ];
 
           return `
@@ -341,7 +342,7 @@
         document.getElementById("collapse").addEventListener("click", () => {
           const side = document.getElementById("side");
           side.classList.toggle("collapsed");
-          document.getElementById("collapse").textContent = side.classList.contains("collapsed") ? "â€º" : "â€¹";
+          document.getElementById("collapse").textContent = side.classList.contains("collapsed") ? ">" : "<";
         });
 
         // Highlight active nav item based on current path.

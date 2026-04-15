@@ -12,6 +12,7 @@ if __name__ == "__main__" and (__package__ is None or __package__ == ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from backend.risk_engine import engine
+from backend.services import shared
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -120,6 +121,11 @@ def favicon() -> Response:
         return RedirectResponse(url="/static/img/heartbeat.svg")
 
     return Response(status_code=204)
+
+
+@app.get("/about", include_in_schema=False)
+def about_page() -> FileResponse | Response:
+    return shared.html_page(shared.HTML_PAGES["about"])
 
 
 @app.get("/model-info")

@@ -129,18 +129,29 @@
         loginWithEl.addEventListener("change", syncLoginIdentifierUI);
         syncLoginIdentifierUI();
 
+        identifierEl.addEventListener("input", () => {
+          const mode = (loginWithEl.value || "email").toLowerCase();
+          if (mode !== "phone") return;
+          const digits = String(identifierEl.value || "").replace(/\D/g, "").slice(0, 10);
+          if (identifierEl.value !== digits) identifierEl.value = digits;
+        });
+
         document.getElementById("f").addEventListener("submit", async (e) => {
           e.preventDefault();
           msg.textContent = "Signing in...";
           try {
             const loginWith = (loginWithEl.value || "email").toLowerCase();
-            const identifier = identifierEl.value;
+            const identifier = String(identifierEl.value || "").trim();
             const email = loginWith === "email" ? (identifier || "").trim() : null;
+            if (loginWith === "phone" && !/^\d{10}$/.test(identifier)) {
+              msg.textContent = "Phone number must be exactly 10 digits.";
+              return;
+            }
             const data = await App.apiFetch("/auth/login", {
               method: "POST",
               body: JSON.stringify({
                 email,
-                phone: loginWith === "phone" ? (identifier || "").replace(/\\D/g, "") : null,
+                phone: loginWith === "phone" ? identifier : null,
                 password: document.getElementById("password").value,
                 role: roleEl.value,
               }),

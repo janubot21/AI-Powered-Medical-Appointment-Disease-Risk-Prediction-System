@@ -73,14 +73,26 @@ class RiskPredictionResponse(BaseModel):
 class RegisterRequest(BaseModel):
     full_name: str = Field(..., min_length=2, max_length=100, description="User display name.")
     email: str = Field(..., min_length=5, max_length=254, description="User email address.")
-    phone: str = Field(..., min_length=10, max_length=10, description="User phone number (10 digits).")
+    phone: str = Field(
+        ...,
+        min_length=10,
+        max_length=10,
+        pattern=r"^\d{10}$",
+        description="User phone number (10 digits).",
+    )
     password: str = Field(..., min_length=8, max_length=128, description="Account password.")
     role: Literal["patient", "nurse", "doctor"] = Field(..., description="Account role.")
 
 
 class LoginRequest(BaseModel):
     email: str | None = Field(None, min_length=5, max_length=254, description="User email address.")
-    phone: str | None = Field(None, min_length=10, max_length=10, description="User phone number (10 digits).")
+    phone: str | None = Field(
+        None,
+        min_length=10,
+        max_length=10,
+        pattern=r"^\d{10}$",
+        description="User phone number (10 digits).",
+    )
     password: str = Field(..., min_length=6, max_length=128, description="Account password.")
     role: Literal["patient", "nurse", "doctor"] = Field(..., description="Account role.")
 

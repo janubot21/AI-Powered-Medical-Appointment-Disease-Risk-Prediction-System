@@ -19,6 +19,7 @@
           </div>
           <div class="nre-actions">
             <a class="nre-btn" href="/nurse">Back to Patient Queue</a>
+            <a class="nre-btn" href="/about" style="text-decoration:none">About</a>
             <select id="themeSelect" class="nre-select" aria-label="Theme">
               <option value="light">Light Mode</option>
               <option value="dark">Dark Mode</option>
@@ -177,7 +178,7 @@
 
             <div class="nre-banner" id="overallBanner">Overall Risk Level: Waiting</div>
             <div class="nre-note" id="riskSources" style="margin-top:10px">
-              Model: â€” â€¢ Clinical: â€” â€¢ Final: â€”
+              Model: - | Clinical: - | Final: -
             </div>
 
             <div class="nre-pri">
@@ -185,55 +186,55 @@
                 <div class="nre-pri-h">Appointment Priority Recommendation</div>
                 <div class="nre-pri-sub"><span class="muted">Recommended Slot:</span> <span id="slotText">Waiting</span></div>
               </div>
-              <span class="nre-pill" id="priPill">â€”</span>
+              <span class="nre-pill" id="priPill">-</span>
             </div>
 
             <div class="nre-mini-grid">
               <div class="nre-mini-card">
                 <div class="nre-mini-k">Blood pressure</div>
-                <div class="nre-mini-v" id="bpCat">â€”</div>
+                <div class="nre-mini-v" id="bpCat">-</div>
               </div>
               <div class="nre-mini-card">
                 <div class="nre-mini-k">Glucose</div>
-                <div class="nre-mini-v" id="gluCat">â€”</div>
+                <div class="nre-mini-v" id="gluCat">-</div>
               </div>
               <div class="nre-mini-card">
                 <div class="nre-mini-k">BMI</div>
-                <div class="nre-mini-v" id="bmiCat">â€”</div>
+                <div class="nre-mini-v" id="bmiCat">-</div>
               </div>
             </div>
 
             <div class="nre-details-card" style="margin-top:14px">
               <div class="nre-mini-k">Nurse triage (rule-based)</div>
-              <div id="rulesEmpty" class="nre-note">Run â€œGenerate riskâ€ to see triage rules.</div>
+              <div id="rulesEmpty" class="nre-note">Run "Generate risk" to see triage rules.</div>
               <div id="rulesBody" style="display:none">
                 <div class="nre-details-grid" style="margin-top:10px">
-                  <div><span class="muted">Triage</span><b id="r_triage">â€”</b></div>
-                  <div><span class="muted">Recommended slot</span><b id="r_slot">â€”</b></div>
-                  <div><span class="muted">Priority</span><b id="r_priority">â€”</b></div>
-                  <div><span class="muted">Tags</span><b id="r_tags">â€”</b></div>
+                  <div><span class="muted">Triage</span><b id="r_triage">-</b></div>
+                  <div><span class="muted">Recommended slot</span><b id="r_slot">-</b></div>
+                  <div><span class="muted">Priority</span><b id="r_priority">-</b></div>
+                  <div><span class="muted">Tags</span><b id="r_tags">-</b></div>
                 </div>
                 <div style="margin-top:10px">
                   <div class="nre-mini-k">Emergency alerts</div>
-                  <div class="nre-note" id="r_alerts">â€”</div>
+                  <div class="nre-note" id="r_alerts">-</div>
                 </div>
                 <div style="margin-top:10px">
                   <div class="nre-mini-k">Validation</div>
-                  <div class="nre-note" id="r_validation">â€”</div>
+                  <div class="nre-note" id="r_validation">-</div>
                 </div>
                 <div style="margin-top:10px">
                   <div class="nre-mini-k">Workflow notes</div>
-                  <div class="nre-note" id="r_comment">â€”</div>
+                  <div class="nre-note" id="r_comment">-</div>
                 </div>
                 <div style="margin-top:10px">
                   <div class="nre-mini-k">Basic suggestions (not a prescription)</div>
-                  <div class="nre-note" id="r_suggestions">â€”</div>
+                  <div class="nre-note" id="r_suggestions">-</div>
                 </div>
               </div>
             </div>
 
             <div class="nre-bars" id="bars">
-              <div class="nre-empty">Run â€œGenerate riskâ€ to see results.</div>
+              <div class="nre-empty">Run \"Generate risk\" to see results.</div>
             </div>
           </aside>
         </div>
@@ -316,10 +317,10 @@
         function setRiskSources(modelGroup, clinicalGroup, finalGroup) {
           const el = document.getElementById("riskSources");
           if (!el) return;
-          const m = modelGroup ? String(modelGroup) : "â€”";
-          const c = clinicalGroup ? String(clinicalGroup) : "â€”";
-          const f = finalGroup ? String(finalGroup) : "â€”";
-          el.textContent = `Model: ${m} â€¢ Clinical: ${c} â€¢ Final: ${f}`;
+          const m = modelGroup ? String(modelGroup) : "-";
+          const c = clinicalGroup ? String(clinicalGroup) : "-";
+          const f = finalGroup ? String(finalGroup) : "-";
+          el.textContent = `Model: ${m} | Clinical: ${c} | Final: ${f}`;
         }
 
         function setPriority(bookingPriority, riskGroup) {
@@ -328,7 +329,7 @@
           const pill = document.getElementById("priPill");
           const g = String(riskGroup || "").toLowerCase();
           if (!bookingPriority) {
-            pill.textContent = "â€”";
+            pill.textContent = "-";
             pill.dataset.kind = "neutral";
             return;
           }
@@ -345,9 +346,9 @@
         }
 
         function setClinicalCats(assessment) {
-          const bp = (assessment && assessment.blood_pressure && assessment.blood_pressure.clinical_category) || "â€”";
-          const glu = (assessment && assessment.glucose && assessment.glucose.clinical_category) || "â€”";
-          const bmi = (assessment && assessment.bmi && assessment.bmi.clinical_category) || "â€”";
+          const bp = (assessment && assessment.blood_pressure && assessment.blood_pressure.clinical_category) || "-";
+          const glu = (assessment && assessment.glucose && assessment.glucose.clinical_category) || "-";
+          const bmi = (assessment && assessment.bmi && assessment.bmi.clinical_category) || "-";
           document.getElementById("bpCat").textContent = bp;
           document.getElementById("gluCat").textContent = glu;
           document.getElementById("bmiCat").textContent = bmi;
@@ -409,7 +410,7 @@
 
           const setText = (id, value) => {
             const el = document.getElementById(id);
-            if (el) el.textContent = value == null || value === "" ? "â€”" : String(value);
+            if (el) el.textContent = value == null || value === "" ? "-" : String(value);
           };
 
           setText("r_triage", rules.triage_level);
@@ -417,22 +418,22 @@
           setText("r_priority", rules.priority);
           setText(
             "r_tags",
-            Array.isArray(rules.tags) && rules.tags.length ? rules.tags.join(", ") : "â€”",
+            Array.isArray(rules.tags) && rules.tags.length ? rules.tags.join(", ") : "-",
           );
 
           const alerts = Array.isArray(rules.emergency_alerts) ? rules.emergency_alerts : [];
-          setText("r_alerts", alerts.length ? alerts.join(" â€¢ ") : "â€”");
+          setText("r_alerts", alerts.length ? alerts.join(" | ") : "-");
 
           const verr = Array.isArray(rules.validation_errors) ? rules.validation_errors : [];
           if (rules.valid === false || verr.length) {
-            setText("r_validation", (verr.length ? verr.join(" â€¢ ") : "Needs correction before saving."));
+            setText("r_validation", (verr.length ? verr.join(" | ") : "Needs correction before saving."));
           } else {
             setText("r_validation", "OK");
           }
 
           setText("r_comment", rules.nurse_comment);
           const sug = Array.isArray(rules.suggestions) ? rules.suggestions : [];
-          setText("r_suggestions", sug.length ? sug.join(" â€¢ ") : "â€”");
+          setText("r_suggestions", sug.length ? sug.join(" | ") : "-");
         }
 
         function setTab(which) {
@@ -512,7 +513,7 @@
         }
 
         document.getElementById("loadBtn").addEventListener("click", async () => {
-          msg.textContent = "Loadingâ€¦";
+          msg.textContent = "Loading...";
           setLoadedDefaults();
           const ok = await loadPatient(document.getElementById("load_email").value);
           msg.textContent = ok ? "Loaded." : "Patient not found.";
@@ -530,7 +531,7 @@
             msg.textContent = "Load a patient first.";
             return;
           }
-          msg.textContent = "Savingâ€¦";
+          msg.textContent = "Saving...";
           const bmiVal = computeBmi();
           if (!bmiVal) {
             msg.textContent = "Enter height and weight to calculate BMI.";
@@ -568,8 +569,8 @@
 
         document.getElementById("f").addEventListener("submit", async (e) => {
           e.preventDefault();
-          msg.textContent = "Generatingâ€¦";
-          bars.innerHTML = `<div class="nre-empty">Workingâ€¦</div>`;
+          msg.textContent = "Generating...";
+          bars.innerHTML = `<div class="nre-empty">Working...</div>`;
           const bmiVal = computeBmi();
           if (!bmiVal) {
             msg.textContent = "Enter height and weight to calculate BMI.";

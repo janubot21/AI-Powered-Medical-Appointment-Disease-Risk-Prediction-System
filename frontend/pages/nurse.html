@@ -29,8 +29,9 @@
         </div>
 
         <div class="nav" style="margin-top:14px">
-          <a href="/nurse">Dashboard <span>â†’</span></a>
-          <a href="/nurse/editor">Record editor <span>â†’</span></a>
+          <a href="/nurse">Dashboard <span>-></span></a>
+          <a href="/nurse/editor">Record editor <span>-></span></a>
+          <a href="/about">About <span>-></span></a>
           <button class="btn danger" type="button" data-logout>Logout</button>
         </div>
       </aside>
@@ -41,7 +42,7 @@
         <header class="ba-top">
           <div>
             <h1 class="ba-h1">Nurse Portal</h1>
-            <div class="ba-sub">Patient queue â€¢ vitals review â€¢ risk assessment</div>
+            <div class="ba-sub">Patient queue - vitals review - risk assessment</div>
           </div>
 
           <div class="ba-actions">
@@ -62,7 +63,7 @@
                 <button class="nq-tab" id="tabBooked" type="button" role="tab" aria-selected="false">Booked appointments</button>
                 <button class="nq-tab" id="tabData" type="button" role="tab" aria-selected="false">Patient data</button>
               </div>
-              <input id="q" class="nq-search" type="search" placeholder="Search patient name/emailâ€¦" />
+              <input id="q" class="nq-search" type="search" placeholder="Search patient name/email..." />
               <button class="ba-btn" id="refreshBtn" type="button">Refresh</button>
             </div>
           </div>
@@ -70,11 +71,11 @@
             Upcoming pending/confirmed appointments that need vitals review.
           </div>
           <div class="ba-panel">
-            <div class="ba-empty" id="queueEmpty">Loadingâ€¦</div>
+            <div class="ba-empty" id="queueEmpty">Loading...</div>
             <div class="ba-list" id="queueList" style="display:none"></div>
-            <div class="ba-empty" id="bookedEmpty" style="display:none">Loadingâ€¦</div>
+            <div class="ba-empty" id="bookedEmpty" style="display:none">Loading...</div>
             <div class="ba-list" id="bookedList" style="display:none"></div>
-            <div class="ba-empty" id="dataEmpty" style="display:none">Loadingâ€¦</div>
+            <div class="ba-empty" id="dataEmpty" style="display:none">Loading...</div>
             <div class="nq-dir" id="dataList" style="display:none"></div>
           </div>
         </section>
@@ -84,7 +85,7 @@
         <div class="ba-modal-card" role="dialog" aria-modal="true" aria-label="Details">
           <div class="ba-modal-top">
             <b>Details</b>
-            <button type="button" class="ba-x" id="closeModal">âœ•</button>
+            <button type="button" class="ba-x" id="closeModal">X</button>
           </div>
           <pre class="ba-pre" id="modalPre">{}</pre>
         </div>
@@ -175,7 +176,7 @@
         async function openHistory(patientEmail) {
           const email = String(patientEmail || "").trim();
           if (!email) return;
-          openModal("Loading historyâ€¦");
+          openModal("Loading history...");
           try {
             const data = await App.apiFetch(`/api/patient/history?email=${encodeURIComponent(email)}&limit=30`);
             const events = (data && data.events) || [];
@@ -186,8 +187,8 @@
             const lines = [`Patient: ${email}`, `Changes: ${events.length}`, ""];
             events.slice(0, 10).forEach((ev, idx) => {
               const when = ev.changed_at ? (App.formatLocal ? App.formatLocal(ev.changed_at) : String(ev.changed_at)) : "-";
-              const who = `${ev.changed_by_role || "-"} â€¢ ${ev.changed_by_email || "-"}`;
-              lines.push(`${when} â€” ${who}`);
+              const who = `${ev.changed_by_role || "-"} - ${ev.changed_by_email || "-"}`;
+              lines.push(`${when} - ${who}`);
               const changes = Array.isArray(ev.changes) ? ev.changes : [];
               if (!changes.length) lines.push("  (no field changes recorded)");
               changes.slice(0, 20).forEach((c) => {
@@ -213,7 +214,7 @@
           const triage = (appt && appt.nurse_triage) || null;
           const triagePriority = triage && triage.priority ? String(triage.priority) : (appt.booking_priority ? `Priority: ${appt.booking_priority}` : "");
           const triageSlot = triage && triage.appointment_recommendation ? `Recommended: ${triage.appointment_recommendation}` : "";
-          const patientLine = appt.patient_name ? `${appt.patient_name} â€¢ ${appt.patient_email}` : (appt.patient_email || "");
+          const patientLine = appt.patient_name ? `${appt.patient_name} - ${appt.patient_email}` : (appt.patient_email || "");
 
           const wrap = document.createElement("div");
           wrap.className = "ba-item";
@@ -285,9 +286,9 @@
           const bookedList = document.getElementById("bookedList");
           const dataEmpty = document.getElementById("dataEmpty");
           const dataList = document.getElementById("dataList");
-          queueEmpty.textContent = "Loadingâ€¦";
-          bookedEmpty.textContent = "Loadingâ€¦";
-          dataEmpty.textContent = "Loadingâ€¦";
+          queueEmpty.textContent = "Loading...";
+          bookedEmpty.textContent = "Loading...";
+          dataEmpty.textContent = "Loading...";
           if (activeTab === "queue") queueEmpty.style.display = "block";
           if (activeTab === "booked") bookedEmpty.style.display = "block";
           if (activeTab === "data") dataEmpty.style.display = "block";
@@ -316,7 +317,7 @@
 
         async function loadPatients() {
           const dataEmpty = document.getElementById("dataEmpty");
-          dataEmpty.textContent = "Loadingâ€¦";
+          dataEmpty.textContent = "Loading...";
           try {
             const data = await App.apiFetch("/portal/directory");
             const patients = (data && data.patients) || [];

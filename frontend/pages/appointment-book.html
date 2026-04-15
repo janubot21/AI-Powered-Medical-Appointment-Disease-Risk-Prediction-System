@@ -13,7 +13,7 @@
         <aside class="pdb-side" id="side">
           <div class="pdb-topline">
             <div class="pdb-menu">MENU</div>
-            <button class="pdb-collapse" id="collapse" type="button" title="Collapse">â€¹</button>
+            <button class="pdb-collapse" id="collapse" type="button" title="Collapse">&lt;</button>
           </div>
 
           <div class="pdb-brand">
@@ -36,6 +36,7 @@
             <a href="/patient">Upcoming Dashboard</a>
             <a class="active" href="/patient/book">Book Appointment</a>
             <a href="/health-details">Health Details</a>
+            <a href="/about">About</a>
           </nav>
 
           <div class="pdb-divider"></div>
@@ -72,7 +73,17 @@
                   <button class="book-edit-mini" id="editProfile" type="button">Edit</button>
                   <div>
                     <label class="label" for="contact_info">PHONE NUMBER *</label>
-                    <input id="contact_info" class="book-input" type="tel" inputmode="tel" placeholder="Phone number (required)" required />
+                    <input
+                      id="contact_info"
+                      class="book-input"
+                      type="tel"
+                      inputmode="numeric"
+                      pattern="[0-9]{10}"
+                      minlength="10"
+                      maxlength="10"
+                      placeholder="10-digit phone number (required)"
+                      required
+                    />
                   </div>
                 </div>
 
@@ -123,7 +134,7 @@
               <div class="pdb-card-top">
                 <div><h2>Your appointments</h2></div>
               </div>
-              <div id="appts" class="pdb-hint" style="margin-top: 10px">Loadingâ€¦</div>
+              <div id="appts" class="pdb-hint" style="margin-top: 10px">Loading...</div>
             </article>
           </div>
         </section>
@@ -150,7 +161,7 @@
         document.getElementById("collapse").addEventListener("click", () => {
           const side = document.getElementById("side");
           side.classList.toggle("collapsed");
-          document.getElementById("collapse").textContent = side.classList.contains("collapsed") ? "â€º" : "â€¹";
+          document.getElementById("collapse").textContent = side.classList.contains("collapsed") ? ">" : "<";
         });
 
         if (!user || !user.email) {
@@ -178,12 +189,21 @@
         function buildContactInfo(u) {
           const phone = u && u.phone && String(u.phone).trim() ? String(u.phone).trim() : "";
           const email = u && u.email ? String(u.email).trim() : "";
-          if (phone && email) return `${phone} â€¢ ${email}`;
+          if (phone && email) return `${phone} - ${email}`;
           return phone || email || "";
         }
 
+        const sanitizePhone = (value) => String(value || "").replace(/\D/g, "").slice(0, 10);
+        const contactInfoEl = document.getElementById("contact_info");
+        if (contactInfoEl) {
+          contactInfoEl.addEventListener("input", () => {
+            const digits = sanitizePhone(contactInfoEl.value);
+            if (contactInfoEl.value !== digits) contactInfoEl.value = digits;
+          });
+        }
+
         // Prefill phone when available; otherwise require user input.
-        document.getElementById("contact_info").value = user.phone ? String(user.phone).trim() : "";
+        document.getElementById("contact_info").value = sanitizePhone(user.phone);
 
         // Refresh user profile from backend to get latest phone (for older sessions).
         (async function refreshUser() {
@@ -192,7 +212,7 @@
             if (fresh && fresh.user) {
               const merged = { ...user, ...fresh.user };
               if (App.setAuthUser) App.setAuthUser(merged);
-              document.getElementById("contact_info").value = merged.phone ? String(merged.phone).trim() : "";
+              document.getElementById("contact_info").value = sanitizePhone(merged.phone);
             }
           } catch {}
         })();
@@ -289,10 +309,10 @@
             doctors.forEach((d) => {
               const opt = document.createElement("option");
               opt.value = d.email;
-              const emergency = d.emergency_doctor ? " â€¢ Emergency" : "";
-              const spec = d.specialization ? ` â€¢ ${d.specialization}` : "";
+              const emergency = d.emergency_doctor ? " - Emergency" : "";
+              const spec = d.specialization ? ` - ${d.specialization}` : "";
               const onLeave = !!d.on_leave;
-              const leaveText = onLeave ? ` â€¢ ON LEAVE${describeLeave(d.leave)}` : "";
+              const leaveText = onLeave ? ` - ON LEAVE${describeLeave(d.leave)}` : "";
               opt.textContent = `${d.full_name} (${d.email})${spec}${emergency}${leaveText}`;
               if (onLeave) opt.disabled = true;
               select.appendChild(opt);
@@ -323,7 +343,7 @@
         async function loadPatientDetails() {
           const el = document.getElementById("patient_details");
           if (!el) return;
-          el.textContent = "Loadingâ€¦";
+          el.textContent = "Loading...";
           try {
             const data = await App.apiFetch(`/auth/health-details?email=${encodeURIComponent(user.email)}`);
             const d = data.health_details || {};
@@ -353,7 +373,7 @@
 
         async function loadAppointments() {
           const el = document.getElementById("appts");
-          el.textContent = "Loadingâ€¦";
+          el.textContent = "Loading...";
           try {
             const data = await App.apiFetch(`/appointments?patient_email=${encodeURIComponent(user.email)}`);
             if (!data || data.length === 0) {
@@ -366,7 +386,7 @@
                 const when = App.formatLocal ? App.formatLocal(a.scheduled_for) : a.scheduled_for;
                 const status = a.status || "Pending";
                 const reason = a.reason || a.appointment_type || "";
-                return `<div class="pill" style="margin:6px 0"><span class="dot"></span>${when} â€¢ ${status} â€¢ ${reason}</div>`;
+                return `<div class="pill" style="margin:6px 0"><span class="dot"></span>${when} - ${status} - ${reason}</div>`;
               })
               .join("");
           } catch (err) {
@@ -456,7 +476,7 @@
             };
 
             const phone = String(payload.contact_info || "").trim();
-            if (phone.replace(/[^\d+]/g, "").length < 7) throw new Error("Please enter a valid phone number.");
+            if (!/^\d{10}$/.test(phone)) throw new Error("Phone number must be exactly 10 digits.");
 
             const timeValue = document.getElementById("appt_time").value;
             if (isEmergencyOnlyTime(timeValue)) {
@@ -481,7 +501,7 @@
             document.getElementById("emergencyMsg").style.display = "none";
             document.getElementById("emergencyMsg").textContent = "";
             const u2 = App.getAuthUser ? App.getAuthUser() : user;
-            document.getElementById("contact_info").value = u2 && u2.phone ? String(u2.phone).trim() : "";
+            document.getElementById("contact_info").value = sanitizePhone(u2 && u2.phone ? u2.phone : "");
             document.getElementById("patient_name").value = user.full_name || user.email;
 
             if (App.confirmPopup) {

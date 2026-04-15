@@ -30,6 +30,11 @@ def root() -> FileResponse:
     return html_page(HTML_PAGES["root"])
 
 
+@router.get("/about")
+def about_page() -> FileResponse:
+    return html_page(HTML_PAGES["about"])
+
+
 @router.get("/patient")
 def patient_dashboard() -> FileResponse:
     return html_page(HTML_PAGES["patient"])
@@ -136,4 +141,3 @@ def health_details_page(request: Request) -> Response:
 @router.get("/predict-risk")
 def predict_risk_form() -> RedirectResponse:
     return RedirectResponse(url="/nurse/editor")
-

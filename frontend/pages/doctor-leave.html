@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Doctor â€¢ AI Health Hub</title>
+    <title>Doctor - AI Health Hub</title>
     <link rel="stylesheet" href="/static/app.css?v=20260414_19" />
     <script defer src="/static/app.js?v=20260414_19"></script>
   </head>
@@ -29,12 +29,13 @@
         </div>
 
         <div class="nav" style="margin-top:14px">
-          <a href="/doctor">Upcoming <span>â†’</span></a>
-          <a href="/doctor/past">Past <span>â†’</span></a>
-          <a href="/doctor/patients">Patient database <span>â†’</span></a>
-          <a href="/doctor#ai-risk-analytics">AI risk analytics <span>â†’</span></a>
-          <a class="active" href="/doctor/leave">Leave <span>â†’</span></a>
-          <button type="button" data-logout>Logout <span>â†’</span></button>
+          <a href="/doctor">Upcoming <span>-></span></a>
+          <a href="/doctor/past">Past <span>-></span></a>
+          <a href="/doctor/patients">Patient database <span>-></span></a>
+          <a href="/doctor#ai-risk-analytics">AI risk analytics <span>-></span></a>
+          <a class="active" href="/doctor/leave">Leave <span>-></span></a>
+          <a href="/about">About <span>-></span></a>
+          <button type="button" data-logout>Logout <span>-></span></button>
         </div>
       </aside>
 
@@ -94,7 +95,7 @@
                 </thead>
                 <tbody id="leaveBody">
                   <tr>
-                    <td colspan="2" class="muted">Loadingâ€¦</td>
+                    <td colspan="2" class="muted">Loading...</td>
                   </tr>
                 </tbody>
               </table>
@@ -173,7 +174,7 @@
 
         document.getElementById("leaveForm").addEventListener("submit", async (e) => {
           e.preventDefault();
-          msg.textContent = "Savingâ€¦";
+          msg.textContent = "Saving...";
           try {
             const start = toIso(document.getElementById("startDate").value, document.getElementById("startTime").value);
             const end = toIso(document.getElementById("endDate").value, document.getElementById("endTime").value);

@@ -133,6 +133,7 @@ def get_db() -> Any:
 
 HTML_PAGES: dict[str, str] = {
     "root": "frontend/pages/role-selection.html",
+    "about": "frontend/pages/about.html",
     "patient": "frontend/pages/patient-dashboard.html",
     "patient_appointments": "frontend/pages/patient-appointments.html",
     "patient_book": "frontend/pages/appointment-book.html",
@@ -181,7 +182,6 @@ def normalize_email(email: str) -> str:
     return email.strip().lower()
 
 
-PHONE_CLEAN_RE = re.compile(r"\D")
 PHONE_VALID_RE = re.compile(r"^\d{10}$")
 EMAIL_VALID_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 FULL_NAME_VALID_RE = re.compile(r"^[A-Za-z]+(?: [A-Za-z]+)*$")
@@ -189,10 +189,13 @@ FULL_NAME_VALID_RE = re.compile(r"^[A-Za-z]+(?: [A-Za-z]+)*$")
 
 def normalize_phone(phone: str) -> str:
     raw = (phone or "").strip()
-    cleaned = PHONE_CLEAN_RE.sub("", raw)
-    if not cleaned or not PHONE_VALID_RE.match(cleaned):
+    if not raw:
         raise HTTPException(status_code=400, detail="Phone number must be exactly 10 digits.")
-    return cleaned
+    if not raw.isdigit():
+        raise HTTPException(status_code=400, detail="Phone number must contain digits only (0-9).")
+    if not PHONE_VALID_RE.match(raw):
+        raise HTTPException(status_code=400, detail="Phone number must be exactly 10 digits.")
+    return raw
 
 
 def validate_email(email: str) -> str:
